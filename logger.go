@@ -31,6 +31,9 @@ func (l Level) String() string {
 	return s
 }
 
+// Logger interface copied from https://github.com/jackc/pgx/blob/master/logger.go
+// Copyright (c) 2013 Jack Christensen
+// https://github.com/jackc/pgx/blob/master/LICENSE
 type Logger interface {
 	Log(ctx context.Context, level Level, msg string, data map[string]interface{})
 }
