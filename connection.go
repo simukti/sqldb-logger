@@ -77,8 +77,6 @@ func (c *connection) Close() error {
 func (c *connection) BeginTx(ctx context.Context, opts driver.TxOptions) (driver.Tx, error) {
 	drvTx, ok := c.driverConn.(driver.ConnBeginTx)
 	if !ok {
-		c.logger.log(ctx, LevelNotice, "Driver does not implement driver.ConnBeginTx", time.Now(), nil)
-
 		return c.Begin()
 	}
 
@@ -102,8 +100,6 @@ func (c *connection) BeginTx(ctx context.Context, opts driver.TxOptions) (driver
 func (c *connection) PrepareContext(ctx context.Context, query string) (driver.Stmt, error) {
 	driverPrep, ok := c.driverConn.(driver.ConnPrepareContext)
 	if !ok {
-		c.logger.log(ctx, LevelNotice, "Driver does not implement driver.ConnPrepareContext", time.Now(), nil)
-
 		return c.Prepare(query)
 	}
 
@@ -145,12 +141,8 @@ func (c *connection) Ping(ctx context.Context) error {
 func (c *connection) Exec(query string, args []driver.Value) (driver.Result, error) {
 	driverExecer, ok := c.driverConn.(driver.Execer) // nolint: staticcheck
 	if !ok {
-		c.logger.log(context.Background(), LevelNotice, "Driver does not implement driver.Execer", time.Now(), nil)
-
 		return nil, driver.ErrSkip
 	}
-
-	c.logger.log(context.Background(), LevelNotice, "Exec() deprecated, use ExecContext() instead", time.Now(), nil)
 
 	lvl, start := LevelInfo, time.Now()
 	drvResult, err := driverExecer.Exec(query, args)
@@ -168,8 +160,6 @@ func (c *connection) Exec(query string, args []driver.Value) (driver.Result, err
 func (c *connection) ExecContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Result, error) {
 	driverExecerContext, ok := c.driverConn.(driver.ExecerContext)
 	if !ok {
-		c.logger.log(ctx, LevelNotice, "Driver does not implement driver.Execer", time.Now(), nil)
-
 		dargs, err := namedValueToValue(args)
 		if err != nil {
 			return nil, err
@@ -201,8 +191,6 @@ func (c *connection) ExecContext(ctx context.Context, query string, args []drive
 func (c *connection) Query(query string, args []driver.Value) (driver.Rows, error) {
 	driverQueryer, ok := c.driverConn.(driver.Queryer) // nolint: staticcheck
 	if !ok {
-		c.logger.log(context.Background(), LevelNotice, "Driver does not implement driver.Queryer", time.Now(), nil)
-
 		return nil, driver.ErrSkip
 	}
 
@@ -222,12 +210,8 @@ func (c *connection) Query(query string, args []driver.Value) (driver.Rows, erro
 func (c *connection) QueryContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Rows, error) {
 	driverQueryerContext, ok := c.driverConn.(driver.QueryerContext)
 	if !ok {
-		c.logger.log(ctx, LevelNotice, "Driver does not implement driver.QueryerContext", time.Now(), nil)
-
 		dargs, err := namedValueToValue(args)
 		if err != nil {
-			c.logger.log(ctx, LevelError, "namedValueToValue error", time.Now(), nil)
-
 			return nil, err
 		}
 

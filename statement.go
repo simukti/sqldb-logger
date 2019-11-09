@@ -30,7 +30,6 @@ func (s *statement) NumInput() int {
 
 // Exec implements driver.Stmt
 func (s *statement) Exec(args []driver.Value) (driver.Result, error) {
-	s.logger.log(context.Background(), LevelNotice, "Exec() deprecated, use ExecContext() instead", time.Now(), nil)
 	lvl, start := LevelInfo, time.Now()
 	res, err := s.driverStmt.Exec(args) // nolint: staticcheck
 
@@ -45,7 +44,6 @@ func (s *statement) Exec(args []driver.Value) (driver.Result, error) {
 
 // Query implements driver.Stmt
 func (s *statement) Query(args []driver.Value) (driver.Rows, error) {
-	s.logger.log(context.Background(), LevelNotice, "Query() deprecated, use QueryContext() instead", time.Now(), nil)
 	lvl, start := LevelInfo, time.Now()
 	res, err := s.driverStmt.Query(args) // nolint: staticcheck
 
@@ -62,8 +60,6 @@ func (s *statement) Query(args []driver.Value) (driver.Rows, error) {
 func (s *statement) ExecContext(ctx context.Context, args []driver.NamedValue) (driver.Result, error) {
 	stmtExecer, ok := s.driverStmt.(driver.StmtExecContext)
 	if !ok {
-		s.logger.log(ctx, LevelNotice, "Driver does not implement driver.StmtExecContext", time.Now(), nil)
-
 		dargs, err := namedValueToValue(args)
 		if err != nil {
 			return nil, err
@@ -94,8 +90,6 @@ func (s *statement) ExecContext(ctx context.Context, args []driver.NamedValue) (
 func (s *statement) QueryContext(ctx context.Context, args []driver.NamedValue) (driver.Rows, error) {
 	stmtQueryer, ok := s.driverStmt.(driver.StmtQueryContext)
 	if !ok {
-		s.logger.log(ctx, LevelNotice, "Driver does not implement driver.StmtQueryContext", time.Now(), nil)
-
 		dargs, err := namedValueToValue(args)
 		if err != nil {
 			return nil, err
