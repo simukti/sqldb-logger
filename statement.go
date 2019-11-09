@@ -37,7 +37,7 @@ func (s *statement) Exec(args []driver.Value) (driver.Result, error) {
 		lvl = LevelError
 	}
 
-	s.logger.log(context.Background(), lvl, "Exec", start, err, s.logger.withQuery(s.query), s.logger.withArgs(args))
+	s.logger.log(context.Background(), lvl, "StmtExec", start, err, s.logger.withQuery(s.query), s.logger.withArgs(args))
 
 	return res, err
 }
@@ -51,7 +51,7 @@ func (s *statement) Query(args []driver.Value) (driver.Rows, error) {
 		lvl = LevelError
 	}
 
-	s.logger.log(context.Background(), lvl, "Query", start, err, s.logger.withQuery(s.query), s.logger.withArgs(args))
+	s.logger.log(context.Background(), lvl, "StmtQuery", start, err, s.logger.withQuery(s.query), s.logger.withArgs(args))
 
 	return res, err
 }
@@ -81,7 +81,7 @@ func (s *statement) ExecContext(ctx context.Context, args []driver.NamedValue) (
 		lvl = LevelError
 	}
 
-	s.logger.log(ctx, lvl, "ExecContext", start, err, s.logger.withQuery(s.query), s.logger.withNamedArgs(args))
+	s.logger.log(ctx, lvl, "StmtExecContext", start, err, s.logger.withQuery(s.query), s.logger.withNamedArgs(args))
 
 	return res, err
 }
@@ -111,7 +111,7 @@ func (s *statement) QueryContext(ctx context.Context, args []driver.NamedValue) 
 		lvl = LevelError
 	}
 
-	s.logger.log(ctx, lvl, "QueryContext", start, err, s.logger.withQuery(s.query), s.logger.withNamedArgs(args))
+	s.logger.log(ctx, lvl, "StmtQueryContext", start, err, s.logger.withQuery(s.query), s.logger.withNamedArgs(args))
 
 	return res, err
 }
