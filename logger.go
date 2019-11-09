@@ -104,14 +104,12 @@ func parseArgs(argsVal []driver.Value) []interface{} {
 
 	for k, a := range argsVal {
 		switch v := a.(type) {
-
 		case []byte:
 			if len(v) < maxArgValueLen {
 				a = string(v)
 			} else {
 				a = string(v[:maxArgValueLen]) + " (truncated " + strconv.Itoa(len(v)-maxArgValueLen) + " bytes)"
 			}
-
 		case string:
 			if len(v) > maxArgValueLen {
 				a = v[:maxArgValueLen] + " (truncated " + strconv.Itoa(len(v)-maxArgValueLen) + " bytes)"
