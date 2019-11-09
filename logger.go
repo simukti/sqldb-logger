@@ -77,7 +77,10 @@ func (l *logger) log(ctx context.Context, lvl Level, msg string, start time.Time
 	data := map[string]interface{}{
 		l.cfg.timestampFieldname: time.Now().Unix(),
 		l.cfg.durationFieldname:  time.Since(start),
-		l.cfg.errorFieldname:     err,
+	}
+
+	if lvl == LevelError {
+		data[l.cfg.errorFieldname] = err
 	}
 
 	for _, d := range datas {
