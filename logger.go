@@ -3,6 +3,7 @@ package sqldblogger
 import (
 	"context"
 	"database/sql/driver"
+	"fmt"
 	"time"
 )
 
@@ -16,19 +17,18 @@ const (
 )
 
 func (l Level) String() string {
-	var stringMap = map[Level]string{
-		LevelError:  "error",
-		LevelInfo:   "info",
-		LevelNotice: "notice",
-		LevelDebug:  "debug",
+	switch l {
+	case LevelError:
+		return "error" // nolint: goconst
+	case LevelInfo:
+		return "info" // nolint: goconst
+	case LevelNotice:
+		return "notice" // nolint: goconst
+	case LevelDebug:
+		return "debug" // nolint: goconst
+	default:
+		return fmt.Sprintf("invalid level: %d", l)
 	}
-
-	var s string
-	if v, ok := stringMap[l]; ok {
-		s = v
-	}
-
-	return s
 }
 
 // Logger interface copied from https://github.com/jackc/pgx/blob/master/logger.go
