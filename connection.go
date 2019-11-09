@@ -168,7 +168,7 @@ func (c *connection) Exec(query string, args []driver.Value) (driver.Result, err
 func (c *connection) ExecContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Result, error) {
 	driverExecerContext, ok := c.driverConn.(driver.ExecerContext)
 	if !ok {
-		c.logger.log(context.Background(), LevelNotice, "Driver does not implement driver.Execer", time.Now(), nil)
+		c.logger.log(ctx, LevelNotice, "Driver does not implement driver.Execer", time.Now(), nil)
 
 		dargs, err := namedValueToValue(args)
 		if err != nil {
@@ -222,11 +222,11 @@ func (c *connection) Query(query string, args []driver.Value) (driver.Rows, erro
 func (c *connection) QueryContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Rows, error) {
 	driverQueryerContext, ok := c.driverConn.(driver.QueryerContext)
 	if !ok {
-		c.logger.log(context.Background(), LevelNotice, "Driver does not implement driver.QueryerContext", time.Now(), nil)
+		c.logger.log(ctx, LevelNotice, "Driver does not implement driver.QueryerContext", time.Now(), nil)
 
 		dargs, err := namedValueToValue(args)
 		if err != nil {
-			c.logger.log(context.Background(), LevelError, "namedValueToValue error", time.Now(), nil)
+			c.logger.log(ctx, LevelError, "namedValueToValue error", time.Now(), nil)
 
 			return nil, err
 		}
