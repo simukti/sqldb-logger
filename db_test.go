@@ -1,3 +1,5 @@
+// +build unit
+
 package sqldblogger
 
 import (
@@ -18,7 +20,7 @@ func TestConnector_Connect(t *testing.T) {
 		dsn:    "sqlmock_db_0", // this 0 to use sql mock counter
 		driver: dbmock.Driver(),
 		logger: &logger{
-			logger: &NullLogger{},
+			logger: &bufferTestLogger{},
 			cfg:    cfg,
 		},
 	}
@@ -38,7 +40,7 @@ func TestConnector_ConnectError(t *testing.T) {
 		dsn:    "sqlmock_err_always",
 		driver: dbmock.Driver(),
 		logger: &logger{
-			logger: &NullLogger{},
+			logger: &bufferTestLogger{},
 			cfg:    cfg,
 		},
 	}
@@ -49,7 +51,7 @@ func TestConnector_ConnectError(t *testing.T) {
 
 func TestConnector_Driver(t *testing.T) {
 	dbmock, _, _ := sqlmock.New()
-	db, err := Open("sqlmock_err", dbmock.Driver(), &NullLogger{})
+	db, err := Open("sqlmock_err", dbmock.Driver(), &bufferTestLogger{})
 	assert.NoError(t, err)
 	_, ok := interface{}(db).(*sql.DB)
 	assert.True(t, ok)
@@ -59,7 +61,7 @@ func TestConnector_Driver(t *testing.T) {
 
 func TestOpen(t *testing.T) {
 	dbmock, _, _ := sqlmock.New()
-	db, err := Open("sqlmock_db_0", dbmock.Driver(), &NullLogger{})
+	db, err := Open("sqlmock_db_0", dbmock.Driver(), &bufferTestLogger{})
 	assert.NoError(t, err)
 	_, ok := interface{}(db).(*sql.DB)
 	assert.True(t, ok)
@@ -68,7 +70,7 @@ func TestOpen(t *testing.T) {
 
 func TestOpenWithOptions(t *testing.T) {
 	dbmock, _, _ := sqlmock.New()
-	db, err := Open("sqlmock_db_0", dbmock.Driver(), &NullLogger{}, WithErrorFieldname("errtest"), WithMinimumLevel(LevelNotice))
+	db, err := Open("sqlmock_db_0", dbmock.Driver(), &bufferTestLogger{}, WithErrorFieldname("errtest"), WithMinimumLevel(LevelNotice))
 	assert.NoError(t, err)
 	_, ok := interface{}(db).(*sql.DB)
 	assert.True(t, ok)
