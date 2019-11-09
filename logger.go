@@ -13,7 +13,6 @@ type Level uint8
 const (
 	LevelError Level = iota
 	LevelInfo
-	LevelNotice
 	LevelDebug
 )
 
@@ -23,8 +22,6 @@ func (l Level) String() string {
 		return "error" // nolint: goconst
 	case LevelInfo:
 		return "info" // nolint: goconst
-	case LevelNotice:
-		return "notice" // nolint: goconst
 	case LevelDebug:
 		return "debug" // nolint: goconst
 	default:

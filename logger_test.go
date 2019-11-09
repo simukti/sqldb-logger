@@ -16,11 +16,10 @@ import (
 
 func TestLevel_String(t *testing.T) {
 	tt := map[Level]string{
-		LevelError:  "error",
-		LevelInfo:   "info",
-		LevelNotice: "notice",
-		LevelDebug:  "debug",
-		Level(99):   "invalid level: 99",
+		LevelError: "error",
+		LevelInfo:  "info",
+		LevelDebug: "debug",
+		Level(99):  "invalid level: 99",
 	}
 
 	for l, s := range tt {
@@ -157,11 +156,12 @@ type bufferTestLogger struct {
 }
 
 type bufLog struct {
-	Level string                 `json:"level"`
-	Data  map[string]interface{} `json:"data"`
+	Level   string                 `json:"level"`
+	Message string                 `json:"message"`
+	Data    map[string]interface{} `json:"data"`
 }
 
 func (bl *bufferTestLogger) Log(_ context.Context, level Level, msg string, data map[string]interface{}) {
 	bl.Reset()
-	_ = json.NewEncoder(bl).Encode(bufLog{level.String(), data})
+	_ = json.NewEncoder(bl).Encode(bufLog{level.String(), msg, data})
 }
