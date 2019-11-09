@@ -33,6 +33,5 @@ func (zl *zerologAdapter) Log(ctx context.Context, level sqldblogger.Level, msg 
 		lvl = zerolog.DebugLevel
 	}
 
-	logger := zl.logger.With().Fields(data).Logger()
-	logger.WithLevel(lvl).Msg(msg)
+	zl.logger.WithLevel(lvl).Fields(data).Msg(msg)
 }
