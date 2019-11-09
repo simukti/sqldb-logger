@@ -55,7 +55,7 @@ func (c *connection) Prepare(query string) (driver.Stmt, error) {
 		return driverStmt, err
 	}
 
-	return &statement{driverStmt: driverStmt, logger: c.logger}, nil
+	return &statement{query: query, driverStmt: driverStmt, logger: c.logger}, nil
 }
 
 // Prepare implements driver.Conn
@@ -114,13 +114,13 @@ func (c *connection) PrepareContext(ctx context.Context, query string) (driver.S
 		lvl = LevelError
 	}
 
-	c.logger.log(context.Background(), lvl, "PrepareContext", start, err, c.logger.withQuery(query))
+	c.logger.log(ctx, lvl, "PrepareContext", start, err, c.logger.withQuery(query))
 
 	if err != nil {
 		return driverStmt, err
 	}
 
-	return &statement{driverStmt: driverStmt, logger: c.logger}, nil
+	return &statement{query: query, driverStmt: driverStmt, logger: c.logger}, nil
 }
 
 // Ping implements driver.Pinger
