@@ -25,8 +25,6 @@ func (zl *zerologAdapter) Log(ctx context.Context, level sqldblogger.Level, msg 
 		lvl = zerolog.ErrorLevel
 	case sqldblogger.LevelInfo:
 		lvl = zerolog.InfoLevel
-	case sqldblogger.LevelNotice:
-		lvl = zerolog.WarnLevel
 	case sqldblogger.LevelDebug:
 		lvl = zerolog.DebugLevel
 	default:

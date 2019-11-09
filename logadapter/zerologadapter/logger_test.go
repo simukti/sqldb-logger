@@ -29,11 +29,10 @@ func TestZerologAdapter_Log(t *testing.T) {
 	wr := &bytes.Buffer{}
 	lg := New(zerolog.New(wr))
 	lvls := map[sqldblogger.Level]string{
-		sqldblogger.LevelError:  "error",
-		sqldblogger.LevelInfo:   "info",
-		sqldblogger.LevelNotice: "warn",
-		sqldblogger.LevelDebug:  "debug",
-		sqldblogger.Level(99):   "debug", // unknown
+		sqldblogger.LevelError: "error",
+		sqldblogger.LevelInfo:  "info",
+		sqldblogger.LevelDebug: "debug",
+		sqldblogger.Level(99):  "debug", // unknown
 	}
 
 	for lvl, lvlStr := range lvls {
