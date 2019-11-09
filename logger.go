@@ -3,8 +3,8 @@ package sqldblogger
 import (
 	"context"
 	"database/sql/driver"
-	"encoding/hex"
 	"fmt"
+	"strconv"
 	"time"
 )
 
@@ -32,16 +32,11 @@ func (l Level) String() string {
 	}
 }
 
-// Logger interface copied from https://github.com/jackc/pgx/blob/master/logger.go
-// Copyright (c) 2013 Jack Christensen
-// https://github.com/jackc/pgx/blob/master/LICENSE
+// Logger interface copied from:
+// https://github.com/jackc/pgx/blob/f3a3ee1a0e5c8fc8991928bcd06fdbcd1ee9d05c/logger.go#L46-L49
 type Logger interface {
 	Log(ctx context.Context, level Level, msg string, data map[string]interface{})
 }
-
-type NullLogger struct{}
-
-func (nl *NullLogger) Log(ctx context.Context, level Level, msg string, data map[string]interface{}) {}
 
 // logger internal logger wrapper
 type logger struct {
@@ -87,7 +82,7 @@ func (l *logger) log(ctx context.Context, lvl Level, msg string, start time.Time
 	}
 
 	if lvl == LevelError {
-		data[l.cfg.errorFieldname] = err
+		data[l.cfg.errorFieldname] = err.Error()
 	}
 
 	for _, d := range datas {
@@ -104,22 +99,22 @@ const maxArgValueLen int = 64
 // parseArgs will trim argument value if it is []byte or string more than maxArgValueLen.
 // Copied from https://github.com/jackc/pgx/blob/f3a3ee1a0e5c8fc8991928bcd06fdbcd1ee9d05c/logger.go#L79
 // and modified accordingly.
-// Copyright (c) 2013 Jack Christensen
-// https://github.com/jackc/pgx/blob/master/LICENSE
 func parseArgs(argsVal []driver.Value) []interface{} {
 	args := make([]interface{}, len(argsVal))
 
 	for k, a := range argsVal {
 		switch v := a.(type) {
+
 		case []byte:
 			if len(v) < maxArgValueLen {
-				a = hex.EncodeToString(v)
+				a = string(v)
 			} else {
-				a = fmt.Sprintf("%x (truncated %d bytes)", v[:maxArgValueLen], len(v)-maxArgValueLen)
+				a = string(v[:maxArgValueLen]) + " (truncated " + strconv.Itoa(len(v)-maxArgValueLen) + " bytes)"
 			}
+
 		case string:
 			if len(v) > maxArgValueLen {
-				a = fmt.Sprintf("%s (truncated %d bytes)", v[:maxArgValueLen], len(v)-maxArgValueLen)
+				a = v[:maxArgValueLen] + " (truncated " + strconv.Itoa(len(v)-maxArgValueLen) + " bytes)"
 			}
 		}
 
