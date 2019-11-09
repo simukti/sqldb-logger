@@ -163,10 +163,5 @@ type bufLog struct {
 
 func (bl *bufferTestLogger) Log(_ context.Context, level Level, msg string, data map[string]interface{}) {
 	bl.Reset()
-	b, _ := json.Marshal(bufLog{
-		Level: level.String(),
-		Data:  data,
-	})
-
-	_, _ = bl.Write(b)
+	_ = json.NewEncoder(bl).Encode(bufLog{level.String(), data})
 }
