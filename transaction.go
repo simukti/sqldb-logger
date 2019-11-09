@@ -12,7 +12,7 @@ type transaction struct {
 }
 
 func (t *transaction) Commit() error {
-	lvl, start := LevelInfo, time.Now()
+	lvl, start := LevelDebug, time.Now()
 	err := t.tx.Commit()
 
 	if err != nil {
@@ -25,7 +25,7 @@ func (t *transaction) Commit() error {
 }
 
 func (t *transaction) Rollback() error {
-	lvl, start := LevelInfo, time.Now()
+	lvl, start := LevelDebug, time.Now()
 	err := t.tx.Rollback()
 
 	if err != nil {
