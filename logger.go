@@ -3,6 +3,7 @@ package sqldblogger
 import (
 	"context"
 	"database/sql/driver"
+	"encoding/hex"
 	"fmt"
 	"time"
 )
@@ -59,13 +60,19 @@ func (l *logger) withQuery(query string) dataFunc {
 
 func (l *logger) withArgs(args []driver.Value) dataFunc {
 	return func() (string, interface{}) {
-		return l.cfg.sqlArgsFieldname, args
+		return l.cfg.sqlArgsFieldname, parseArgs(args)
 	}
 }
 
 func (l *logger) withNamedArgs(args []driver.NamedValue) dataFunc {
 	return func() (string, interface{}) {
-		return l.cfg.sqlArgsFieldname, args
+		argsVal := make([]driver.Value, len(args))
+
+		for k, v := range args {
+			argsVal[k] = v.Value
+		}
+
+		return l.cfg.sqlArgsFieldname, parseArgs(argsVal)
 	}
 }
 
@@ -89,4 +96,35 @@ func (l *logger) log(ctx context.Context, lvl Level, msg string, start time.Time
 	}
 
 	l.logger.Log(ctx, lvl, msg, data)
+}
+
+// maxArgValueLen []byte and string more than this length will be truncated.
+const maxArgValueLen int = 64
+
+// parseArgs will trim argument value if it is []byte or string more than maxArgValueLen.
+// Copied from https://github.com/jackc/pgx/blob/f3a3ee1a0e5c8fc8991928bcd06fdbcd1ee9d05c/logger.go#L79
+// and modified accordingly.
+// Copyright (c) 2013 Jack Christensen
+// https://github.com/jackc/pgx/blob/master/LICENSE
+func parseArgs(argsVal []driver.Value) []interface{} {
+	args := make([]interface{}, len(argsVal))
+
+	for k, a := range argsVal {
+		switch v := a.(type) {
+		case []byte:
+			if len(v) < maxArgValueLen {
+				a = hex.EncodeToString(v)
+			} else {
+				a = fmt.Sprintf("%x (truncated %d bytes)", v[:maxArgValueLen], len(v)-maxArgValueLen)
+			}
+		case string:
+			if len(v) > maxArgValueLen {
+				a = fmt.Sprintf("%s (truncated %d bytes)", v[:maxArgValueLen], len(v)-maxArgValueLen)
+			}
+		}
+
+		args[k] = a
+	}
+
+	return args
 }
