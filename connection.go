@@ -77,7 +77,7 @@ func (c *connection) Close() error {
 func (c *connection) BeginTx(ctx context.Context, opts driver.TxOptions) (driver.Tx, error) {
 	drvTx, ok := c.driverConn.(driver.ConnBeginTx)
 	if !ok {
-		return c.Begin()
+		return nil, driver.ErrSkip
 	}
 
 	lvl, start := LevelDebug, time.Now()
@@ -100,7 +100,7 @@ func (c *connection) BeginTx(ctx context.Context, opts driver.TxOptions) (driver
 func (c *connection) PrepareContext(ctx context.Context, query string) (driver.Stmt, error) {
 	driverPrep, ok := c.driverConn.(driver.ConnPrepareContext)
 	if !ok {
-		return c.Prepare(query)
+		return nil, driver.ErrSkip
 	}
 
 	lvl, start := LevelDebug, time.Now()
@@ -160,18 +160,7 @@ func (c *connection) Exec(query string, args []driver.Value) (driver.Result, err
 func (c *connection) ExecContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Result, error) {
 	driverExecerContext, ok := c.driverConn.(driver.ExecerContext)
 	if !ok {
-		dargs, err := namedValueToValue(args)
-		if err != nil {
-			return nil, err
-		}
-
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-		}
-
-		return c.Exec(query, dargs)
+		return nil, driver.ErrSkip
 	}
 
 	lvl, start := LevelInfo, time.Now()
@@ -210,18 +199,7 @@ func (c *connection) Query(query string, args []driver.Value) (driver.Rows, erro
 func (c *connection) QueryContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Rows, error) {
 	driverQueryerContext, ok := c.driverConn.(driver.QueryerContext)
 	if !ok {
-		dargs, err := namedValueToValue(args)
-		if err != nil {
-			return nil, err
-		}
-
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-		}
-
-		return c.Query(query, dargs)
+		return nil, driver.ErrSkip
 	}
 
 	lvl, start := LevelInfo, time.Now()
@@ -240,7 +218,7 @@ func (c *connection) QueryContext(ctx context.Context, query string, args []driv
 func (c *connection) ResetSession(ctx context.Context) error {
 	driverSessionResetter, ok := c.driverConn.(driver.SessionResetter)
 	if !ok {
-		return nil
+		return driver.ErrSkip
 	}
 
 	lvl, start := LevelDebug, time.Now()
@@ -259,7 +237,7 @@ func (c *connection) ResetSession(ctx context.Context) error {
 func (c *connection) CheckNamedValue(nm *driver.NamedValue) error {
 	driverNamedValueChecker, ok := c.driverConn.(driver.NamedValueChecker)
 	if !ok {
-		return nil
+		return driver.ErrSkip
 	}
 
 	lvl, start := LevelDebug, time.Now()

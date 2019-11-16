@@ -7,7 +7,6 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -133,21 +132,13 @@ func TestConnection_Close(t *testing.T) {
 func TestConnection_BeginTx(t *testing.T) {
 	t.Run("Non driver.ConnBeginTx", func(t *testing.T) {
 		driverConnMock := &driverConnMock{}
-		txMock := &transactionMock{}
-		driverConnMock.On("Begin").Return(txMock, nil)
-
 		conn := &connection{driverConn: driverConnMock, logger: testLogger}
 		_, err := conn.BeginTx(context.TODO(), driver.TxOptions{
 			Isolation: 1,
 			ReadOnly:  true,
 		})
-		assert.NoError(t, err)
-
-		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
-		assert.NoError(t, err)
-		assert.Equal(t, "Begin", output.Message)
-		assert.Equal(t, LevelDebug.String(), output.Level)
+		assert.Error(t, err)
+		assert.Equal(t, driver.ErrSkip, err)
 	})
 
 	t.Run("With driver.ConnBeginTx Error", func(t *testing.T) {
@@ -193,20 +184,12 @@ func TestConnection_BeginTx(t *testing.T) {
 func TestConnection_PrepareContext(t *testing.T) {
 	t.Run("Non driver.ConnPrepareContext", func(t *testing.T) {
 		driverConnMock := &driverConnMock{}
-		stmtMock := &statementMock{}
-		driverConnMock.On("Prepare", mock.Anything).Return(stmtMock, nil)
 
 		q := "SELECT * FROM tt WHERE id = ?"
 		conn := &connection{driverConn: driverConnMock, logger: testLogger}
 		_, err := conn.PrepareContext(context.TODO(), q)
-		assert.NoError(t, err)
-
-		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
-		assert.NoError(t, err)
-		assert.Equal(t, "Prepare", output.Message)
-		assert.Equal(t, LevelDebug.String(), output.Level)
-		assert.Equal(t, q, output.Data[testConfig.sqlQueryFieldname])
+		assert.Error(t, err)
+		assert.Equal(t, driver.ErrSkip, err)
 	})
 
 	t.Run("With driver.ConnPrepareContext Error", func(t *testing.T) {
@@ -341,36 +324,6 @@ func TestConnection_ExecContext(t *testing.T) {
 		assert.Error(t, err)
 	})
 
-	t.Run("Non driver.ExecerContext Return Error Context Done", func(t *testing.T) {
-		driverConnMock := &driverConnExecerMock{}
-		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
-		ctx, cancel := context.WithDeadline(context.TODO(), time.Now().Add(-1*time.Hour))
-		cancel()
-		_, err := conn.ExecContext(ctx, q, []driver.NamedValue{{Name: "", Ordinal: 0, Value: 1}})
-		assert.Error(t, err)
-		assert.Equal(t, interface{}(context.DeadlineExceeded), err)
-	})
-
-	t.Run("Non driver.ExecerContext Return Success", func(t *testing.T) {
-		driverConnMock := &driverConnExecerMock{}
-		resultMock := driver.ResultNoRows
-		driverConnMock.On("Exec", mock.Anything, mock.Anything).Return(resultMock, nil)
-
-		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
-		_, err := conn.ExecContext(context.TODO(), q, []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
-		assert.NoError(t, err)
-
-		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
-		assert.NoError(t, err)
-		assert.Equal(t, "Exec", output.Message)
-		assert.Equal(t, LevelInfo.String(), output.Level)
-		assert.Equal(t, q, output.Data[testConfig.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[testConfig.sqlArgsFieldname])
-	})
-
 	t.Run("driver.ExecerContext Return Error", func(t *testing.T) {
 		driverConnMock := &driverConnExecerContextMock{}
 		resultMock := driver.ResultNoRows
@@ -475,36 +428,6 @@ func TestConnection_QueryContext(t *testing.T) {
 		assert.Error(t, err)
 	})
 
-	t.Run("Non driver.QueryerContext Return Error Context Done", func(t *testing.T) {
-		driverConnMock := &driverConnQueryerMock{}
-		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
-		ctx, cancel := context.WithDeadline(context.TODO(), time.Now().Add(-1*time.Hour))
-		cancel()
-		_, err := conn.QueryContext(ctx, q, []driver.NamedValue{{Name: "", Ordinal: 0, Value: 1}})
-		assert.Error(t, err)
-		assert.Equal(t, interface{}(context.DeadlineExceeded), err)
-	})
-
-	t.Run("Non driver.QueryerContext Return Success", func(t *testing.T) {
-		driverConnMock := &driverConnQueryerMock{}
-		resultMock := &rowsMock{}
-		driverConnMock.On("Query", mock.Anything, mock.Anything).Return(resultMock, nil)
-
-		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
-		_, err := conn.QueryContext(context.TODO(), q, []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
-		assert.NoError(t, err)
-
-		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
-		assert.NoError(t, err)
-		assert.Equal(t, "Query", output.Message)
-		assert.Equal(t, LevelInfo.String(), output.Level)
-		assert.Equal(t, q, output.Data[testConfig.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[testConfig.sqlArgsFieldname])
-	})
-
 	t.Run("driver.QueryerContext Return Error", func(t *testing.T) {
 		driverConnMock := &driverConnQueryerContextMock{}
 		resultMock := &rowsMock{}
@@ -550,7 +473,8 @@ func TestConnection_ResetSession(t *testing.T) {
 		driverConnMock := &driverConnMock{}
 		conn := &connection{driverConn: driverConnMock, logger: testLogger}
 		err := conn.ResetSession(context.TODO())
-		assert.NoError(t, err)
+		assert.Error(t, err)
+		assert.Error(t, driver.ErrSkip, err)
 	})
 
 	t.Run("driver.SessionResetter Return Error", func(t *testing.T) {
@@ -593,7 +517,8 @@ func TestConnection_CheckNamedValue(t *testing.T) {
 			Ordinal: 0,
 			Value:   "testid",
 		})
-		assert.NoError(t, err)
+		assert.Error(t, err)
+		assert.Equal(t, driver.ErrSkip, err)
 	})
 
 	t.Run("driver.NamedValueChecker Return Error", func(t *testing.T) {

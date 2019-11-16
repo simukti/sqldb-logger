@@ -60,18 +60,7 @@ func (s *statement) Query(args []driver.Value) (driver.Rows, error) {
 func (s *statement) ExecContext(ctx context.Context, args []driver.NamedValue) (driver.Result, error) {
 	stmtExecer, ok := s.driverStmt.(driver.StmtExecContext)
 	if !ok {
-		dargs, err := namedValueToValue(args)
-		if err != nil {
-			return nil, err
-		}
-
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-		}
-
-		return s.Exec(dargs)
+		return nil, driver.ErrSkip
 	}
 
 	lvl, start := LevelInfo, time.Now()
@@ -90,18 +79,7 @@ func (s *statement) ExecContext(ctx context.Context, args []driver.NamedValue) (
 func (s *statement) QueryContext(ctx context.Context, args []driver.NamedValue) (driver.Rows, error) {
 	stmtQueryer, ok := s.driverStmt.(driver.StmtQueryContext)
 	if !ok {
-		dargs, err := namedValueToValue(args)
-		if err != nil {
-			return nil, err
-		}
-
-		select {
-		case <-ctx.Done():
-			return nil, ctx.Err()
-		default:
-		}
-
-		return s.Query(dargs)
+		return nil, driver.ErrSkip
 	}
 
 	lvl, start := LevelInfo, time.Now()
@@ -122,7 +100,7 @@ func (s *statement) CheckNamedValue(nm *driver.NamedValue) error {
 		return checker.CheckNamedValue(nm)
 	}
 
-	return nil
+	return driver.ErrSkip
 }
 
 // QueryContext implements driver.ColumnConverter
