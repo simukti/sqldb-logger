@@ -103,12 +103,12 @@ func (s *statement) CheckNamedValue(nm *driver.NamedValue) error {
 	return driver.ErrSkip
 }
 
-// QueryContext implements driver.ColumnConverter
+// ColumnConverter implements driver.ColumnConverter
 func (s *statement) ColumnConverter(idx int) driver.ValueConverter {
 	// nolint: staticcheck
 	if converter, ok := s.driverStmt.(driver.ColumnConverter); ok {
 		return converter.ColumnConverter(idx)
 	}
 
-	return nil
+	return driver.DefaultParameterConverter
 }
