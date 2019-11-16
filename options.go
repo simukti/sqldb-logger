@@ -7,6 +7,7 @@ type options struct {
 	sqlQueryFieldname  string
 	sqlArgsFieldname   string
 	minimumLogLevel    Level
+	logArgs            bool
 }
 
 type Option func(*options)
@@ -18,6 +19,7 @@ func setDefaultOptions(opt *options) {
 	opt.sqlQueryFieldname = "query"
 	opt.sqlArgsFieldname = "args"
 	opt.minimumLogLevel = LevelInfo
+	opt.logArgs = true
 }
 
 func WithErrorFieldname(name string) Option {
@@ -57,5 +59,11 @@ func WithMinimumLevel(lvl Level) Option {
 		}
 
 		opt.minimumLogLevel = lvl
+	}
+}
+
+func WithLogArguments(flag bool) Option {
+	return func(opt *options) {
+		opt.logArgs = flag
 	}
 }

@@ -17,6 +17,7 @@ func TestDefaultConfigs(t *testing.T) {
 	assert.Equal(t, "query", cfg.sqlQueryFieldname)
 	assert.Equal(t, "args", cfg.sqlArgsFieldname)
 	assert.Equal(t, LevelInfo, cfg.minimumLogLevel)
+	assert.Equal(t, true, cfg.logArgs)
 }
 
 func TestWithErrorFieldname(t *testing.T) {
@@ -56,4 +57,10 @@ func TestWithSQLArgsFieldname(t *testing.T) {
 	cfg := &options{}
 	WithSQLArgsFieldname("sqlargs")(cfg)
 	assert.Equal(t, "sqlargs", cfg.sqlArgsFieldname)
+}
+
+func TestWithLogArguments(t *testing.T) {
+	cfg := &options{}
+	WithLogArguments(false)(cfg)
+	assert.Equal(t, false, cfg.logArgs)
 }

@@ -84,6 +84,11 @@ func (l *logger) log(ctx context.Context, lvl Level, msg string, start time.Time
 
 	for _, d := range datas {
 		k, v := d()
+
+		if !l.opt.logArgs && k == l.opt.sqlArgsFieldname {
+			continue
+		}
+
 		data[k] = v
 	}
 

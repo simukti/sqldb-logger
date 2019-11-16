@@ -151,6 +151,38 @@ func TestLogTrimStringArgs(t *testing.T) {
 	bl.Reset()
 }
 
+func TestWithLogArgumentsFalse(t *testing.T) {
+	cfg := &options{}
+	setDefaultOptions(cfg)
+	WithLogArguments(false)(cfg)
+
+	bl := &bufferTestLogger{}
+	l := &logger{opt: cfg, logger: bl}
+	l.log(
+		context.TODO(),
+		LevelInfo,
+		"msg",
+		time.Now(),
+		nil,
+		l.withQuery("query"),
+		l.withArgs([]driver.Value{
+			1,
+			[]byte("kedua"),
+			[]byte("lanjut"),
+		}),
+	)
+
+	var content bufLog
+	err := json.Unmarshal(bl.Bytes(), &content)
+	assert.NoError(t, err)
+	assert.Contains(t, content.Data, cfg.sqlQueryFieldname)
+	assert.Contains(t, content.Data, cfg.timestampFieldname)
+	assert.Contains(t, content.Data, cfg.durationFieldname)
+	// sql args should not logged
+	assert.NotContains(t, content.Data, cfg.sqlArgsFieldname)
+	bl.Reset()
+}
+
 type bufferTestLogger struct {
 	bytes.Buffer
 }
