@@ -1,13 +1,39 @@
 package sqldblogger
 
+import "time"
+
 type options struct {
 	errorFieldname     string
 	durationFieldname  string
 	timestampFieldname string
 	sqlQueryFieldname  string
 	sqlArgsFieldname   string
-	minimumLogLevel    Level
 	logArgs            bool
+	minimumLogLevel    Level
+	durationUnit       DurationUnit
+}
+
+type DurationUnit uint8
+
+const (
+	DurationNanosecond DurationUnit = iota
+	DurationMicrosecond
+	DurationMillisecond
+)
+
+func (unit DurationUnit) format(duration time.Duration) float64 {
+	nanosecond := float64(duration.Nanoseconds())
+
+	switch unit {
+	case DurationNanosecond:
+		return nanosecond
+	case DurationMicrosecond:
+		return nanosecond / float64(time.Microsecond)
+	case DurationMillisecond:
+		return nanosecond / float64(time.Millisecond)
+	default:
+		return nanosecond
+	}
 }
 
 type Option func(*options)
@@ -20,6 +46,7 @@ func setDefaultOptions(opt *options) {
 	opt.sqlArgsFieldname = "args"
 	opt.minimumLogLevel = LevelInfo
 	opt.logArgs = true
+	opt.durationUnit = DurationMillisecond
 }
 
 func WithErrorFieldname(name string) Option {
@@ -65,5 +92,11 @@ func WithMinimumLevel(lvl Level) Option {
 func WithLogArguments(flag bool) Option {
 	return func(opt *options) {
 		opt.logArgs = flag
+	}
+}
+
+func WithDurationUnit(unit DurationUnit) Option {
+	return func(opt *options) {
+		opt.durationUnit = unit
 	}
 }

@@ -4,6 +4,7 @@ package sqldblogger
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -16,8 +17,9 @@ func TestDefaultConfigs(t *testing.T) {
 	assert.Equal(t, "timestamp", cfg.timestampFieldname)
 	assert.Equal(t, "query", cfg.sqlQueryFieldname)
 	assert.Equal(t, "args", cfg.sqlArgsFieldname)
-	assert.Equal(t, LevelInfo, cfg.minimumLogLevel)
 	assert.Equal(t, true, cfg.logArgs)
+	assert.Equal(t, LevelInfo, cfg.minimumLogLevel)
+	assert.Equal(t, DurationMillisecond, cfg.durationUnit)
 }
 
 func TestWithErrorFieldname(t *testing.T) {
@@ -63,4 +65,29 @@ func TestWithLogArguments(t *testing.T) {
 	cfg := &options{}
 	WithLogArguments(false)(cfg)
 	assert.Equal(t, false, cfg.logArgs)
+}
+
+func TestWithDurationUnit(t *testing.T) {
+	cfg := &options{}
+	WithDurationUnit(DurationMicrosecond)(cfg)
+	assert.Equal(t, DurationMicrosecond, cfg.durationUnit)
+}
+
+func TestWithDurationUnitFormat(t *testing.T) {
+	dur := time.Second * 1
+
+	tt := []struct {
+		dur DurationUnit
+		val float64
+	}{
+		{dur: DurationNanosecond, val: 1000000000},
+		{dur: DurationMicrosecond, val: 1000000},
+		{dur: DurationMillisecond, val: 1000},
+		{dur: DurationUnit(99), val: 1000000000},
+	}
+
+	for _, tc := range tt {
+		v := tc.dur.format(dur)
+		assert.Equal(t, tc.val, v)
+	}
 }
