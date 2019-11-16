@@ -58,7 +58,7 @@ There are 3 adapters within this repo:
 - [Onelog adapter](logadapter/onelogadapter): Using [onelog](https://github.com/francoispqt/onelog) as its logger.
 - [Zap adapter](logadapter/zapadapter): Using [zap](https://github.com/uber-go/zap) as its logger.
 
-Implements another logger must follow these simple interface (which copied from [pgx `Log` interface](https://github.com/jackc/pgx/blob/f3a3ee1a0e5c8fc8991928bcd06fdbcd1ee9d05c/logger.go#L46-L49)):
+Implements another logger must follow these simple interface:
 
 ```go
 type Logger interface {
