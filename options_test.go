@@ -9,8 +9,8 @@ import (
 )
 
 func TestDefaultConfigs(t *testing.T) {
-	cfg := &config{}
-	setDefaultConfig(cfg)
+	cfg := &options{}
+	setDefaultOptions(cfg)
 	assert.Equal(t, "error", cfg.errorFieldname)
 	assert.Equal(t, "duration", cfg.durationFieldname)
 	assert.Equal(t, "timestamp", cfg.timestampFieldname)
@@ -20,19 +20,19 @@ func TestDefaultConfigs(t *testing.T) {
 }
 
 func TestWithErrorFieldname(t *testing.T) {
-	cfg := &config{}
+	cfg := &options{}
 	WithErrorFieldname("errorfield")(cfg)
 	assert.Equal(t, "errorfield", cfg.errorFieldname)
 }
 
 func TestWithDurationFieldname(t *testing.T) {
-	cfg := &config{}
+	cfg := &options{}
 	WithDurationFieldname("durfield")(cfg)
 	assert.Equal(t, "durfield", cfg.durationFieldname)
 }
 
 func TestWithMinimumLevel(t *testing.T) {
-	cfg := &config{}
+	cfg := &options{}
 	WithMinimumLevel(LevelDebug)(cfg)
 	assert.Equal(t, LevelDebug, cfg.minimumLogLevel)
 
@@ -41,19 +41,19 @@ func TestWithMinimumLevel(t *testing.T) {
 }
 
 func TestWithTimestampFieldname(t *testing.T) {
-	cfg := &config{}
+	cfg := &options{}
 	WithTimestampFieldname("ts")(cfg)
 	assert.Equal(t, "ts", cfg.timestampFieldname)
 }
 
 func TestWithSQLQueryFieldname(t *testing.T) {
-	cfg := &config{}
+	cfg := &options{}
 	WithSQLQueryFieldname("sqlq")(cfg)
 	assert.Equal(t, "sqlq", cfg.sqlQueryFieldname)
 }
 
 func TestWithSQLArgsFieldname(t *testing.T) {
-	cfg := &config{}
+	cfg := &options{}
 	WithSQLArgsFieldname("sqlargs")(cfg)
 	assert.Equal(t, "sqlargs", cfg.sqlArgsFieldname)
 }

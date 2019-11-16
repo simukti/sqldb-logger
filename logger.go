@@ -38,7 +38,7 @@ type Logger interface {
 // logger internal logger wrapper
 type logger struct {
 	logger Logger
-	cfg    *config
+	opt    *options
 }
 
 // dataFunc for extra data to be added to log
@@ -46,13 +46,13 @@ type dataFunc func() (string, interface{})
 
 func (l *logger) withQuery(query string) dataFunc {
 	return func() (string, interface{}) {
-		return l.cfg.sqlQueryFieldname, query
+		return l.opt.sqlQueryFieldname, query
 	}
 }
 
 func (l *logger) withArgs(args []driver.Value) dataFunc {
 	return func() (string, interface{}) {
-		return l.cfg.sqlArgsFieldname, parseArgs(args)
+		return l.opt.sqlArgsFieldname, parseArgs(args)
 	}
 }
 
@@ -64,22 +64,22 @@ func (l *logger) withNamedArgs(args []driver.NamedValue) dataFunc {
 			argsVal[k] = v.Value
 		}
 
-		return l.cfg.sqlArgsFieldname, parseArgs(argsVal)
+		return l.opt.sqlArgsFieldname, parseArgs(argsVal)
 	}
 }
 
 func (l *logger) log(ctx context.Context, lvl Level, msg string, start time.Time, err error, datas ...dataFunc) {
-	if !(lvl <= l.cfg.minimumLogLevel) {
+	if !(lvl <= l.opt.minimumLogLevel) {
 		return
 	}
 
 	data := map[string]interface{}{
-		l.cfg.timestampFieldname: time.Now().Unix(),
-		l.cfg.durationFieldname:  time.Since(start),
+		l.opt.timestampFieldname: time.Now().Unix(),
+		l.opt.durationFieldname:  time.Since(start),
 	}
 
 	if lvl == LevelError {
-		data[l.cfg.errorFieldname] = err.Error()
+		data[l.opt.errorFieldname] = err.Error()
 	}
 
 	for _, d := range datas {

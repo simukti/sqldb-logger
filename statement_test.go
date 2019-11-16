@@ -47,9 +47,9 @@ func TestStatement_Exec(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "StmtExec", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
-		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testConfig.errorFieldname])
-		assert.Equal(t, q, output.Data[testConfig.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[testConfig.sqlArgsFieldname])
+		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testOpts.errorFieldname])
+		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
+		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
 	})
 
 	t.Run("Success", func(t *testing.T) {
@@ -66,8 +66,8 @@ func TestStatement_Exec(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "StmtExec", output.Message)
 		assert.Equal(t, LevelInfo.String(), output.Level)
-		assert.Equal(t, q, output.Data[testConfig.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[testConfig.sqlArgsFieldname])
+		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
+		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
 	})
 }
 
@@ -86,9 +86,9 @@ func TestStatement_Query(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "StmtQuery", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
-		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testConfig.errorFieldname])
-		assert.Equal(t, q, output.Data[testConfig.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[testConfig.sqlArgsFieldname])
+		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testOpts.errorFieldname])
+		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
+		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
 	})
 
 	t.Run("Success", func(t *testing.T) {
@@ -105,8 +105,8 @@ func TestStatement_Query(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "StmtQuery", output.Message)
 		assert.Equal(t, LevelInfo.String(), output.Level)
-		assert.Equal(t, q, output.Data[testConfig.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[testConfig.sqlArgsFieldname])
+		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
+		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
 	})
 }
 
@@ -136,9 +136,9 @@ func TestStatement_ExecContext(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "StmtExecContext", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
-		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testConfig.errorFieldname])
-		assert.Equal(t, q, output.Data[testConfig.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[testConfig.sqlArgsFieldname])
+		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testOpts.errorFieldname])
+		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
+		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
 	})
 
 	t.Run("Success", func(t *testing.T) {
@@ -155,8 +155,8 @@ func TestStatement_ExecContext(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "StmtExecContext", output.Message)
 		assert.Equal(t, LevelInfo.String(), output.Level)
-		assert.Equal(t, q, output.Data[testConfig.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[testConfig.sqlArgsFieldname])
+		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
+		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
 	})
 }
 
@@ -186,9 +186,9 @@ func TestStatement_QueryContext(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "StmtQueryContext", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
-		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testConfig.errorFieldname])
-		assert.Equal(t, q, output.Data[testConfig.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[testConfig.sqlArgsFieldname])
+		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testOpts.errorFieldname])
+		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
+		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
 	})
 
 	t.Run("Success", func(t *testing.T) {
@@ -205,8 +205,8 @@ func TestStatement_QueryContext(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "StmtQueryContext", output.Message)
 		assert.Equal(t, LevelInfo.String(), output.Level)
-		assert.Equal(t, q, output.Data[testConfig.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[testConfig.sqlArgsFieldname])
+		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
+		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
 	})
 }
 

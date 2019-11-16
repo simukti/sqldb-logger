@@ -34,18 +34,18 @@ func TestNullLogger_Log(t *testing.T) {
 }
 
 func TestWithQuery(t *testing.T) {
-	cfg := &config{}
-	setDefaultConfig(cfg)
-	l := &logger{cfg: cfg}
+	cfg := &options{}
+	setDefaultOptions(cfg)
+	l := &logger{opt: cfg}
 	k, v := l.withQuery("query")()
 	assert.Equal(t, cfg.sqlQueryFieldname, k)
 	assert.Equal(t, "query", fmt.Sprint(v))
 }
 
 func TestWithArgs(t *testing.T) {
-	cfg := &config{}
-	setDefaultConfig(cfg)
-	l := &logger{cfg: cfg}
+	cfg := &options{}
+	setDefaultOptions(cfg)
+	l := &logger{opt: cfg}
 	k, v := l.withArgs([]driver.Value{})()
 	assert.Equal(t, cfg.sqlArgsFieldname, k)
 	assert.Equal(t, []interface{}{}, v)
@@ -60,40 +60,40 @@ func TestWithNamedArgs(t *testing.T) {
 		},
 	}
 
-	cfg := &config{}
-	setDefaultConfig(cfg)
-	l := &logger{cfg: cfg}
+	cfg := &options{}
+	setDefaultOptions(cfg)
+	l := &logger{opt: cfg}
 	k, v := l.withNamedArgs(args)()
 	assert.Equal(t, cfg.sqlArgsFieldname, k)
 	assert.Equal(t, []interface{}{"arg1"}, v)
 }
 
 func TestLogInternalWithMinimumLevel(t *testing.T) {
-	cfg := &config{}
-	setDefaultConfig(cfg)
-	l := &logger{cfg: cfg, logger: &bufferTestLogger{}}
+	cfg := &options{}
+	setDefaultOptions(cfg)
+	l := &logger{opt: cfg, logger: &bufferTestLogger{}}
 	l.log(context.TODO(), LevelDebug, "msg", time.Now(), nil)
 }
 
 func TestLogInternal(t *testing.T) {
-	cfg := &config{}
-	setDefaultConfig(cfg)
-	l := &logger{cfg: cfg, logger: &bufferTestLogger{}}
+	cfg := &options{}
+	setDefaultOptions(cfg)
+	l := &logger{opt: cfg, logger: &bufferTestLogger{}}
 	l.log(context.TODO(), LevelInfo, "msg", time.Now(), nil)
 }
 
 func TestLogInternalWithData(t *testing.T) {
-	cfg := &config{}
-	setDefaultConfig(cfg)
-	l := &logger{cfg: cfg, logger: &bufferTestLogger{}}
+	cfg := &options{}
+	setDefaultOptions(cfg)
+	l := &logger{opt: cfg, logger: &bufferTestLogger{}}
 	l.log(context.TODO(), LevelInfo, "msg", time.Now(), nil, l.withQuery("query"))
 }
 
 func TestLogInternalErrorLevel(t *testing.T) {
-	cfg := &config{}
-	setDefaultConfig(cfg)
+	cfg := &options{}
+	setDefaultOptions(cfg)
 	bl := &bufferTestLogger{}
-	l := &logger{cfg: cfg, logger: bl}
+	l := &logger{opt: cfg, logger: bl}
 	l.log(context.TODO(), LevelError, "msg", time.Now(), fmt.Errorf("dummy"), l.withQuery("query"))
 
 	var content bufLog
@@ -107,12 +107,12 @@ func TestLogInternalErrorLevel(t *testing.T) {
 }
 
 func TestLogTrimStringArgs(t *testing.T) {
-	cfg := &config{}
-	setDefaultConfig(cfg)
+	cfg := &options{}
+	setDefaultOptions(cfg)
 
 	longArgVal := "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
 	bl := &bufferTestLogger{}
-	l := &logger{cfg: cfg, logger: bl}
+	l := &logger{opt: cfg, logger: bl}
 	l.log(
 		context.TODO(),
 		LevelInfo,

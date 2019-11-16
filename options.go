@@ -1,6 +1,6 @@
 package sqldblogger
 
-type config struct {
+type options struct {
 	errorFieldname     string
 	durationFieldname  string
 	timestampFieldname string
@@ -9,53 +9,53 @@ type config struct {
 	minimumLogLevel    Level
 }
 
-type Option func(*config)
+type Option func(*options)
 
-func setDefaultConfig(cfg *config) {
-	cfg.errorFieldname = "error"
-	cfg.durationFieldname = "duration"
-	cfg.timestampFieldname = "timestamp"
-	cfg.sqlQueryFieldname = "query"
-	cfg.sqlArgsFieldname = "args"
-	cfg.minimumLogLevel = LevelInfo
+func setDefaultOptions(opt *options) {
+	opt.errorFieldname = "error"
+	opt.durationFieldname = "duration"
+	opt.timestampFieldname = "timestamp"
+	opt.sqlQueryFieldname = "query"
+	opt.sqlArgsFieldname = "args"
+	opt.minimumLogLevel = LevelInfo
 }
 
 func WithErrorFieldname(name string) Option {
-	return func(cfg *config) {
-		cfg.errorFieldname = name
+	return func(opt *options) {
+		opt.errorFieldname = name
 	}
 }
 
 func WithDurationFieldname(name string) Option {
-	return func(cfg *config) {
-		cfg.durationFieldname = name
+	return func(opt *options) {
+		opt.durationFieldname = name
 	}
 }
 
 func WithTimestampFieldname(name string) Option {
-	return func(cfg *config) {
-		cfg.timestampFieldname = name
+	return func(opt *options) {
+		opt.timestampFieldname = name
 	}
 }
 
 func WithSQLQueryFieldname(name string) Option {
-	return func(cfg *config) {
-		cfg.sqlQueryFieldname = name
+	return func(opt *options) {
+		opt.sqlQueryFieldname = name
 	}
 }
 
 func WithSQLArgsFieldname(name string) Option {
-	return func(cfg *config) {
-		cfg.sqlArgsFieldname = name
+	return func(opt *options) {
+		opt.sqlArgsFieldname = name
 	}
 }
 
 func WithMinimumLevel(lvl Level) Option {
-	return func(cfg *config) {
+	return func(opt *options) {
 		if lvl < LevelError || lvl > LevelDebug {
 			return
 		}
 
-		cfg.minimumLogLevel = lvl
+		opt.minimumLogLevel = lvl
 	}
 }

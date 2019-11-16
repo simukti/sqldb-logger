@@ -6,18 +6,18 @@ import (
 )
 
 // Open wrap given driver with logger and return sql.DB
-func Open(dsn string, drv driver.Driver, lg Logger, opts ...Option) (*sql.DB, error) {
-	cfg := &config{}
-	setDefaultConfig(cfg)
+func Open(dsn string, drv driver.Driver, lg Logger, opt ...Option) (*sql.DB, error) {
+	optObj := &options{}
+	setDefaultOptions(optObj)
 
-	for _, opt := range opts {
-		opt(cfg)
+	for _, o := range opt {
+		o(optObj)
 	}
 
 	loggedConnector := &connector{
 		dsn:    dsn,
 		driver: drv,
-		logger: &logger{logger: lg, cfg: cfg},
+		logger: &logger{logger: lg, opt: optObj},
 	}
 
 	return sql.OpenDB(loggedConnector), nil
