@@ -38,7 +38,7 @@ func TestZerologAdapter_Log(t *testing.T) {
 	for lvl, lvlStr := range lvls {
 		data := map[string]interface{}{
 			"timestamp": now.Unix(),
-			"duration":  time.Since(now),
+			"duration":  time.Since(now).Nanoseconds(),
 			"query":     "SELECT at.* FROM a_table AS at WHERE a.id = ? LIMIT 1",
 			"args":      []interface{}{1},
 		}

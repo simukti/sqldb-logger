@@ -75,7 +75,7 @@ func (l *logger) log(ctx context.Context, lvl Level, msg string, start time.Time
 
 	data := map[string]interface{}{
 		l.opt.timestampFieldname: time.Now().Unix(),
-		l.opt.durationFieldname:  time.Since(start),
+		l.opt.durationFieldname:  time.Since(start).Nanoseconds(),
 	}
 
 	if lvl == LevelError {
