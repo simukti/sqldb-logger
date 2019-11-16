@@ -170,6 +170,9 @@ func TestWithLogArgumentsFalse(t *testing.T) {
 			[]byte("kedua"),
 			[]byte("lanjut"),
 		}),
+		l.withNamedArgs([]driver.NamedValue{
+			{"", 1, driver.Value(1)},
+		}),
 	)
 
 	var content bufLog

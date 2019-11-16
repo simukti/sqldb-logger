@@ -52,12 +52,20 @@ func (l *logger) withQuery(query string) dataFunc {
 
 func (l *logger) withArgs(args []driver.Value) dataFunc {
 	return func() (string, interface{}) {
+		if !l.opt.logArgs {
+			return l.opt.sqlArgsFieldname, nil
+		}
+
 		return l.opt.sqlArgsFieldname, parseArgs(args)
 	}
 }
 
 func (l *logger) withNamedArgs(args []driver.NamedValue) dataFunc {
 	return func() (string, interface{}) {
+		if !l.opt.logArgs {
+			return l.opt.sqlArgsFieldname, nil
+		}
+
 		argsVal := make([]driver.Value, len(args))
 
 		for k, v := range args {
