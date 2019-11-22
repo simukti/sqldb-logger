@@ -16,12 +16,12 @@ import (
 )
 
 type logContent struct {
-	Level     string        `json:"level"`
-	Timestamp int64         `json:"timestamp"`
-	Duration  float64       `json:"duration"`
-	Query     string        `json:"query"`
-	Args      []interface{} `json:"args"`
-	Error     string        `json:"error"`
+	Level    string        `json:"level"`
+	Time     int64         `json:"time"`
+	Duration float64       `json:"duration"`
+	Query    string        `json:"query"`
+	Args     []interface{} `json:"args"`
+	Error    string        `json:"error"`
 }
 
 func TestOnelogAdapter_Log(t *testing.T) {
@@ -38,10 +38,10 @@ func TestOnelogAdapter_Log(t *testing.T) {
 
 	for lvl, lvlStr := range lvls {
 		data := map[string]interface{}{
-			"timestamp": now.Unix(),
-			"duration":  time.Since(now).Nanoseconds(),
-			"query":     "SELECT at.* FROM a_table AS at WHERE a.id = ? LIMIT 1",
-			"args":      []interface{}{1},
+			"time":     now.Unix(),
+			"duration": time.Since(now).Nanoseconds(),
+			"query":    "SELECT at.* FROM a_table AS at WHERE a.id = ? LIMIT 1",
+			"args":     []interface{}{1},
 		}
 
 		if lvl == sqldblogger.LevelError {
@@ -54,7 +54,7 @@ func TestOnelogAdapter_Log(t *testing.T) {
 
 		err := json.Unmarshal(wr.Bytes(), &content)
 		assert.NoError(t, err)
-		assert.Equal(t, now.Unix(), content.Timestamp)
+		assert.Equal(t, now.Unix(), content.Time)
 		assert.True(t, content.Duration > 0)
 		assert.Equal(t, lvlStr, content.Level)
 		assert.Equal(t, "SELECT at.* FROM a_table AS at WHERE a.id = ? LIMIT 1", content.Query)
