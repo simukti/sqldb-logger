@@ -16,12 +16,12 @@ func init() {
 	sql.Register("mock", &driverMock{})
 }
 
-func TestOpen(t *testing.T) {
+func TestOpenDriver(t *testing.T) {
 	t.Run("Without Options", func(t *testing.T) {
 		mockDriver := &driverMock{}
 		mockDriver.On("Open", mock.Anything).Return(&driverConnMock{}, nil)
 
-		db, err := Open("test", mockDriver, bufLogger)
+		db, err := OpenDriver("test", mockDriver, bufLogger)
 		assert.NoError(t, err)
 		_, ok := interface{}(db).(*sql.DB)
 		assert.True(t, ok)
@@ -31,7 +31,7 @@ func TestOpen(t *testing.T) {
 		mockDriver := &driverMock{}
 		mockDriver.On("Open", mock.Anything).Return(&driverConnMock{}, driver.ErrBadConn)
 
-		db, err := Open("test", mockDriver, bufLogger, WithErrorFieldname("errtest"), WithMinimumLevel(LevelDebug))
+		db, err := OpenDriver("test", mockDriver, bufLogger, WithErrorFieldname("errtest"), WithMinimumLevel(LevelDebug))
 		assert.NoError(t, err)
 		_, ok := interface{}(db).(*sql.DB)
 		assert.True(t, ok)
