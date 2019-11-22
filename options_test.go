@@ -91,3 +91,36 @@ func TestWithDurationUnitFormat(t *testing.T) {
 		assert.Equal(t, tc.val, v)
 	}
 }
+
+func TestWithTimeFormat(t *testing.T) {
+	t.Run("Valid format", func(t *testing.T) {
+		cfg := &options{}
+		WithTimeFormat(TimeFormatRFC3339)(cfg)
+		assert.Equal(t, TimeFormatRFC3339, cfg.timeFormat)
+	})
+
+	t.Run("Invalid format", func(t *testing.T) {
+		cfg := &options{}
+		WithTimeFormat(TimeFormat(99))(cfg)
+		assert.Equal(t, TimeFormatUnix, cfg.timeFormat)
+	})
+}
+
+func TestWithTimeFormatResult(t *testing.T) {
+	now := time.Now()
+	tt := []struct {
+		tf  TimeFormat
+		val interface{}
+	}{
+		{tf: TimeFormatUnix, val: now.Unix()},
+		{tf: TimeFormatUnixNano, val: now.UnixNano()},
+		{tf: TimeFormatRFC3339, val: now.Format(time.RFC3339)},
+		{tf: TimeFormatRFC3339Nano, val: now.Format(time.RFC3339Nano)},
+		{tf: TimeFormat(99), val: now.Unix()},
+	}
+
+	for _, tc := range tt {
+		v := tc.tf.format(now)
+		assert.Equal(t, tc.val, v)
+	}
+}

@@ -11,6 +11,7 @@ type options struct {
 	logArgs            bool
 	minimumLogLevel    Level
 	durationUnit       DurationUnit
+	timeFormat         TimeFormat
 }
 
 type DurationUnit uint8
@@ -36,6 +37,30 @@ func (unit DurationUnit) format(duration time.Duration) float64 {
 	}
 }
 
+type TimeFormat uint8
+
+const (
+	TimeFormatUnix TimeFormat = iota
+	TimeFormatUnixNano
+	TimeFormatRFC3339
+	TimeFormatRFC3339Nano
+)
+
+func (t TimeFormat) format(logTime time.Time) interface{} {
+	switch t {
+	case TimeFormatUnix:
+		return logTime.Unix()
+	case TimeFormatUnixNano:
+		return logTime.UnixNano()
+	case TimeFormatRFC3339:
+		return logTime.Format(time.RFC3339)
+	case TimeFormatRFC3339Nano:
+		return logTime.Format(time.RFC3339Nano)
+	default:
+		return logTime.Unix()
+	}
+}
+
 type Option func(*options)
 
 func setDefaultOptions(opt *options) {
@@ -47,6 +72,7 @@ func setDefaultOptions(opt *options) {
 	opt.minimumLogLevel = LevelInfo
 	opt.logArgs = true
 	opt.durationUnit = DurationMillisecond
+	opt.timeFormat = TimeFormatUnix
 }
 
 func WithErrorFieldname(name string) Option {
@@ -98,5 +124,15 @@ func WithLogArguments(flag bool) Option {
 func WithDurationUnit(unit DurationUnit) Option {
 	return func(opt *options) {
 		opt.durationUnit = unit
+	}
+}
+
+func WithTimeFormat(format TimeFormat) Option {
+	return func(opt *options) {
+		if format < TimeFormatUnix || format > TimeFormatRFC3339Nano {
+			return
+		}
+
+		opt.timeFormat = format
 	}
 }
