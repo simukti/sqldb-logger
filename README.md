@@ -1,33 +1,15 @@
-# sqldb-logger - Go SQL Database Driver Logger
+# sqldb-logger - Go SQL Database Logger
 
-A wrapper for Go [database SQL driver](https://github.com/golang/go/blob/master/src/database/sql/driver/driver.go) which will log driver method call from `sql.DB` call.
+![console output](./logadapter/zerologadapter/console.jpg?raw=true "go sql database logger output")
 
-## WHY?
-
-My preferred way to interact with SQL database in Go are using `*sql.DB` methods directly as much as I can.
-
-I want to:
-
-- have simple [log interface](https://github.com/jackc/pgx/blob/f3a3ee1a0e5c8fc8991928bcd06fdbcd1ee9d05c/logger.go#L46-L49) but for all my commonly use SQL driver.
-- have configurable log field name.
-- have configurable duration unit.
-- have configurable minimum logging level.
-- do one thing only, log my SQL database interaction.
-- leverage structured logging with any provider.
-
-Because I haven't found SQL logger with that features, so why not created myself?
+A thin wrapper for Go SQL database driver to log its interaction with `sql.DB`.
 
 ## HOW IT WORKS?
 
-Having database connection initiation only once when the app start, it should be minimal change.
-
-Let's say we have existing `sql.Open` using commonly used driver.
-
-### MYSQL DRIVER
+Let's say, for example, we have existing `sql.Open` using commonly-used go-sql-driver/mysql driver and want to log its interaction with `sql.DB` using Zerolog.
 
 ```go
 // import _ "github.com/go-sql-driver/mysql"
-
 dsn := "username:passwd@tcp(mysqlserver:3306)/dbname?parseTime=true"
 db, err := sql.Open("mysql", dsn) // db is *sql.DB
 ```
@@ -36,19 +18,41 @@ Change it with:
 
 ```go
 // import "github.com/go-sql-driver/mysql"
-// "github.com/rs/zerolog"
-// sqldblogger "github.com/simukti/sqldb-logger"
-// "github.com/simukti/sqldb-logger/logadapter/zerologadapter"
+zlogger := zerolog.New(os.Stdout) // zerolog.New(zerolog.NewConsoleWriter()) // <-- for colored console
+dsn := "username:passwd@tcp(mysqlserver:3306)/dbname?parseTime=true"
+db, err := sqldblogger.OpenDriver(dsn, &mysql.MySQLDriver{}, zlogger) // db is *sql.DB
+``` 
 
-// first define your logger (here we use zerolog for example)
-// logger := zerolog.New() // for development with colorful console output
-logger := zerolog.New() // for JSON output to stdout
-db, err := sqldblogger.Open(dsn, &mysql.MySQLDriver{}, zerologadapter.New(logger))
+Without giving 4th param to `OpenDriver`, it will give us [default options](./options.go#L19-L29).
+
+### OPTIONS
+
+If we want full control of log output (field name, time format, etc...), pass it to 4th param as below:
+
+```go
+db, err := sqldblogger.OpenDriver(
+    dsn, 
+    &mysql.MySQLDriver{}, 
+    zlogger,
+    // options
+    sqldblogger.WithErrorFieldname("sql_error"), // default: error
+    sqldblogger.WithDurationFieldname("query_duration"), // default: duration
+    sqldblogger.WithTimeFieldname("log_time"), // default: time
+    sqldblogger.WithSQLQueryFieldname("sql_query"), // default: query
+    sqldblogger.WithSQLArgsFieldname("sql_args"), // default: args
+    sqldblogger.WithMinimumLevel(sqldblogger.LevelInfo), // default: LevelDebug
+    sqldblogger.WithLogArguments(false), // default: true
+    sqldblogger.WithDurationUnit(sqldblogger.DurationNanosecond), // default: millisecond
+    sqldblogger.WithTimeFormat(sqldblogger.TimeFormatRFC3339), // default: unix timestamp
+)
 ```
 
-## CAN I USE IT WITH *** QUERY BUILDER?
+That's it. It should be compatible with following empty public struct driver: 
 
-As long as your query builder runner accept `*sql.DB`, you can use it as is.
+- [go-sql-driver/mysql](https://github.com/go-sql-driver/mysql/blob/15462c1d60d42ecca11d6ef9fec0b0afd5833459/driver.go#L84)
+- [lib/pq](https://github.com/lib/pq/blob/f91d3411e481ed313eeab65ebfe9076466c39d01/conn.go#L52)
+- [mattn/go-sqlite3](https://github.com/mattn/go-sqlite3/blob/590d44c02bca83987d23f6eab75e6d0ddf95f644/sqlite3.go#L230)
+- [denisenkom/go-mssqldb](https://github.com/denisenkom/go-mssqldb/blob/cfbb681360f0a7de54ae77703318f0e60d422e00/mssql.go#L33)
 
 ## PROVIDED LOGGER ADAPTER
 
@@ -64,12 +68,32 @@ Implements another logger must follow these simple interface:
 type Logger interface {
 	Log(ctx context.Context, level Level, msg string, data map[string]interface{})
 }
-```
+``` 
 
-## CUSTOMIZE LOG OUTPUT
+## MOTIVATION
 
-All of log fieldname are configurable, including duration format, whether to log query arguments or not, and minimum level to be logged. [See here for all of its options](./options.go)
+I want to:
+
+- Stick to use `sql.DB`.
+- Level-logging SQL database interaction.
+- Re-use [pgx log interface](https://github.com/jackc/pgx/blob/f3a3ee1a0e5c8fc8991928bcd06fdbcd1ee9d05c/logger.go#L46-L49) for commonly use SQL driver.
+- Have configurable output field.
+- Leverage structured logging with any provider.
+
+Because I haven't found SQL logger with that features, so why not created myself?
+
+And also I want to learn the interaction between [sql.DB](https://github.com/golang/go/blob/master/src/database/sql/sql.go) <---> [driver interfaces](https://github.com/golang/go/blob/master/src/database/sql/driver/driver.go) <---> [SQL driver implementation](https://github.com/golang/go/wiki/SQLDrivers). 
+
+## CONTRIBUTE
+
+If you found bug, typo, wrong test, idea, or anything constructive.
+ 
+Don't hesitate to create an issue or pull request.
 
 ## CREDITS
 
 - [pgx](https://github.com/jackc/pgx) for awesome PostgreSQL driver.
+
+## LICENSE
+
+[MIT](./LICENSE.txt)
