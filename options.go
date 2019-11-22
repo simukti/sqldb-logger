@@ -14,6 +14,20 @@ type options struct {
 	timeFormat        TimeFormat
 }
 
+// setDefaultOptions called first time before Log() called (see: OpenDriver()).
+// To change option value, use With* functions below.
+func setDefaultOptions(opt *options) {
+	opt.errorFieldname = "error"
+	opt.durationFieldname = "duration"
+	opt.timeFieldname = "time"
+	opt.sqlQueryFieldname = "query"
+	opt.sqlArgsFieldname = "args"
+	opt.minimumLogLevel = LevelInfo
+	opt.logArgs = true
+	opt.durationUnit = DurationMillisecond
+	opt.timeFormat = TimeFormatUnix
+}
+
 type DurationUnit uint8
 
 const (
@@ -22,10 +36,10 @@ const (
 	DurationMillisecond
 )
 
-func (unit DurationUnit) format(duration time.Duration) float64 {
+func (du DurationUnit) format(duration time.Duration) float64 {
 	nanosecond := float64(duration.Nanoseconds())
 
-	switch unit {
+	switch du {
 	case DurationNanosecond:
 		return nanosecond
 	case DurationMicrosecond:
@@ -46,8 +60,8 @@ const (
 	TimeFormatRFC3339Nano
 )
 
-func (t TimeFormat) format(logTime time.Time) interface{} {
-	switch t {
+func (tf TimeFormat) format(logTime time.Time) interface{} {
+	switch tf {
 	case TimeFormatUnix:
 		return logTime.Unix()
 	case TimeFormatUnixNano:
@@ -62,18 +76,6 @@ func (t TimeFormat) format(logTime time.Time) interface{} {
 }
 
 type Option func(*options)
-
-func setDefaultOptions(opt *options) {
-	opt.errorFieldname = "error"
-	opt.durationFieldname = "duration"
-	opt.timeFieldname = "time"
-	opt.sqlQueryFieldname = "query"
-	opt.sqlArgsFieldname = "args"
-	opt.minimumLogLevel = LevelInfo
-	opt.logArgs = true
-	opt.durationUnit = DurationMillisecond
-	opt.timeFormat = TimeFormatUnix
-}
 
 func WithErrorFieldname(name string) Option {
 	return func(opt *options) {
