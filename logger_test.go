@@ -19,7 +19,7 @@ func TestLevel_String(t *testing.T) {
 		LevelError: "error",
 		LevelInfo:  "info",
 		LevelDebug: "debug",
-		Level(99):  "invalid level: 99",
+		Level(99):  "(invalid level): 99",
 	}
 
 	for l, s := range tt {

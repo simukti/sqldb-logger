@@ -25,7 +25,7 @@ func (l Level) String() string {
 	case LevelDebug:
 		return "debug" // nolint: goconst
 	default:
-		return fmt.Sprintf("invalid level: %d", l)
+		return fmt.Sprintf("(invalid level): %d", l)
 	}
 }
 
