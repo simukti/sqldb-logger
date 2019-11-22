@@ -82,8 +82,8 @@ func (l *logger) log(ctx context.Context, lvl Level, msg string, start time.Time
 	}
 
 	data := map[string]interface{}{
-		l.opt.timestampFieldname: l.opt.timeFormat.format(time.Now()),
-		l.opt.durationFieldname:  l.opt.durationUnit.format(time.Since(start)),
+		l.opt.timeFieldname:     l.opt.timeFormat.format(time.Now()),
+		l.opt.durationFieldname: l.opt.durationUnit.format(time.Since(start)),
 	}
 
 	if lvl == LevelError {

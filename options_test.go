@@ -14,7 +14,7 @@ func TestDefaultConfigs(t *testing.T) {
 	setDefaultOptions(cfg)
 	assert.Equal(t, "error", cfg.errorFieldname)
 	assert.Equal(t, "duration", cfg.durationFieldname)
-	assert.Equal(t, "timestamp", cfg.timestampFieldname)
+	assert.Equal(t, "time", cfg.timeFieldname)
 	assert.Equal(t, "query", cfg.sqlQueryFieldname)
 	assert.Equal(t, "args", cfg.sqlArgsFieldname)
 	assert.Equal(t, true, cfg.logArgs)
@@ -45,8 +45,8 @@ func TestWithMinimumLevel(t *testing.T) {
 
 func TestWithTimestampFieldname(t *testing.T) {
 	cfg := &options{}
-	WithTimestampFieldname("ts")(cfg)
-	assert.Equal(t, "ts", cfg.timestampFieldname)
+	WithTimeFieldname("ts")(cfg)
+	assert.Equal(t, "ts", cfg.timeFieldname)
 }
 
 func TestWithSQLQueryFieldname(t *testing.T) {

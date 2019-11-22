@@ -3,15 +3,15 @@ package sqldblogger
 import "time"
 
 type options struct {
-	errorFieldname     string
-	durationFieldname  string
-	timestampFieldname string
-	sqlQueryFieldname  string
-	sqlArgsFieldname   string
-	logArgs            bool
-	minimumLogLevel    Level
-	durationUnit       DurationUnit
-	timeFormat         TimeFormat
+	errorFieldname    string
+	durationFieldname string
+	timeFieldname     string
+	sqlQueryFieldname string
+	sqlArgsFieldname  string
+	logArgs           bool
+	minimumLogLevel   Level
+	durationUnit      DurationUnit
+	timeFormat        TimeFormat
 }
 
 type DurationUnit uint8
@@ -66,7 +66,7 @@ type Option func(*options)
 func setDefaultOptions(opt *options) {
 	opt.errorFieldname = "error"
 	opt.durationFieldname = "duration"
-	opt.timestampFieldname = "timestamp"
+	opt.timeFieldname = "time"
 	opt.sqlQueryFieldname = "query"
 	opt.sqlArgsFieldname = "args"
 	opt.minimumLogLevel = LevelInfo
@@ -87,9 +87,9 @@ func WithDurationFieldname(name string) Option {
 	}
 }
 
-func WithTimestampFieldname(name string) Option {
+func WithTimeFieldname(name string) Option {
 	return func(opt *options) {
-		opt.timestampFieldname = name
+		opt.timeFieldname = name
 	}
 }
 

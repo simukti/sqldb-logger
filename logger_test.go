@@ -101,7 +101,7 @@ func TestLogInternalErrorLevel(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Contains(t, content.Data, cfg.errorFieldname)
 	assert.Contains(t, content.Data, cfg.sqlQueryFieldname)
-	assert.Contains(t, content.Data, cfg.timestampFieldname)
+	assert.Contains(t, content.Data, cfg.timeFieldname)
 	assert.Contains(t, content.Data, cfg.durationFieldname)
 	bl.Reset()
 }
@@ -131,7 +131,7 @@ func TestLogTrimStringArgs(t *testing.T) {
 	err := json.Unmarshal(bl.Bytes(), &content)
 	assert.NoError(t, err)
 	assert.Contains(t, content.Data, cfg.sqlQueryFieldname)
-	assert.Contains(t, content.Data, cfg.timestampFieldname)
+	assert.Contains(t, content.Data, cfg.timeFieldname)
 	assert.Contains(t, content.Data, cfg.durationFieldname)
 	assert.Contains(t, content.Data, cfg.sqlArgsFieldname)
 	trimmedArg, ok := content.Data[cfg.sqlArgsFieldname].([]interface{})
@@ -179,7 +179,7 @@ func TestWithLogArgumentsFalse(t *testing.T) {
 	err := json.Unmarshal(bl.Bytes(), &content)
 	assert.NoError(t, err)
 	assert.Contains(t, content.Data, cfg.sqlQueryFieldname)
-	assert.Contains(t, content.Data, cfg.timestampFieldname)
+	assert.Contains(t, content.Data, cfg.timeFieldname)
 	assert.Contains(t, content.Data, cfg.durationFieldname)
 	// sql args should not logged
 	assert.NotContains(t, content.Data, cfg.sqlArgsFieldname)
