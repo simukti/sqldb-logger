@@ -18,7 +18,7 @@ func TestDefaultConfigs(t *testing.T) {
 	assert.Equal(t, "query", cfg.sqlQueryFieldname)
 	assert.Equal(t, "args", cfg.sqlArgsFieldname)
 	assert.Equal(t, true, cfg.logArgs)
-	assert.Equal(t, LevelInfo, cfg.minimumLogLevel)
+	assert.Equal(t, LevelDebug, cfg.minimumLogLevel)
 	assert.Equal(t, DurationMillisecond, cfg.durationUnit)
 }
 

@@ -22,7 +22,7 @@ func setDefaultOptions(opt *options) {
 	opt.timeFieldname = "time"
 	opt.sqlQueryFieldname = "query"
 	opt.sqlArgsFieldname = "args"
-	opt.minimumLogLevel = LevelInfo
+	opt.minimumLogLevel = LevelDebug
 	opt.logArgs = true
 	opt.durationUnit = DurationMillisecond
 	opt.timeFormat = TimeFormatUnix
