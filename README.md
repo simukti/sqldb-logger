@@ -1,12 +1,15 @@
-[![Build Status](https://travis-ci.org/simukti/sqldb-logger.svg)](https://travis-ci.org/simukti/sqldb-logger)
-[![GolangCI](https://golangci.com/badges/github.com/simukti/sqldb-logger.svg)](https://golangci.com/r/github.com/simukti/sqldb-logger)
-[![Coverage Status](https://coveralls.io/repos/simukti/sqldb-logger/badge.svg?branch=master&service=github)](https://coveralls.io/github/simukti/sqldb-logger?branch=master) 
+[![Build Status](https://travis-ci.org/simukti/sqldb-logger.svg)](https://travis-ci.org/simukti/sqldb-logger) 
+[![Coverage Status](https://coveralls.io/repos/github/simukti/sqldb-logger/badge.svg)](https://coveralls.io/github/simukti/sqldb-logger) 
+[![GolangCI](https://golangci.com/badges/github.com/simukti/sqldb-logger.svg)](https://golangci.com/r/github.com/simukti/sqldb-logger) 
+[![Go Report Card](https://goreportcard.com/badge/github.com/simukti/sqldb-logger)](https://goreportcard.com/report/github.com/simukti/sqldb-logger) 
+
+------
 
 # sqldb-logger - Go SQL Database Logger
 
-![console output](./logadapter/zerologadapter/console.jpg?raw=true "go sql database logger output")
+![shameless console output sample](./logadapter/zerologadapter/console.jpg?raw=true "go sql database logger output")
 
-A thin wrapper for Go SQL database driver to log its interaction with `sql.DB`.
+A thin wrapper for Go SQL database driver to log its interaction with `sql.DB`. _Some might say it's just a sql.DB query logger._
 
 ## HOW IT WORKS?
 
@@ -27,11 +30,11 @@ dsn := "username:passwd@tcp(mysqlserver:3306)/dbname?parseTime=true"
 db, err := sqldblogger.OpenDriver(dsn, &mysql.MySQLDriver{}, zlogger) // db is *sql.DB
 ``` 
 
-Without giving 4th param to `OpenDriver`, it will give us [default options](./options.go#L19-L29).
+Without giving 4th argument to `OpenDriver`, it will automatically set [default options](./options.go#L19-L29).
 
 ### OPTIONS
 
-If we want full control of log output (field name, time format, etc...), pass it to 4th param as below:
+For full control of log output (field name, time format, etc...), pass variadic `sqldblogger.Option` as 4th argument as below:
 
 ```go
 db, err := sqldblogger.OpenDriver(
@@ -62,9 +65,9 @@ That's it. It should be compatible with following empty public struct driver:
 
 There are 3 adapters within this repo:
 
-- [Zerolog adapter](logadapter/zerologadapter): Using [zerolog](https://github.com/rs/zerolog) as its logger.
-- [Onelog adapter](logadapter/onelogadapter): Using [onelog](https://github.com/francoispqt/onelog) as its logger.
-- [Zap adapter](logadapter/zapadapter): Using [zap](https://github.com/uber-go/zap) as its logger.
+- [Zerolog adapter](logadapter/zerologadapter): Using [rs/zerolog](https://github.com/rs/zerolog) as its logger.
+- [Onelog adapter](logadapter/onelogadapter): Using [francoispqt/onelog](https://github.com/francoispqt/onelog) as its logger.
+- [Zap adapter](logadapter/zapadapter): Using [uber-go/zap](https://github.com/uber-go/zap) as its logger.
 
 Implements another logger must follow these simple interface:
 
@@ -84,9 +87,13 @@ I want to:
 - Have configurable output field.
 - Leverage structured logging with any provider.
 
-Because I haven't found SQL logger with that features, so why not created myself?
+I haven't found SQL logger with that features, so why not created myself? 
 
-And also I want to learn the interaction between [sql.DB](https://github.com/golang/go/blob/master/src/database/sql/sql.go) <---> [driver interfaces](https://github.com/golang/go/blob/master/src/database/sql/driver/driver.go) <---> [SQL driver implementation](https://github.com/golang/go/wiki/SQLDrivers). 
+## REFERENCES
+
+- [Stdlib sql.DB](https://github.com/golang/go/blob/master/src/database/sql/sql.go)
+- [SQL driver interfaces](https://github.com/golang/go/blob/master/src/database/sql/driver/driver.go)
+- [SQL driver implementation](https://github.com/golang/go/wiki/SQLDrivers)
 
 ## CONTRIBUTE
 
