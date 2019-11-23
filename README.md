@@ -12,9 +12,15 @@
 
 A thin wrapper for Go SQL database driver to log its interaction with `sql.DB`. _Some might say it's just a sql.DB query logger._
 
-## HOW IT WORKS?
+## INSTALL
 
-Let's say, for example, we have existing `sql.Open` using commonly-used go-sql-driver/mysql driver and want to log its interaction with `sql.DB` using Zerolog.
+```bash
+go get -u -v github.com/simukti/sqldb-logger
+```
+
+## USAGE
+
+Assuming we have existing `sql.Open` using commonly-used go-sql-driver/mysql driver and want to log its interaction with `sql.DB` using Zerolog.
 
 ```go
 // import _ "github.com/go-sql-driver/mysql"
@@ -33,7 +39,7 @@ db, err := sqldblogger.OpenDriver(dsn, &mysql.MySQLDriver{}, zlogger) // db is *
 
 Without giving 4th argument to `OpenDriver`, it will automatically set [default options](./options.go#L19-L29).
 
-### OPTIONS
+## OPTIONS
 
 For full control of log output (field name, time format, etc...), pass variadic `sqldblogger.Option` as 4th argument as below:
 
@@ -55,7 +61,11 @@ db, err := sqldblogger.OpenDriver(
 )
 ```
 
-That's it. It should be compatible with following empty public struct driver: 
+That's it. Use `db` object as usual.
+
+## COMPATIBLITY
+
+It should be compatible with following empty public struct driver: 
 
 - [go-sql-driver/mysql](https://github.com/go-sql-driver/mysql/blob/15462c1d60d42ecca11d6ef9fec0b0afd5833459/driver.go#L84)
 - [lib/pq](https://github.com/lib/pq/blob/f91d3411e481ed313eeab65ebfe9076466c39d01/conn.go#L52)
@@ -67,8 +77,16 @@ That's it. It should be compatible with following empty public struct driver:
 There are 3 adapters within this repo:
 
 - [Zerolog adapter](logadapter/zerologadapter): Using [rs/zerolog](https://github.com/rs/zerolog) as its logger.
+
+![zerolog output sample](./logadapter/zerologadapter/zerolog.jpg?raw=true "go sql database logger output")
+
 - [Onelog adapter](logadapter/onelogadapter): Using [francoispqt/onelog](https://github.com/francoispqt/onelog) as its logger.
+
+![onelog output sample](./logadapter/onelogadapter/onelog.jpg?raw=true "go sql database logger output")
+
 - [Zap adapter](logadapter/zapadapter): Using [uber-go/zap](https://github.com/uber-go/zap) as its logger.
+
+![zap output sample](./logadapter/zapadapter/zap.jpg?raw=true "go sql database logger output")
 
 Implements another logger must follow these simple interface:
 
@@ -98,7 +116,7 @@ I haven't found SQL logger with that features, so why not created myself?
 
 ## CONTRIBUTE
 
-If you found bug, typo, wrong test, idea, or anything constructive.
+If you found bug, typo, wrong test, idea, help with existing issue, or anything constructive.
  
 Don't hesitate to create an issue or pull request.
 
