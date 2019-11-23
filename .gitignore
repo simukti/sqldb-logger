@@ -115,4 +115,4 @@ config.yaml
 .idea
 *.ini
 *.env
-coverage.txt
+coverage.*
