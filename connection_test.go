@@ -33,7 +33,7 @@ func TestConnection_Begin(t *testing.T) {
 		var txMock *transactionMock
 		driverConnMock.On("Begin").Return(txMock, driver.ErrBadConn)
 
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		_, err := conn.Begin()
 		assert.Error(t, err)
 
@@ -48,7 +48,7 @@ func TestConnection_Begin(t *testing.T) {
 		txMock := &transactionMock{}
 		driverConnMock.On("Begin").Return(txMock, nil)
 
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		tx, err := conn.Begin()
 		assert.NoError(t, err)
 		assert.Implements(t, (*driver.Tx)(nil), tx)
@@ -67,7 +67,7 @@ func TestConnection_Prepare(t *testing.T) {
 		var stmtMock *statementMock
 		driverConnMock.On("Prepare", mock.Anything).Return(stmtMock, driver.ErrBadConn)
 		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		_, err := conn.Prepare(q)
 		assert.Error(t, err)
 
@@ -84,7 +84,7 @@ func TestConnection_Prepare(t *testing.T) {
 		stmtMock := &statementMock{}
 		driverConnMock.On("Prepare", mock.Anything).Return(stmtMock, nil)
 		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		stmt, err := conn.Prepare(q)
 		assert.NoError(t, err)
 		assert.Implements(t, (*driver.Stmt)(nil), stmt)
@@ -102,7 +102,7 @@ func TestConnection_Close(t *testing.T) {
 	t.Run("Error", func(t *testing.T) {
 		driverConnMock := &driverConnMock{}
 		driverConnMock.On("Close").Return(driver.ErrBadConn)
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		err := conn.Close()
 		assert.Error(t, err)
 
@@ -117,7 +117,7 @@ func TestConnection_Close(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		driverConnMock := &driverConnMock{}
 		driverConnMock.On("Close").Return(nil)
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		err := conn.Close()
 		assert.NoError(t, err)
 
@@ -132,7 +132,7 @@ func TestConnection_Close(t *testing.T) {
 func TestConnection_BeginTx(t *testing.T) {
 	t.Run("Non driver.ConnBeginTx", func(t *testing.T) {
 		driverConnMock := &driverConnMock{}
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		_, err := conn.BeginTx(context.TODO(), driver.TxOptions{
 			Isolation: 1,
 			ReadOnly:  true,
@@ -146,7 +146,7 @@ func TestConnection_BeginTx(t *testing.T) {
 		var txMock *transactionMock
 		driverConnMock.On("BeginTx", mock.Anything, mock.Anything).Return(txMock, driver.ErrBadConn)
 
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		_, err := conn.BeginTx(context.TODO(), driver.TxOptions{
 			Isolation: 1,
 			ReadOnly:  true,
@@ -165,7 +165,7 @@ func TestConnection_BeginTx(t *testing.T) {
 		txMock := &transactionMock{}
 		driverConnMock.On("BeginTx", mock.Anything, mock.Anything).Return(txMock, nil)
 
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		tx, err := conn.BeginTx(context.TODO(), driver.TxOptions{
 			Isolation: 1,
 			ReadOnly:  true,
@@ -186,7 +186,7 @@ func TestConnection_PrepareContext(t *testing.T) {
 		driverConnMock := &driverConnMock{}
 
 		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		_, err := conn.PrepareContext(context.TODO(), q)
 		assert.Error(t, err)
 		assert.Equal(t, driver.ErrSkip, err)
@@ -198,7 +198,7 @@ func TestConnection_PrepareContext(t *testing.T) {
 		driverConnMock.On("PrepareContext", mock.Anything).Return(stmtMock, driver.ErrBadConn)
 
 		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		_, err := conn.PrepareContext(context.TODO(), q)
 		assert.Error(t, err)
 
@@ -217,7 +217,7 @@ func TestConnection_PrepareContext(t *testing.T) {
 		driverConnMock.On("PrepareContext", mock.Anything).Return(stmtMock, nil)
 
 		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		stmt, err := conn.PrepareContext(context.TODO(), q)
 		assert.NoError(t, err)
 		assert.Implements(t, (*driver.Stmt)(nil), stmt)
@@ -234,7 +234,7 @@ func TestConnection_PrepareContext(t *testing.T) {
 func TestConnection_Ping(t *testing.T) {
 	t.Run("Non driver.Pinger", func(t *testing.T) {
 		driverConnMock := &driverConnMock{}
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		err := conn.Ping(context.TODO())
 		assert.NoError(t, err)
 
@@ -248,7 +248,7 @@ func TestConnection_Ping(t *testing.T) {
 	t.Run("driver.Pinger With Error", func(t *testing.T) {
 		driverConnMock := &driverConnPingerMock{}
 		driverConnMock.On("Ping", mock.Anything).Return(driver.ErrBadConn)
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		err := conn.Ping(context.TODO())
 		assert.Error(t, err)
 
@@ -266,7 +266,7 @@ func TestConnection_Exec(t *testing.T) {
 		driverConnMock := &driverConnMock{}
 
 		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		res, err := conn.Exec(q, []driver.Value{1})
 		assert.Nil(t, res)
 		assert.Error(t, err)
@@ -279,7 +279,7 @@ func TestConnection_Exec(t *testing.T) {
 		driverConnMock.On("Exec", mock.Anything, mock.Anything).Return(resultMock, driver.ErrBadConn)
 
 		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		_, err := conn.Exec(q, []driver.Value{1})
 		assert.Error(t, err)
 		assert.Equal(t, interface{}(driver.ErrBadConn), err)
@@ -299,7 +299,7 @@ func TestConnection_Exec(t *testing.T) {
 		driverConnMock.On("Exec", mock.Anything, mock.Anything).Return(resultMock, nil)
 
 		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		_, err := conn.Exec(q, []driver.Value{"testid"})
 		assert.NoError(t, err)
 
@@ -317,7 +317,7 @@ func TestConnection_ExecContext(t *testing.T) {
 	t.Run("Non driver.ExecerContext Return Error args", func(t *testing.T) {
 		driverConnMock := &driverConnExecerMock{}
 		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		_, err := conn.ExecContext(context.TODO(), q, []driver.NamedValue{
 			{Name: "errrrr", Ordinal: 0, Value: 1},
 		})
@@ -330,7 +330,7 @@ func TestConnection_ExecContext(t *testing.T) {
 		driverConnMock.On("ExecContext", mock.Anything, mock.Anything, mock.Anything).Return(resultMock, driver.ErrBadConn)
 
 		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		_, err := conn.ExecContext(context.TODO(), q, []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.Error(t, err)
 
@@ -350,7 +350,7 @@ func TestConnection_ExecContext(t *testing.T) {
 		driverConnMock.On("ExecContext", mock.Anything, mock.Anything, mock.Anything).Return(resultMock, nil)
 
 		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		_, err := conn.ExecContext(context.TODO(), q, []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.NoError(t, err)
 
@@ -369,7 +369,7 @@ func TestConnection_Query(t *testing.T) {
 		driverConnMock := &driverConnMock{}
 
 		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		res, err := conn.Query(q, []driver.Value{1})
 		assert.Nil(t, res)
 		assert.Error(t, err)
@@ -382,7 +382,7 @@ func TestConnection_Query(t *testing.T) {
 		driverConnMock.On("Query", mock.Anything, mock.Anything).Return(resultMock, driver.ErrBadConn)
 
 		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		_, err := conn.Query(q, []driver.Value{"testid"})
 		assert.Error(t, err)
 		assert.Equal(t, interface{}(driver.ErrBadConn), err)
@@ -403,7 +403,7 @@ func TestConnection_Query(t *testing.T) {
 		driverConnMock.On("Query", mock.Anything, mock.Anything).Return(resultMock, nil)
 
 		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		_, err := conn.Query(q, []driver.Value{"testid"})
 		assert.NoError(t, err)
 
@@ -421,7 +421,7 @@ func TestConnection_QueryContext(t *testing.T) {
 	t.Run("Non driver.QueryerContext Return Error args", func(t *testing.T) {
 		driverConnMock := &driverConnQueryerMock{}
 		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		_, err := conn.QueryContext(context.TODO(), q, []driver.NamedValue{
 			{Name: "errrrr", Ordinal: 0, Value: 1},
 		})
@@ -434,7 +434,7 @@ func TestConnection_QueryContext(t *testing.T) {
 		driverConnMock.On("QueryContext", mock.Anything, mock.Anything, mock.Anything).Return(resultMock, driver.ErrBadConn)
 
 		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		_, err := conn.QueryContext(context.TODO(), q, []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.Error(t, err)
 
@@ -454,7 +454,7 @@ func TestConnection_QueryContext(t *testing.T) {
 		driverConnMock.On("QueryContext", mock.Anything, mock.Anything, mock.Anything).Return(resultMock, nil)
 
 		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		_, err := conn.QueryContext(context.TODO(), q, []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.NoError(t, err)
 
@@ -471,7 +471,7 @@ func TestConnection_QueryContext(t *testing.T) {
 func TestConnection_ResetSession(t *testing.T) {
 	t.Run("Non driver.SessionResetter", func(t *testing.T) {
 		driverConnMock := &driverConnMock{}
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		err := conn.ResetSession(context.TODO())
 		assert.Error(t, err)
 		assert.Error(t, driver.ErrSkip, err)
@@ -481,7 +481,7 @@ func TestConnection_ResetSession(t *testing.T) {
 		driverConnMock := &driverConnResetterMock{}
 		driverConnMock.On("ResetSession", mock.Anything).Return(driver.ErrBadConn)
 
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		err := conn.ResetSession(context.TODO())
 		assert.Error(t, err)
 
@@ -496,7 +496,7 @@ func TestConnection_ResetSession(t *testing.T) {
 		driverConnMock := &driverConnResetterMock{}
 		driverConnMock.On("ResetSession", mock.Anything).Return(nil)
 
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		err := conn.ResetSession(context.TODO())
 		assert.NoError(t, err)
 
@@ -511,7 +511,7 @@ func TestConnection_ResetSession(t *testing.T) {
 func TestConnection_CheckNamedValue(t *testing.T) {
 	t.Run("Non driver.NamedValueChecker", func(t *testing.T) {
 		driverConnMock := &driverConnMock{}
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		err := conn.CheckNamedValue(&driver.NamedValue{
 			Name:    "",
 			Ordinal: 0,
@@ -525,7 +525,7 @@ func TestConnection_CheckNamedValue(t *testing.T) {
 		driverConnMock := &driverConnNameValueCheckerMock{}
 		driverConnMock.On("CheckNamedValue", mock.Anything).Return(driver.ErrBadConn)
 
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		err := conn.CheckNamedValue(&driver.NamedValue{
 			Name:    "",
 			Ordinal: 0,
@@ -544,7 +544,7 @@ func TestConnection_CheckNamedValue(t *testing.T) {
 		driverConnMock := &driverConnNameValueCheckerMock{}
 		driverConnMock.On("CheckNamedValue", mock.Anything).Return(nil)
 
-		conn := &connection{driverConn: driverConnMock, logger: testLogger}
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
 		err := conn.CheckNamedValue(&driver.NamedValue{
 			Name:    "",
 			Ordinal: 0,
@@ -651,11 +651,3 @@ type driverConnNameValueCheckerMock struct {
 func (m *driverConnNameValueCheckerMock) CheckNamedValue(nm *driver.NamedValue) error {
 	return m.Called(nm).Error(0)
 }
-
-type rowsMock struct {
-	mock.Mock
-}
-
-func (m *rowsMock) Columns() []string              { return m.Called().Get(0).([]string) }
-func (m *rowsMock) Close() error                   { return m.Called().Error(0) }
-func (m *rowsMock) Next(dest []driver.Value) error { return m.Called(dest).Error(0) }
