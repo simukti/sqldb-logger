@@ -29,7 +29,7 @@ before_install:
 script:
   - go vet
   - test -z "$(go fmt ./...)" # fail if not formatted properly
-  - go test -v -race -coverprofile=coverage.out -covermode=atomic -tags=unit ./...
+  - go test -mod=vendor -v -race -coverprofile=coverage.out -covermode=atomic -tags=unit ./...
 
 after_success:
   - $GOPATH/bin/goveralls -v -coverprofile=coverage.out -service=travis-ci -repotoken=$COVERALLS_TOKEN
