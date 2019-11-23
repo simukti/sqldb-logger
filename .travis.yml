@@ -7,10 +7,11 @@ go:
   - "1.11"
   - "1.12"
   - "1.13"
+  - tip
 
 env:
-  global:
-    - GO111MODULE=on
+  - GOPROXY=https://proxy.golang.org
+  - GO111MODULE=on
 
 allow_failures:
   - tip
@@ -20,10 +21,13 @@ branches:
     - master
 
 before_install:
-  - env GO111MODULE=on go get github.com/mattn/goveralls
+  - go get github.com/mattn/goveralls
 
 script:
-  - env GO111MODULE=on go vet
+  - go vet
   - test -z "$(go fmt ./...)" # fail if not formatted properly
-  - env GO111MODULE=on go test -race -coverprofile=coverage.out -covermode=atomic -tags=unit ./...
+  - go test -race -coverprofile=coverage.out -covermode=atomic -tags=unit ./...
+
+after_success:
   - $GOPATH/bin/goveralls -v -coverprofile=coverage.out -service=travis-ci -repotoken=$COVERALLS_TOKEN
+  - bash <(curl -s https://codecov.io/bash)
