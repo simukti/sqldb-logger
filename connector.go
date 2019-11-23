@@ -17,7 +17,7 @@ type connector struct {
 // Connect implement driver.Connector which will open new db connection if none exist
 func (c *connector) Connect(ctx context.Context) (driver.Conn, error) {
 	start := time.Now()
-	driverConn, err := c.driver.Open(c.dsn)
+	conn, err := c.driver.Open(c.dsn)
 
 	if err != nil {
 		c.logger.log(ctx, LevelError, "Connect", start, err)
@@ -26,7 +26,7 @@ func (c *connector) Connect(ctx context.Context) (driver.Conn, error) {
 
 	c.logger.log(ctx, LevelDebug, "Connect", start, err)
 
-	return &connection{driverConn: driverConn, logger: c.logger}, nil
+	return &connection{Conn: conn, logger: c.logger}, nil
 }
 
 // Driver implement driver.Connector
