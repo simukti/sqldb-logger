@@ -11,7 +11,6 @@ type zerologAdapter struct {
 	logger zerolog.Logger
 }
 
-// New db sql logger using zerolog logger with optional pre-populated fields.
 func New(logger zerolog.Logger) sqldblogger.Logger {
 	return &zerologAdapter{logger: logger}
 }
