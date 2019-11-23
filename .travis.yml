@@ -1,20 +1,21 @@
 language: go
 sudo: false
-
+install: true
 go_import_path: github.com/simukti/sqldb-logger
 
 go:
   - "1.11"
   - "1.12"
   - "1.13"
-  - tip
+  - master
 
 env:
-  - GOPROXY=https://proxy.golang.org
-  - GO111MODULE=on
+  global:
+    - GOPROXY=https://proxy.golang.org
+    - GO111MODULE=on
 
 allow_failures:
-  - tip
+  - master
 
 branches:
   only:
@@ -22,11 +23,13 @@ branches:
 
 before_install:
   - go get github.com/mattn/goveralls
+  - go mod download || true
+  - go mod vendor -v
 
 script:
   - go vet
   - test -z "$(go fmt ./...)" # fail if not formatted properly
-  - go test -race -coverprofile=coverage.out -covermode=atomic -tags=unit ./...
+  - go test -v -race -coverprofile=coverage.out -covermode=atomic -tags=unit ./...
 
 after_success:
   - $GOPATH/bin/goveralls -v -coverprofile=coverage.out -service=travis-ci -repotoken=$COVERALLS_TOKEN
