@@ -1,0 +1,29 @@
+language: go
+sudo: false
+
+go_import_path: github.com/simukti/sqldb-logger
+
+go:
+  - "1.11"
+  - "1.12"
+  - "1.13"
+
+env:
+  global:
+    - GO111MODULE=on
+
+allow_failures:
+  - tip
+
+branches:
+  only:
+    - master
+
+before_install:
+  - go get github.com/mattn/goveralls
+
+script:
+  - go vet
+  - test -z "$(go fmt ./...)" # fail if not formatted properly
+  - go test -race -coverprofile=coverage.out -covermode=atomic -tags=unit ./...
+  - $GOPATH/bin/goveralls -v -coverprofile=coverage.out -service=travis-ci -repotoken=$COVERALLS_TOKEN

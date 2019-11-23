@@ -1,3 +1,7 @@
+[![Build Status](https://travis-ci.org/simukti/sqldb-logger.svg)](https://travis-ci.org/simukti/sqldb-logger)
+[![GolangCI](https://golangci.com/badges/github.com/simukti/sqldb-logger.svg)](https://golangci.com/r/github.com/simukti/sqldb-logger)
+[![Coverage Status](https://coveralls.io/repos/alexanderfahlke/hellotravis-golang/badge.svg?branch=master&service=github)](https://coveralls.io/github/simukti/sqldb-logger?branch=master) 
+
 # sqldb-logger - Go SQL Database Logger
 
 ![console output](./logadapter/zerologadapter/console.jpg?raw=true "go sql database logger output")
