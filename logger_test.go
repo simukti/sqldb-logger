@@ -71,22 +71,47 @@ func TestWithNamedArgs(t *testing.T) {
 func TestLogInternalWithMinimumLevel(t *testing.T) {
 	cfg := &options{}
 	setDefaultOptions(cfg)
-	l := &logger{opt: cfg, logger: &bufferTestLogger{}}
+	WithMinimumLevel(LevelError)(cfg)
+	bl := &bufferTestLogger{}
+	l := &logger{opt: cfg, logger: bl}
 	l.log(context.TODO(), LevelDebug, "msg", time.Now(), nil)
+	assert.Equal(t, 0, len(bl.Bytes()))
+	bl.Reset()
 }
 
 func TestLogInternal(t *testing.T) {
 	cfg := &options{}
 	setDefaultOptions(cfg)
-	l := &logger{opt: cfg, logger: &bufferTestLogger{}}
+	bl := &bufferTestLogger{}
+	l := &logger{opt: cfg, logger: bl}
 	l.log(context.TODO(), LevelInfo, "msg", time.Now(), nil)
+
+	var content bufLog
+	err := json.Unmarshal(bl.Bytes(), &content)
+	assert.NoError(t, err)
+	assert.Contains(t, content.Data, cfg.timeFieldname)
+	assert.Contains(t, content.Data, cfg.durationFieldname)
+	assert.Equal(t, LevelInfo.String(), content.Level)
+	bl.Reset()
 }
 
 func TestLogInternalWithData(t *testing.T) {
 	cfg := &options{}
 	setDefaultOptions(cfg)
-	l := &logger{opt: cfg, logger: &bufferTestLogger{}}
+	bl := &bufferTestLogger{}
+	l := &logger{opt: cfg, logger: bl}
 	l.log(context.TODO(), LevelInfo, "msg", time.Now(), nil, l.withQuery("query"))
+
+	var content bufLog
+	err := json.Unmarshal(bl.Bytes(), &content)
+	assert.NoError(t, err)
+	assert.Contains(t, content.Data, cfg.timeFieldname)
+	assert.Contains(t, content.Data, cfg.durationFieldname)
+	assert.Contains(t, content.Data, cfg.sqlQueryFieldname)
+	assert.Equal(t, LevelInfo.String(), content.Level)
+	assert.Equal(t, "msg", content.Message)
+	assert.Equal(t, "query", content.Data[cfg.sqlQueryFieldname])
+	bl.Reset()
 }
 
 func TestLogInternalErrorLevel(t *testing.T) {
