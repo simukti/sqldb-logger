@@ -1,7 +1,5 @@
 language: go
-sudo: false
 install: true
-
 go_import_path: github.com/simukti/sqldb-logger
 
 go:
@@ -9,6 +7,9 @@ go:
   - "1.12"
   - "1.13"
   - master
+
+git:
+  depth: 1
 
 env:
   global:
@@ -24,8 +25,7 @@ branches:
 
 before_install:
   - go get -u -v github.com/mattn/goveralls
-  - go get -v
-  - go mod install
+  - go mod vendor -v
 
 script:
   - go vet
