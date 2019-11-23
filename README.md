@@ -1,7 +1,8 @@
-[![Build Status](https://travis-ci.org/simukti/sqldb-logger.svg)](https://travis-ci.org/simukti/sqldb-logger) 
-[![Coverage Status](https://coveralls.io/repos/github/simukti/sqldb-logger/badge.svg)](https://coveralls.io/github/simukti/sqldb-logger) 
-[![GolangCI](https://golangci.com/badges/github.com/simukti/sqldb-logger.svg)](https://golangci.com/r/github.com/simukti/sqldb-logger) 
-[![Go Report Card](https://goreportcard.com/badge/github.com/simukti/sqldb-logger)](https://goreportcard.com/report/github.com/simukti/sqldb-logger) 
+[![Build Status](https://travis-ci.com/simukti/sqldb-logger.svg)](https://travis-ci.com/simukti/sqldb-logger) 
+[![Coverage Status](https://coveralls.io/repos/github/simukti/sqldb-logger/badge.svg)](https://coveralls.io/github/simukti/sqldb-logger)  
+[![Go Report Card](https://goreportcard.com/badge/github.com/simukti/sqldb-logger)](https://goreportcard.com/report/github.com/simukti/sqldb-logger)
+[![GolangCI Status](https://golangci.com/badges/github.com/simukti/sqldb-logger.svg)](https://golangci.com/r/github.com/simukti/sqldb-logger) 
+[![License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://raw.githubusercontent.com/simukti/sqldb-logger/master/LICENSE.txt)
 
 ------
 
