@@ -5,6 +5,7 @@ install: true
 go_import_path: github.com/simukti/sqldb-logger
 
 go:
+  - "1.11"
   - "1.12"
   - "1.13"
   - master
@@ -22,7 +23,9 @@ branches:
     - master
 
 before_install:
-  - go get github.com/mattn/goveralls
+  - go get -u -v github.com/mattn/goveralls
+  - go get -v ./...
+  - go mod install
 
 script:
   - go vet
