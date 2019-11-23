@@ -17,7 +17,7 @@ func TestStatement_Close(t *testing.T) {
 	stmtMock := &statementMock{}
 	stmtMock.On("Close").Return(driver.ErrBadConn)
 
-	stmt := &statement{query: q, driverStmt: stmtMock, logger: testLogger}
+	stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger}
 	err := stmt.Close()
 	assert.Error(t, err)
 }
@@ -27,7 +27,7 @@ func TestStatement_NumInput(t *testing.T) {
 	stmtMock := &statementMock{}
 	stmtMock.On("NumInput").Return(1)
 
-	stmt := &statement{query: q, driverStmt: stmtMock, logger: testLogger}
+	stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger}
 	input := stmt.NumInput()
 	assert.Equal(t, 1, input)
 }
@@ -38,7 +38,7 @@ func TestStatement_Exec(t *testing.T) {
 		stmtMock := &statementMock{}
 		stmtMock.On("Exec", mock.Anything).Return(driver.ResultNoRows, driver.ErrBadConn)
 
-		stmt := &statement{query: q, driverStmt: stmtMock, logger: testLogger}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger}
 		_, err := stmt.Exec([]driver.Value{"testid"})
 		assert.Error(t, err)
 
@@ -57,7 +57,7 @@ func TestStatement_Exec(t *testing.T) {
 		stmtMock := &statementMock{}
 		stmtMock.On("Exec", mock.Anything).Return(&resultMock{}, nil)
 
-		stmt := &statement{query: q, driverStmt: stmtMock, logger: testLogger}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger}
 		_, err := stmt.Exec([]driver.Value{"testid"})
 		assert.NoError(t, err)
 
@@ -77,7 +77,7 @@ func TestStatement_Query(t *testing.T) {
 		stmtMock := &statementMock{}
 		stmtMock.On("Query", mock.Anything).Return(&rowsMock{}, driver.ErrBadConn)
 
-		stmt := &statement{query: q, driverStmt: stmtMock, logger: testLogger}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger}
 		_, err := stmt.Query([]driver.Value{"testid"})
 		assert.Error(t, err)
 
@@ -96,7 +96,7 @@ func TestStatement_Query(t *testing.T) {
 		stmtMock := &statementMock{}
 		stmtMock.On("Query", mock.Anything).Return(&rowsMock{}, nil)
 
-		stmt := &statement{query: q, driverStmt: stmtMock, logger: testLogger}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger}
 		_, err := stmt.Query([]driver.Value{"testid"})
 		assert.NoError(t, err)
 
@@ -114,7 +114,7 @@ func TestStatement_ExecContext(t *testing.T) {
 	t.Run("Not implement driver.StmtExecContext", func(t *testing.T) {
 		q := "SELECT * FROM tt WHERE id = ?"
 		stmtMock := &statementMock{}
-		stmt := &statement{query: q, driverStmt: stmtMock, logger: testLogger}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger}
 
 		_, err := stmt.ExecContext(context.TODO(), []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.Error(t, err)
@@ -126,7 +126,7 @@ func TestStatement_ExecContext(t *testing.T) {
 		stmtMock := &statementExecerContextMock{}
 		stmtMock.On("ExecContext", mock.Anything, mock.Anything).Return(&resultMock{}, driver.ErrBadConn)
 
-		stmt := &statement{query: q, driverStmt: stmtMock, logger: testLogger}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger}
 		_, err := stmt.ExecContext(context.TODO(), []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.Error(t, err)
 		assert.Equal(t, driver.ErrBadConn, err)
@@ -146,7 +146,7 @@ func TestStatement_ExecContext(t *testing.T) {
 		stmtMock := &statementExecerContextMock{}
 		stmtMock.On("ExecContext", mock.Anything, mock.Anything).Return(&resultMock{}, nil)
 
-		stmt := &statement{query: q, driverStmt: stmtMock, logger: testLogger}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger}
 		_, err := stmt.ExecContext(context.TODO(), []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.NoError(t, err)
 
@@ -164,7 +164,7 @@ func TestStatement_QueryContext(t *testing.T) {
 	t.Run("Not implement driver.StmtQueryContext", func(t *testing.T) {
 		q := "SELECT * FROM tt WHERE id = ?"
 		stmtMock := &statementMock{}
-		stmt := &statement{query: q, driverStmt: stmtMock, logger: testLogger}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger}
 
 		_, err := stmt.QueryContext(context.TODO(), []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.Error(t, err)
@@ -176,7 +176,7 @@ func TestStatement_QueryContext(t *testing.T) {
 		stmtMock := &statementQueryerContextMock{}
 		stmtMock.On("QueryContext", mock.Anything, mock.Anything).Return(&rowsMock{}, driver.ErrBadConn)
 
-		stmt := &statement{query: q, driverStmt: stmtMock, logger: testLogger}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger}
 		_, err := stmt.QueryContext(context.TODO(), []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.Error(t, err)
 		assert.Equal(t, driver.ErrBadConn, err)
@@ -196,7 +196,7 @@ func TestStatement_QueryContext(t *testing.T) {
 		stmtMock := &statementQueryerContextMock{}
 		stmtMock.On("QueryContext", mock.Anything, mock.Anything).Return(&rowsMock{}, nil)
 
-		stmt := &statement{query: q, driverStmt: stmtMock, logger: testLogger}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger}
 		_, err := stmt.QueryContext(context.TODO(), []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.NoError(t, err)
 
@@ -215,7 +215,7 @@ func TestStatement_CheckNamedValue(t *testing.T) {
 		stmtMock := &statementNamedValueCheckerMock{}
 		stmtMock.On("CheckNamedValue", mock.Anything).Return(nil)
 
-		stmt := &statement{driverStmt: stmtMock, logger: testLogger}
+		stmt := &statement{Stmt: stmtMock, logger: testLogger}
 		err := stmt.CheckNamedValue(&driver.NamedValue{Name: "", Ordinal: 0, Value: "testid"})
 		assert.NoError(t, err)
 	})
@@ -223,7 +223,7 @@ func TestStatement_CheckNamedValue(t *testing.T) {
 	t.Run("Not implement driver.NamedValueChecker", func(t *testing.T) {
 		stmtMock := &statementMock{}
 
-		stmt := &statement{driverStmt: stmtMock, logger: testLogger}
+		stmt := &statement{Stmt: stmtMock, logger: testLogger}
 		err := stmt.CheckNamedValue(&driver.NamedValue{Name: "", Ordinal: 0, Value: "testid"})
 		assert.Error(t, err)
 		assert.Equal(t, driver.ErrSkip, err)
@@ -235,7 +235,7 @@ func TestStatement_ColumnConverter(t *testing.T) {
 		stmtMock := &statementValueConverterMock{}
 		stmtMock.On("ColumnConverter", mock.Anything).Return(driver.NotNull{Converter: driver.DefaultParameterConverter})
 
-		stmt := &statement{driverStmt: stmtMock, logger: testLogger}
+		stmt := &statement{Stmt: stmtMock, logger: testLogger}
 		cnv := stmt.ColumnConverter(1)
 		val, err := cnv.ConvertValue(1)
 		assert.NoError(t, err)
@@ -246,7 +246,7 @@ func TestStatement_ColumnConverter(t *testing.T) {
 
 	t.Run("Not implement driver.ColumnConverter", func(t *testing.T) {
 		stmtMock := &statementMock{}
-		stmt := &statement{driverStmt: stmtMock, logger: testLogger}
+		stmt := &statement{Stmt: stmtMock, logger: testLogger}
 		cnv := stmt.ColumnConverter(1)
 		assert.Equal(t, driver.DefaultParameterConverter, cnv)
 	})
@@ -308,20 +308,4 @@ type statementValueConverterMock struct {
 
 func (m *statementValueConverterMock) ColumnConverter(idx int) driver.ValueConverter {
 	return m.Called(idx).Get(0).(driver.ValueConverter)
-}
-
-type resultMock struct {
-	mock.Mock
-}
-
-func (m *resultMock) LastInsertId() (int64, error) {
-	arg := m.Called()
-
-	return int64(arg.Int(0)), arg.Error(1)
-}
-
-func (m *resultMock) RowsAffected() (int64, error) {
-	arg := m.Called()
-
-	return int64(arg.Int(0)), arg.Error(1)
 }
