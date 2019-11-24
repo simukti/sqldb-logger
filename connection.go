@@ -121,14 +121,17 @@ func (c *connection) PrepareContext(ctx context.Context, query string) (driver.S
 
 // Ping implements driver.Pinger
 func (c *connection) Ping(ctx context.Context) error {
+	driverPinger, ok := c.Conn.(driver.Pinger)
+	if !ok {
+		return driver.ErrSkip
+	}
+
 	var err error
 
 	lvl, start := LevelInfo, time.Now()
 
-	if connPing, ok := c.Conn.(driver.Pinger); ok {
-		if pingErr := connPing.Ping(ctx); pingErr != nil {
-			lvl, err = LevelError, pingErr
-		}
+	if err = driverPinger.Ping(ctx); err != nil {
+		lvl = LevelError
 	}
 
 	c.logger.log(ctx, lvl, "Ping", start, err)
