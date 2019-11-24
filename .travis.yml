@@ -1,5 +1,4 @@
 language: go
-go_import_path: github.com/simukti/sqldb-logger
 
 go:
   - 1.11.x
@@ -7,8 +6,10 @@ go:
   - 1.13.x
   - master
 
-allow_failures:
-  - master
+matrix:
+  fast_finish: true
+  allow_failures:
+    - go: master
 
 git:
   depth: 1
