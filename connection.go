@@ -18,14 +18,14 @@ import (
 // - driver.SessionResetter
 // - driver.NamedValueChecker
 type connection struct {
-	driverConn driver.Conn
-	logger     *logger
+	driver.Conn
+	logger *logger
 }
 
 // Begin implements driver.Conn
 func (c *connection) Begin() (driver.Tx, error) {
 	lvl, start := LevelDebug, time.Now()
-	connTx, err := c.driverConn.Begin() // nolint: staticcheck
+	connTx, err := c.Conn.Begin() // nolint: staticcheck
 
 	if err != nil {
 		lvl = LevelError
@@ -43,7 +43,7 @@ func (c *connection) Begin() (driver.Tx, error) {
 // Prepare implements driver.Conn
 func (c *connection) Prepare(query string) (driver.Stmt, error) {
 	lvl, start := LevelDebug, time.Now()
-	driverStmt, err := c.driverConn.Prepare(query)
+	driverStmt, err := c.Conn.Prepare(query)
 
 	if err != nil {
 		lvl = LevelError
@@ -55,7 +55,7 @@ func (c *connection) Prepare(query string) (driver.Stmt, error) {
 		return driverStmt, err
 	}
 
-	return &statement{query: query, driverStmt: driverStmt, logger: c.logger}, nil
+	return &statement{query: query, Stmt: driverStmt, logger: c.logger}, nil
 }
 
 // Prepare implements driver.Conn
@@ -64,7 +64,7 @@ func (c *connection) Close() error {
 
 	lvl, start := LevelDebug, time.Now()
 
-	if err = c.driverConn.Close(); err != nil {
+	if err = c.Conn.Close(); err != nil {
 		lvl = LevelError
 	}
 
@@ -75,7 +75,7 @@ func (c *connection) Close() error {
 
 // BeginTx implements driver.ConnBeginTx
 func (c *connection) BeginTx(ctx context.Context, opts driver.TxOptions) (driver.Tx, error) {
-	drvTx, ok := c.driverConn.(driver.ConnBeginTx)
+	drvTx, ok := c.Conn.(driver.ConnBeginTx)
 	if !ok {
 		return nil, driver.ErrSkip
 	}
@@ -98,7 +98,7 @@ func (c *connection) BeginTx(ctx context.Context, opts driver.TxOptions) (driver
 
 // PrepareContext implements driver.ConnPrepareContext
 func (c *connection) PrepareContext(ctx context.Context, query string) (driver.Stmt, error) {
-	driverPrep, ok := c.driverConn.(driver.ConnPrepareContext)
+	driverPrep, ok := c.Conn.(driver.ConnPrepareContext)
 	if !ok {
 		return nil, driver.ErrSkip
 	}
@@ -116,19 +116,22 @@ func (c *connection) PrepareContext(ctx context.Context, query string) (driver.S
 		return driverStmt, err
 	}
 
-	return &statement{query: query, driverStmt: driverStmt, logger: c.logger}, nil
+	return &statement{query: query, Stmt: driverStmt, logger: c.logger}, nil
 }
 
 // Ping implements driver.Pinger
 func (c *connection) Ping(ctx context.Context) error {
+	driverPinger, ok := c.Conn.(driver.Pinger)
+	if !ok {
+		return driver.ErrSkip
+	}
+
 	var err error
 
 	lvl, start := LevelInfo, time.Now()
 
-	if connPing, ok := c.driverConn.(driver.Pinger); ok {
-		if pingErr := connPing.Ping(ctx); pingErr != nil {
-			lvl, err = LevelError, pingErr
-		}
+	if err = driverPinger.Ping(ctx); err != nil {
+		lvl = LevelError
 	}
 
 	c.logger.log(ctx, lvl, "Ping", start, err)
@@ -139,13 +142,13 @@ func (c *connection) Ping(ctx context.Context) error {
 // Exec implements driver.Execer
 // Deprecated: use ExecContext() instead
 func (c *connection) Exec(query string, args []driver.Value) (driver.Result, error) {
-	driverExecer, ok := c.driverConn.(driver.Execer) // nolint: staticcheck
+	driverExecer, ok := c.Conn.(driver.Execer) // nolint: staticcheck
 	if !ok {
 		return nil, driver.ErrSkip
 	}
 
 	lvl, start := LevelInfo, time.Now()
-	drvResult, err := driverExecer.Exec(query, args)
+	res, err := driverExecer.Exec(query, args)
 
 	if err != nil {
 		lvl = LevelError
@@ -153,18 +156,22 @@ func (c *connection) Exec(query string, args []driver.Value) (driver.Result, err
 
 	c.logger.log(context.Background(), lvl, "Exec", start, err, c.logger.withQuery(query), c.logger.withArgs(args))
 
-	return drvResult, err
+	if err != nil {
+		return res, err
+	}
+
+	return &result{Result: res, logger: c.logger}, nil
 }
 
 // ExecContext implements driver.ExecerContext
 func (c *connection) ExecContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Result, error) {
-	driverExecerContext, ok := c.driverConn.(driver.ExecerContext)
+	driverExecerContext, ok := c.Conn.(driver.ExecerContext)
 	if !ok {
 		return nil, driver.ErrSkip
 	}
 
 	lvl, start := LevelInfo, time.Now()
-	drvResult, err := driverExecerContext.ExecContext(ctx, query, args)
+	res, err := driverExecerContext.ExecContext(ctx, query, args)
 
 	if err != nil {
 		lvl = LevelError
@@ -172,19 +179,23 @@ func (c *connection) ExecContext(ctx context.Context, query string, args []drive
 
 	c.logger.log(ctx, lvl, "ExecContext", start, err, c.logger.withQuery(query), c.logger.withNamedArgs(args))
 
-	return drvResult, err
+	if err != nil {
+		return res, err
+	}
+
+	return &result{Result: res, logger: c.logger}, nil
 }
 
 // Query implements driver.Queryer
 // Deprecated: use QueryContext() instead
 func (c *connection) Query(query string, args []driver.Value) (driver.Rows, error) {
-	driverQueryer, ok := c.driverConn.(driver.Queryer) // nolint: staticcheck
+	driverQueryer, ok := c.Conn.(driver.Queryer) // nolint: staticcheck
 	if !ok {
 		return nil, driver.ErrSkip
 	}
 
 	lvl, start := LevelInfo, time.Now()
-	drvResult, err := driverQueryer.Query(query, args)
+	res, err := driverQueryer.Query(query, args)
 
 	if err != nil {
 		lvl = LevelError
@@ -192,18 +203,22 @@ func (c *connection) Query(query string, args []driver.Value) (driver.Rows, erro
 
 	c.logger.log(context.Background(), lvl, "Query", start, err, c.logger.withQuery(query), c.logger.withArgs(args))
 
-	return drvResult, err
+	if err != nil {
+		return res, err
+	}
+
+	return &rows{Rows: res, logger: c.logger}, nil
 }
 
 // QueryContext implements driver.QueryerContext
 func (c *connection) QueryContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Rows, error) {
-	driverQueryerContext, ok := c.driverConn.(driver.QueryerContext)
+	driverQueryerContext, ok := c.Conn.(driver.QueryerContext)
 	if !ok {
 		return nil, driver.ErrSkip
 	}
 
 	lvl, start := LevelInfo, time.Now()
-	drvResult, err := driverQueryerContext.QueryContext(ctx, query, args)
+	res, err := driverQueryerContext.QueryContext(ctx, query, args)
 
 	if err != nil {
 		lvl = LevelError
@@ -211,12 +226,16 @@ func (c *connection) QueryContext(ctx context.Context, query string, args []driv
 
 	c.logger.log(ctx, lvl, "QueryContext", start, err, c.logger.withQuery(query), c.logger.withNamedArgs(args))
 
-	return drvResult, err
+	if err != nil {
+		return res, err
+	}
+
+	return &rows{Rows: res, logger: c.logger}, nil
 }
 
 // ResetSession implements driver.SessionResetter
 func (c *connection) ResetSession(ctx context.Context) error {
-	driverSessionResetter, ok := c.driverConn.(driver.SessionResetter)
+	driverSessionResetter, ok := c.Conn.(driver.SessionResetter)
 	if !ok {
 		return driver.ErrSkip
 	}
@@ -235,7 +254,7 @@ func (c *connection) ResetSession(ctx context.Context) error {
 
 // CheckNamedValue implements driver.NamedValueChecker
 func (c *connection) CheckNamedValue(nm *driver.NamedValue) error {
-	driverNamedValueChecker, ok := c.driverConn.(driver.NamedValueChecker)
+	driverNamedValueChecker, ok := c.Conn.(driver.NamedValueChecker)
 	if !ok {
 		return driver.ErrSkip
 	}

@@ -13,25 +13,25 @@ import (
 // - driver.NamedValueChecker
 // - driver.ColumnConverter
 type statement struct {
-	query      string
-	driverStmt driver.Stmt
-	logger     *logger
+	driver.Stmt
+	query  string
+	logger *logger
 }
 
 // Close implements driver.Stmt
 func (s *statement) Close() error {
-	return s.driverStmt.Close()
+	return s.Stmt.Close()
 }
 
 // NumInput implements driver.Stmt
 func (s *statement) NumInput() int {
-	return s.driverStmt.NumInput()
+	return s.Stmt.NumInput()
 }
 
 // Exec implements driver.Stmt
 func (s *statement) Exec(args []driver.Value) (driver.Result, error) {
 	lvl, start := LevelInfo, time.Now()
-	res, err := s.driverStmt.Exec(args) // nolint: staticcheck
+	res, err := s.Stmt.Exec(args) // nolint: staticcheck
 
 	if err != nil {
 		lvl = LevelError
@@ -39,13 +39,17 @@ func (s *statement) Exec(args []driver.Value) (driver.Result, error) {
 
 	s.logger.log(context.Background(), lvl, "StmtExec", start, err, s.logger.withQuery(s.query), s.logger.withArgs(args))
 
-	return res, err
+	if err != nil {
+		return res, err
+	}
+
+	return &result{Result: res, logger: s.logger}, nil
 }
 
 // Query implements driver.Stmt
 func (s *statement) Query(args []driver.Value) (driver.Rows, error) {
 	lvl, start := LevelInfo, time.Now()
-	res, err := s.driverStmt.Query(args) // nolint: staticcheck
+	res, err := s.Stmt.Query(args) // nolint: staticcheck
 
 	if err != nil {
 		lvl = LevelError
@@ -53,12 +57,16 @@ func (s *statement) Query(args []driver.Value) (driver.Rows, error) {
 
 	s.logger.log(context.Background(), lvl, "StmtQuery", start, err, s.logger.withQuery(s.query), s.logger.withArgs(args))
 
-	return res, err
+	if err != nil {
+		return res, err
+	}
+
+	return &rows{Rows: res, logger: s.logger}, nil
 }
 
 // ExecContext implements driver.StmtExecContext
 func (s *statement) ExecContext(ctx context.Context, args []driver.NamedValue) (driver.Result, error) {
-	stmtExecer, ok := s.driverStmt.(driver.StmtExecContext)
+	stmtExecer, ok := s.Stmt.(driver.StmtExecContext)
 	if !ok {
 		return nil, driver.ErrSkip
 	}
@@ -72,12 +80,16 @@ func (s *statement) ExecContext(ctx context.Context, args []driver.NamedValue) (
 
 	s.logger.log(ctx, lvl, "StmtExecContext", start, err, s.logger.withQuery(s.query), s.logger.withNamedArgs(args))
 
-	return res, err
+	if err != nil {
+		return res, err
+	}
+
+	return &result{Result: res, logger: s.logger}, nil
 }
 
 // QueryContext implements driver.StmtQueryContext
 func (s *statement) QueryContext(ctx context.Context, args []driver.NamedValue) (driver.Rows, error) {
-	stmtQueryer, ok := s.driverStmt.(driver.StmtQueryContext)
+	stmtQueryer, ok := s.Stmt.(driver.StmtQueryContext)
 	if !ok {
 		return nil, driver.ErrSkip
 	}
@@ -91,12 +103,16 @@ func (s *statement) QueryContext(ctx context.Context, args []driver.NamedValue) 
 
 	s.logger.log(ctx, lvl, "StmtQueryContext", start, err, s.logger.withQuery(s.query), s.logger.withNamedArgs(args))
 
-	return res, err
+	if err != nil {
+		return res, err
+	}
+
+	return &rows{Rows: res, logger: s.logger}, nil
 }
 
 // CheckNamedValue implements driver.NamedValueChecker
 func (s *statement) CheckNamedValue(nm *driver.NamedValue) error {
-	if checker, ok := s.driverStmt.(driver.NamedValueChecker); ok {
+	if checker, ok := s.Stmt.(driver.NamedValueChecker); ok {
 		return checker.CheckNamedValue(nm)
 	}
 
@@ -106,7 +122,7 @@ func (s *statement) CheckNamedValue(nm *driver.NamedValue) error {
 // ColumnConverter implements driver.ColumnConverter
 func (s *statement) ColumnConverter(idx int) driver.ValueConverter {
 	// nolint: staticcheck
-	if converter, ok := s.driverStmt.(driver.ColumnConverter); ok {
+	if converter, ok := s.Stmt.(driver.ColumnConverter); ok {
 		return converter.ColumnConverter(idx)
 	}
 
