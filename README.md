@@ -1,8 +1,8 @@
-# Go SQLDB-Logger
+# SQLDB-Logger
 
 [![Build Status](https://travis-ci.com/simukti/sqldb-logger.svg)](https://travis-ci.com/simukti/sqldb-logger) [![Coverage Status](https://coveralls.io/repos/github/simukti/sqldb-logger/badge.svg)](https://coveralls.io/github/simukti/sqldb-logger) [![Go Report Card](https://goreportcard.com/badge/github.com/simukti/sqldb-logger)](https://goreportcard.com/report/github.com/simukti/sqldb-logger) [![GolangCI Status](https://golangci.com/badges/github.com/simukti/sqldb-logger.svg)](https://golangci.com/r/github.com/simukti/sqldb-logger) [![License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://raw.githubusercontent.com/simukti/sqldb-logger/master/LICENSE.txt)
 
- A logger for SQL database driver without modify existing `*sql.DB` stdlib usage.
+ A logger for Go SQL database driver without modify existing `*sql.DB` stdlib usage.
 
 ![shameless console output sample](./logadapter/zerologadapter/console.jpg?raw=true "go sql database logger output")
 
@@ -35,9 +35,9 @@ Change it with:
 
 ```go
 // import "github.com/go-sql-driver/mysql"
-zlogger := zerolog.New(os.Stdout) // zerolog.New(zerolog.NewConsoleWriter()) // <-- for colored console
+loggerAdapter := zerologadapter.New(zerolog.New(os.Stdout)) // zerolog.New(zerolog.NewConsoleWriter()) // <-- for colored console
 dsn := "username:passwd@tcp(mysqlserver:3306)/dbname?parseTime=true"
-db, err := sqldblogger.OpenDriver(dsn, &mysql.MySQLDriver{}, zlogger) // db is still *sql.DB
+db, err := sqldblogger.OpenDriver(dsn, &mysql.MySQLDriver{}, loggerAdapter) // db is still *sql.DB
 ``` 
 
 Without giving 4th argument to `OpenDriver`, it will use [default options](./options.go#L19-L29).
@@ -52,7 +52,7 @@ For full control of log output (field name, time format, etc...), pass variadic 
 db, err := sqldblogger.OpenDriver(
     dsn, 
     &mysql.MySQLDriver{}, 
-    zlogger,
+    loggerAdapter,
     // options
     sqldblogger.WithErrorFieldname("sql_error"), // default: error
     sqldblogger.WithDurationFieldname("query_duration"), // default: duration
@@ -102,9 +102,9 @@ db, err := sqldblogger.OpenDriver(dsn, &mssql.Driver{}, loggerAdapter /*, ...opt
 db, err := sqldblogger.OpenDriver(dsn, oci8.OCI8Driver, loggerAdapter /*, ...options */)
 ```
 
-## STRUCTURED LOGGER ADAPTER
+## LOGGER ADAPTER
 
-There are 3 adapters within this repo:
+There are 3 logger adapters within this repo:
 
 - [Zerolog adapter](logadapter/zerologadapter): Using [rs/zerolog](https://github.com/rs/zerolog) as its logger.
 
