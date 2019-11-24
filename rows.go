@@ -53,13 +53,13 @@ func (r *rows) HasNextResultSet() bool {
 
 // NextResultSet implement driver.RowsNextResultSet
 func (r *rows) NextResultSet() error {
-	var err error
+	rs, ok := r.Rows.(driver.RowsNextResultSet)
+	if !ok {
+		return io.EOF
+	}
 
 	start := time.Now()
-
-	if rs, ok := r.Rows.(driver.RowsNextResultSet); ok {
-		err = rs.NextResultSet()
-	}
+	err := rs.NextResultSet()
 
 	if err != nil && err != io.EOF {
 		r.logger.log(context.Background(), LevelError, "RowsNextResultSet", start, err)
