@@ -46,10 +46,6 @@ type dataFunc func() (string, interface{})
 
 func (l *logger) withQuery(query string) dataFunc {
 	return func() (string, interface{}) {
-		if query == "" {
-			return l.opt.sqlQueryFieldname, nil
-		}
-
 		return l.opt.sqlQueryFieldname, query
 	}
 }
