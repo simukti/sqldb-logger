@@ -9,6 +9,7 @@ type options struct {
 	sqlQueryFieldname string
 	sqlArgsFieldname  string
 	logArgs           bool
+	logDriverErrSkip  bool
 	minimumLogLevel   Level
 	durationUnit      DurationUnit
 	timeFormat        TimeFormat
@@ -24,6 +25,7 @@ func setDefaultOptions(opt *options) {
 	opt.sqlArgsFieldname = "args"
 	opt.minimumLogLevel = LevelDebug
 	opt.logArgs = true
+	opt.logDriverErrSkip = false
 	opt.durationUnit = DurationMillisecond
 	opt.timeFormat = TimeFormatUnix
 }
@@ -120,6 +122,12 @@ func WithMinimumLevel(lvl Level) Option {
 func WithLogArguments(flag bool) Option {
 	return func(opt *options) {
 		opt.logArgs = flag
+	}
+}
+
+func WithLogDriverErrorSkip(flag bool) Option {
+	return func(opt *options) {
+		opt.logDriverErrSkip = flag
 	}
 }
 
