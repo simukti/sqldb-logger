@@ -46,9 +46,18 @@ func TestWithArgs(t *testing.T) {
 	cfg := &options{}
 	setDefaultOptions(cfg)
 	l := &logger{opt: cfg}
-	k, v := l.withArgs([]driver.Value{})()
-	assert.Equal(t, cfg.sqlArgsFieldname, k)
-	assert.Equal(t, []interface{}{}, v)
+
+	t.Run("Non Empty Args", func(t *testing.T) {
+		k, v := l.withArgs([]driver.Value{1})()
+		assert.Equal(t, cfg.sqlArgsFieldname, k)
+		assert.Equal(t, []interface{}{1}, v)
+	})
+
+	t.Run("Empty Args", func(t *testing.T) {
+		k, v := l.withArgs([]driver.Value{})()
+		assert.Equal(t, cfg.sqlArgsFieldname, k)
+		assert.Equal(t, nil, v)
+	})
 }
 
 func TestWithNamedArgs(t *testing.T) {
@@ -209,6 +218,70 @@ func TestWithLogArgumentsFalse(t *testing.T) {
 	// sql args should not logged
 	assert.NotContains(t, content.Data, cfg.sqlArgsFieldname)
 	bl.Reset()
+}
+
+func TestWithEmptyArgs(t *testing.T) {
+	cfg := &options{}
+	setDefaultOptions(cfg)
+
+	bl := &bufferTestLogger{}
+	l := &logger{opt: cfg, logger: bl}
+	l.log(
+		context.TODO(),
+		LevelInfo,
+		"msg",
+		time.Now(),
+		nil,
+		l.withQuery("query"),
+		l.withArgs([]driver.Value{}),
+	)
+
+	var content bufLog
+	err := json.Unmarshal(bl.Bytes(), &content)
+	assert.NoError(t, err)
+	assert.Contains(t, content.Data, cfg.sqlQueryFieldname)
+	assert.Contains(t, content.Data, cfg.timeFieldname)
+	assert.Contains(t, content.Data, cfg.durationFieldname)
+	// empty args will not logged
+	assert.NotContains(t, content.Data, cfg.sqlArgsFieldname)
+}
+
+func TestWithErrorDriverSkip(t *testing.T) {
+	cfg := &options{}
+	setDefaultOptions(cfg)
+	bl := &bufferTestLogger{}
+	l := &logger{opt: cfg, logger: bl}
+
+	t.Run("Skip", func(t *testing.T) {
+		l.log(
+			context.TODO(),
+			LevelError,
+			"msg",
+			time.Now(),
+			driver.ErrSkip,
+		)
+
+		assert.Empty(t, bl.Bytes())
+	})
+
+	t.Run("No Skip", func(t *testing.T) {
+		WithLogDriverErrorSkip(true)(cfg)
+
+		l.log(
+			context.TODO(),
+			LevelError,
+			"msg",
+			time.Now(),
+			driver.ErrSkip,
+		)
+
+		var content bufLog
+		err := json.Unmarshal(bl.Bytes(), &content)
+		assert.NoError(t, err)
+		assert.Contains(t, content.Data, cfg.timeFieldname)
+		assert.Contains(t, content.Data, cfg.durationFieldname)
+		assert.Contains(t, content.Data, cfg.errorFieldname)
+	})
 }
 
 type bufferTestLogger struct {

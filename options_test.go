@@ -18,6 +18,7 @@ func TestDefaultConfigs(t *testing.T) {
 	assert.Equal(t, "query", cfg.sqlQueryFieldname)
 	assert.Equal(t, "args", cfg.sqlArgsFieldname)
 	assert.Equal(t, true, cfg.logArgs)
+	assert.Equal(t, false, cfg.logDriverErrSkip)
 	assert.Equal(t, LevelDebug, cfg.minimumLogLevel)
 	assert.Equal(t, DurationMillisecond, cfg.durationUnit)
 }
@@ -65,6 +66,12 @@ func TestWithLogArguments(t *testing.T) {
 	cfg := &options{}
 	WithLogArguments(false)(cfg)
 	assert.Equal(t, false, cfg.logArgs)
+}
+
+func TestWithLogDriverErrSkip(t *testing.T) {
+	cfg := &options{}
+	WithLogDriverErrorSkip(true)(cfg)
+	assert.Equal(t, true, cfg.logDriverErrSkip)
 }
 
 func TestWithDurationUnit(t *testing.T) {

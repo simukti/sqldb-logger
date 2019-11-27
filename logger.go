@@ -46,13 +46,17 @@ type dataFunc func() (string, interface{})
 
 func (l *logger) withQuery(query string) dataFunc {
 	return func() (string, interface{}) {
+		if query == "" {
+			return l.opt.sqlQueryFieldname, nil
+		}
+
 		return l.opt.sqlQueryFieldname, query
 	}
 }
 
 func (l *logger) withArgs(args []driver.Value) dataFunc {
 	return func() (string, interface{}) {
-		if !l.opt.logArgs {
+		if !l.opt.logArgs || len(args) == 0 {
 			return l.opt.sqlArgsFieldname, nil
 		}
 
@@ -62,7 +66,7 @@ func (l *logger) withArgs(args []driver.Value) dataFunc {
 
 func (l *logger) withNamedArgs(args []driver.NamedValue) dataFunc {
 	return func() (string, interface{}) {
-		if !l.opt.logArgs {
+		if !l.opt.logArgs || len(args) == 0 {
 			return l.opt.sqlArgsFieldname, nil
 		}
 
@@ -81,6 +85,10 @@ func (l *logger) log(ctx context.Context, lvl Level, msg string, start time.Time
 		return
 	}
 
+	if !l.opt.logDriverErrSkip && err == driver.ErrSkip {
+		return
+	}
+
 	data := map[string]interface{}{
 		l.opt.timeFieldname:     l.opt.timeFormat.format(time.Now()),
 		l.opt.durationFieldname: l.opt.durationUnit.format(time.Since(start)),
@@ -93,7 +101,7 @@ func (l *logger) log(ctx context.Context, lvl Level, msg string, start time.Time
 	for _, d := range datas {
 		k, v := d()
 
-		if !l.opt.logArgs && k == l.opt.sqlArgsFieldname {
+		if (!l.opt.logArgs && k == l.opt.sqlArgsFieldname) || v == nil {
 			continue
 		}
 
