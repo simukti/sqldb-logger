@@ -37,7 +37,7 @@ func (c *connection) Begin() (driver.Tx, error) {
 		return connTx, err
 	}
 
-	return &transaction{tx: connTx, logger: c.logger}, nil
+	return &transaction{Tx: connTx, logger: c.logger}, nil
 }
 
 // Prepare implements driver.Conn
@@ -93,7 +93,7 @@ func (c *connection) BeginTx(ctx context.Context, opts driver.TxOptions) (driver
 		return connTx, err
 	}
 
-	return &transaction{tx: connTx, logger: c.logger}, nil
+	return &transaction{Tx: connTx, logger: c.logger}, nil
 }
 
 // PrepareContext implements driver.ConnPrepareContext
@@ -128,7 +128,7 @@ func (c *connection) Ping(ctx context.Context) error {
 
 	var err error
 
-	lvl, start := LevelInfo, time.Now()
+	lvl, start := LevelDebug, time.Now()
 
 	if err = driverPinger.Ping(ctx); err != nil {
 		lvl = LevelError
