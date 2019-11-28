@@ -8,6 +8,14 @@ import (
 	"time"
 )
 
+// rows is a wrapper which implements:
+// - driver.Rows
+// - driver.RowsNextResultSet
+// - driver.RowsColumnTypeScanType
+// - driver.RowsColumnTypeDatabaseTypeName
+// - driver.RowsColumnTypeLength
+// - driver.RowsColumnTypeNullable
+// - driver.RowsColumnTypePrecisionScale
 type rows struct {
 	driver.Rows
 	logger *logger
