@@ -265,6 +265,21 @@ func TestConnection_Ping(t *testing.T) {
 		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testOpts.errorFieldname])
 		bufLogger.Reset()
 	})
+
+	t.Run("driver.Pinger Success", func(t *testing.T) {
+		driverConnMock := &driverConnPingerMock{}
+		driverConnMock.On("Ping", mock.Anything).Return(nil)
+		conn := &connection{Conn: driverConnMock, logger: testLogger}
+		err := conn.Ping(context.TODO())
+		assert.NoError(t, err)
+
+		var output bufLog
+		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		assert.NoError(t, err)
+		assert.Equal(t, "Ping", output.Message)
+		assert.Equal(t, LevelDebug.String(), output.Level)
+		bufLogger.Reset()
+	})
 }
 
 func TestConnection_Exec(t *testing.T) {
