@@ -16,6 +16,8 @@ type statement struct {
 	driver.Stmt
 	query  string
 	logger *logger
+	id     string
+	connID string
 }
 
 // Close implements driver.Stmt
@@ -30,6 +32,7 @@ func (s *statement) NumInput() int {
 
 // Exec implements driver.Stmt
 func (s *statement) Exec(args []driver.Value) (driver.Result, error) {
+	logs := append(s.logIDs(), s.logger.withArgs(args))
 	lvl, start := LevelInfo, time.Now()
 	res, err := s.Stmt.Exec(args) // nolint: staticcheck
 
@@ -37,7 +40,7 @@ func (s *statement) Exec(args []driver.Value) (driver.Result, error) {
 		lvl = LevelError
 	}
 
-	s.logger.log(context.Background(), lvl, "StmtExec", start, err, s.logger.withQuery(s.query), s.logger.withArgs(args))
+	s.logger.log(context.Background(), lvl, "StmtExec", start, err, logs...)
 
 	if err != nil {
 		return res, err
@@ -48,6 +51,7 @@ func (s *statement) Exec(args []driver.Value) (driver.Result, error) {
 
 // Query implements driver.Stmt
 func (s *statement) Query(args []driver.Value) (driver.Rows, error) {
+	logs := append(s.logIDs(), s.logger.withArgs(args))
 	lvl, start := LevelInfo, time.Now()
 	res, err := s.Stmt.Query(args) // nolint: staticcheck
 
@@ -55,7 +59,7 @@ func (s *statement) Query(args []driver.Value) (driver.Rows, error) {
 		lvl = LevelError
 	}
 
-	s.logger.log(context.Background(), lvl, "StmtQuery", start, err, s.logger.withQuery(s.query), s.logger.withArgs(args))
+	s.logger.log(context.Background(), lvl, "StmtQuery", start, err, logs...)
 
 	if err != nil {
 		return res, err
@@ -71,6 +75,7 @@ func (s *statement) ExecContext(ctx context.Context, args []driver.NamedValue) (
 		return nil, driver.ErrSkip
 	}
 
+	logs := append(s.logIDs(), s.logger.withNamedArgs(args))
 	lvl, start := LevelInfo, time.Now()
 	res, err := stmtExecer.ExecContext(ctx, args)
 
@@ -78,7 +83,7 @@ func (s *statement) ExecContext(ctx context.Context, args []driver.NamedValue) (
 		lvl = LevelError
 	}
 
-	s.logger.log(ctx, lvl, "StmtExecContext", start, err, s.logger.withQuery(s.query), s.logger.withNamedArgs(args))
+	s.logger.log(ctx, lvl, "StmtExecContext", start, err, logs...)
 
 	if err != nil {
 		return res, err
@@ -94,6 +99,7 @@ func (s *statement) QueryContext(ctx context.Context, args []driver.NamedValue) 
 		return nil, driver.ErrSkip
 	}
 
+	logs := append(s.logIDs(), s.logger.withNamedArgs(args))
 	lvl, start := LevelInfo, time.Now()
 	res, err := stmtQueryer.QueryContext(ctx, args)
 
@@ -101,7 +107,7 @@ func (s *statement) QueryContext(ctx context.Context, args []driver.NamedValue) 
 		lvl = LevelError
 	}
 
-	s.logger.log(ctx, lvl, "StmtQueryContext", start, err, s.logger.withQuery(s.query), s.logger.withNamedArgs(args))
+	s.logger.log(ctx, lvl, "StmtQueryContext", start, err, logs...)
 
 	if err != nil {
 		return res, err
@@ -127,4 +133,15 @@ func (s *statement) ColumnConverter(idx int) driver.ValueConverter {
 	}
 
 	return driver.DefaultParameterConverter
+}
+
+// stmtID prepared statement log key id
+const stmtID = "stmt.id"
+
+func (s *statement) logIDs() []dataFunc {
+	return []dataFunc{
+		s.logger.withUID(connID, s.connID),
+		s.logger.withUID(stmtID, s.id),
+		s.logger.withQuery(s.query),
+	}
 }

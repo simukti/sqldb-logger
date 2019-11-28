@@ -19,6 +19,7 @@ import (
 type rows struct {
 	driver.Rows
 	logger *logger
+	connID string
 }
 
 // Columns implement driver.Rows
@@ -32,7 +33,7 @@ func (r *rows) Close() error {
 	err := r.Rows.Close()
 
 	if err != nil {
-		r.logger.log(context.Background(), LevelError, "RowsClose", start, err)
+		r.logger.log(context.Background(), LevelError, "RowsClose", start, err, r.logIDs()...)
 	}
 
 	return err
@@ -44,7 +45,7 @@ func (r *rows) Next(dest []driver.Value) error {
 	err := r.Rows.Next(dest)
 
 	if err != nil && err != io.EOF {
-		r.logger.log(context.Background(), LevelError, "RowsNext", start, err)
+		r.logger.log(context.Background(), LevelError, "RowsNext", start, err, r.logIDs()...)
 	}
 
 	return err
@@ -70,7 +71,7 @@ func (r *rows) NextResultSet() error {
 	err := rs.NextResultSet()
 
 	if err != nil && err != io.EOF {
-		r.logger.log(context.Background(), LevelError, "RowsNextResultSet", start, err)
+		r.logger.log(context.Background(), LevelError, "RowsNextResultSet", start, err, r.logIDs()...)
 	}
 
 	return err
@@ -119,4 +120,10 @@ func (r *rows) ColumnTypePrecisionScale(index int) (precision, scale int64, ok b
 	}
 
 	return 0, 0, false
+}
+
+func (r *rows) logIDs() []dataFunc {
+	return []dataFunc{
+		r.logger.withUID(connID, r.connID),
+	}
 }

@@ -8,6 +8,8 @@ import (
 
 type transaction struct {
 	driver.Tx
+	id     string
+	connID string
 	logger *logger
 }
 
@@ -20,7 +22,7 @@ func (tx *transaction) Commit() error {
 		lvl = LevelError
 	}
 
-	tx.logger.log(context.Background(), lvl, "Commit", start, err)
+	tx.logger.log(context.Background(), lvl, "Commit", start, err, tx.txIDs()...)
 
 	return err
 }
@@ -34,7 +36,16 @@ func (tx *transaction) Rollback() error {
 		lvl = LevelError
 	}
 
-	tx.logger.log(context.Background(), lvl, "Rollback", start, err)
+	tx.logger.log(context.Background(), lvl, "Rollback", start, err, tx.txIDs()...)
 
 	return err
+}
+
+const txID = "tx.id"
+
+func (tx *transaction) txIDs() []dataFunc {
+	return []dataFunc{
+		tx.logger.withUID(connID, tx.connID),
+		tx.logger.withUID(txID, tx.id),
+	}
 }

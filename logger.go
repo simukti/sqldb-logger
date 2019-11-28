@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"strconv"
 	"time"
+
+	"github.com/rs/xid"
 )
 
 type Level uint8
@@ -43,6 +45,12 @@ type logger struct {
 
 // dataFunc for extra data to be added to log
 type dataFunc func() (string, interface{})
+
+func (l *logger) withUID(k, v string) dataFunc {
+	return func() (string, interface{}) {
+		return k, v
+	}
+}
 
 func (l *logger) withQuery(query string) dataFunc {
 	return func() (string, interface{}) {
@@ -134,4 +142,12 @@ func parseArgs(argsVal []driver.Value) []interface{} {
 	}
 
 	return args
+}
+
+// uniqueID generate random ID for id per db call context:
+// - connection
+// - transaction
+// - statement
+func uniqueID() string {
+	return xid.New().String()
 }

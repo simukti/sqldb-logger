@@ -16,7 +16,7 @@ func TestTransaction_Commit(t *testing.T) {
 		txMock := &transactionMock{}
 		txMock.On("Commit").Return(driver.ErrBadConn)
 
-		conn := &transaction{Tx: txMock, logger: testLogger}
+		conn := &transaction{Tx: txMock, logger: testLogger, id: uniqueID()}
 		err := conn.Commit()
 		assert.Error(t, err)
 
@@ -31,7 +31,7 @@ func TestTransaction_Commit(t *testing.T) {
 		txMock := &transactionMock{}
 		txMock.On("Commit").Return(nil)
 
-		conn := &transaction{Tx: txMock, logger: testLogger}
+		conn := &transaction{Tx: txMock, logger: testLogger, id: uniqueID()}
 		err := conn.Commit()
 		assert.NoError(t, err)
 
@@ -48,7 +48,7 @@ func TestTransaction_Rollback(t *testing.T) {
 		txMock := &transactionMock{}
 		txMock.On("Rollback").Return(driver.ErrBadConn)
 
-		conn := &transaction{Tx: txMock, logger: testLogger}
+		conn := &transaction{Tx: txMock, logger: testLogger, id: uniqueID()}
 		err := conn.Rollback()
 		assert.Error(t, err)
 
@@ -63,7 +63,7 @@ func TestTransaction_Rollback(t *testing.T) {
 		txMock := &transactionMock{}
 		txMock.On("Rollback").Return(nil)
 
-		conn := &transaction{Tx: txMock, logger: testLogger}
+		conn := &transaction{Tx: txMock, logger: testLogger, id: uniqueID()}
 		err := conn.Rollback()
 		assert.NoError(t, err)
 
