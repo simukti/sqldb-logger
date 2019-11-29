@@ -33,7 +33,8 @@ func TestConnection_Begin(t *testing.T) {
 		var txMock *transactionMock
 		driverConnMock.On("Begin").Return(txMock, driver.ErrBadConn)
 
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: uniqueID()}
+		id := uniqueID()
+		conn := &connection{Conn: driverConnMock, logger: testLogger, id: id}
 		_, err := conn.Begin()
 		assert.Error(t, err)
 
@@ -41,7 +42,7 @@ func TestConnection_Begin(t *testing.T) {
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, LevelError.String(), output.Level)
-		bufLogger.Reset()
+		assert.Equal(t, id, output.Data[connID])
 	})
 
 	t.Run("Success", func(t *testing.T) {
@@ -49,7 +50,8 @@ func TestConnection_Begin(t *testing.T) {
 		txMock := &transactionMock{}
 		driverConnMock.On("Begin").Return(txMock, nil)
 
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: uniqueID()}
+		id := uniqueID()
+		conn := &connection{Conn: driverConnMock, logger: testLogger, id: id}
 		tx, err := conn.Begin()
 		assert.NoError(t, err)
 		assert.Implements(t, (*driver.Tx)(nil), tx)
@@ -59,7 +61,7 @@ func TestConnection_Begin(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "Begin", output.Message)
 		assert.Equal(t, LevelDebug.String(), output.Level)
-		bufLogger.Reset()
+		assert.Equal(t, id, output.Data[connID])
 	})
 }
 
@@ -79,7 +81,7 @@ func TestConnection_Prepare(t *testing.T) {
 		assert.Equal(t, "Prepare", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
-		bufLogger.Reset()
+		assert.Equal(t, conn.id, output.Data[connID])
 	})
 
 	t.Run("Success", func(t *testing.T) {
@@ -98,7 +100,8 @@ func TestConnection_Prepare(t *testing.T) {
 		assert.Equal(t, "Prepare", output.Message)
 		assert.Equal(t, LevelInfo.String(), output.Level)
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
-		bufLogger.Reset()
+		assert.Equal(t, conn.id, output.Data[connID])
+		assert.NotEmpty(t, output.Data[stmtID])
 	})
 }
 
@@ -116,7 +119,7 @@ func TestConnection_Close(t *testing.T) {
 		assert.Equal(t, "Close", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
 		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testOpts.errorFieldname])
-		bufLogger.Reset()
+		assert.Equal(t, conn.id, output.Data[connID])
 	})
 
 	t.Run("Success", func(t *testing.T) {
@@ -131,7 +134,7 @@ func TestConnection_Close(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "Close", output.Message)
 		assert.Equal(t, LevelDebug.String(), output.Level)
-		bufLogger.Reset()
+		assert.Equal(t, conn.id, output.Data[connID])
 	})
 }
 
@@ -164,7 +167,8 @@ func TestConnection_BeginTx(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "BeginTx", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
-		bufLogger.Reset()
+		assert.Equal(t, conn.id, output.Data[connID])
+		assert.NotEmpty(t, output.Data[txID])
 	})
 
 	t.Run("With driver.ConnBeginTx Success", func(t *testing.T) {
@@ -185,7 +189,8 @@ func TestConnection_BeginTx(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "BeginTx", output.Message)
 		assert.Equal(t, LevelDebug.String(), output.Level)
-		bufLogger.Reset()
+		assert.Equal(t, conn.id, output.Data[connID])
+		assert.NotEmpty(t, output.Data[txID])
 	})
 }
 
@@ -217,7 +222,8 @@ func TestConnection_PrepareContext(t *testing.T) {
 		assert.Equal(t, LevelError.String(), output.Level)
 		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testOpts.errorFieldname])
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
-		bufLogger.Reset()
+		assert.Equal(t, conn.id, output.Data[connID])
+		assert.NotEmpty(t, output.Data[stmtID])
 	})
 
 	t.Run("With driver.ConnBeginTx Success", func(t *testing.T) {
@@ -237,7 +243,8 @@ func TestConnection_PrepareContext(t *testing.T) {
 		assert.Equal(t, "PrepareContext", output.Message)
 		assert.Equal(t, LevelInfo.String(), output.Level)
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
-		bufLogger.Reset()
+		assert.Equal(t, conn.id, output.Data[connID])
+		assert.NotEmpty(t, output.Data[stmtID])
 	})
 }
 
@@ -263,7 +270,7 @@ func TestConnection_Ping(t *testing.T) {
 		assert.Equal(t, "Ping", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
 		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testOpts.errorFieldname])
-		bufLogger.Reset()
+		assert.Equal(t, conn.id, output.Data[connID])
 	})
 
 	t.Run("driver.Pinger Success", func(t *testing.T) {
@@ -278,7 +285,7 @@ func TestConnection_Ping(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "Ping", output.Message)
 		assert.Equal(t, LevelDebug.String(), output.Level)
-		bufLogger.Reset()
+		assert.Equal(t, conn.id, output.Data[connID])
 	})
 }
 
@@ -312,7 +319,7 @@ func TestConnection_Exec(t *testing.T) {
 		assert.Equal(t, LevelError.String(), output.Level)
 		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testOpts.errorFieldname])
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
-		bufLogger.Reset()
+		assert.Equal(t, conn.id, output.Data[connID])
 	})
 
 	t.Run("driver.Execer Success", func(t *testing.T) {
@@ -332,7 +339,7 @@ func TestConnection_Exec(t *testing.T) {
 		assert.Equal(t, LevelInfo.String(), output.Level)
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
 		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
-		bufLogger.Reset()
+		assert.Equal(t, conn.id, output.Data[connID])
 	})
 }
 
@@ -365,7 +372,7 @@ func TestConnection_ExecContext(t *testing.T) {
 		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testOpts.errorFieldname])
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
 		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
-		bufLogger.Reset()
+		assert.Equal(t, conn.id, output.Data[connID])
 	})
 
 	t.Run("driver.ExecerContext Success", func(t *testing.T) {
@@ -385,7 +392,7 @@ func TestConnection_ExecContext(t *testing.T) {
 		assert.Equal(t, LevelInfo.String(), output.Level)
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
 		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
-		bufLogger.Reset()
+		assert.Equal(t, conn.id, output.Data[connID])
 	})
 }
 
@@ -420,7 +427,7 @@ func TestConnection_Query(t *testing.T) {
 		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testOpts.errorFieldname])
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
 		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
-		bufLogger.Reset()
+		assert.Equal(t, conn.id, output.Data[connID])
 	})
 
 	t.Run("driver.Queryer Success", func(t *testing.T) {
@@ -440,7 +447,7 @@ func TestConnection_Query(t *testing.T) {
 		assert.Equal(t, LevelInfo.String(), output.Level)
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
 		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
-		bufLogger.Reset()
+		assert.Equal(t, conn.id, output.Data[connID])
 	})
 }
 
@@ -474,7 +481,7 @@ func TestConnection_QueryContext(t *testing.T) {
 		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testOpts.errorFieldname])
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
 		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
-		bufLogger.Reset()
+		assert.Equal(t, conn.id, output.Data[connID])
 	})
 
 	t.Run("driver.QueryerContext Success", func(t *testing.T) {
@@ -494,7 +501,7 @@ func TestConnection_QueryContext(t *testing.T) {
 		assert.Equal(t, LevelInfo.String(), output.Level)
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
 		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
-		bufLogger.Reset()
+		assert.Equal(t, conn.id, output.Data[connID])
 	})
 }
 
@@ -520,7 +527,7 @@ func TestConnection_ResetSession(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "ResetSession", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
-		bufLogger.Reset()
+		assert.Equal(t, conn.id, output.Data[connID])
 	})
 }
 
@@ -555,7 +562,7 @@ func TestConnection_CheckNamedValue(t *testing.T) {
 		assert.Equal(t, "ConnCheckNamedValue", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
 		assert.NotEmpty(t, output.Data[connID])
-		bufLogger.Reset()
+		assert.Equal(t, conn.id, output.Data[connID])
 	})
 }
 
