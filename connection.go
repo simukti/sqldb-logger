@@ -44,7 +44,7 @@ func (c *connection) Begin() (driver.Tx, error) {
 
 // Prepare implements driver.Conn
 func (c *connection) Prepare(query string) (driver.Stmt, error) {
-	lvl, start, id := LevelDebug, time.Now(), uniqueID()
+	lvl, start, id := LevelInfo, time.Now(), uniqueID()
 	logs := append(c.logIDs(), c.logger.withQuery(query), c.logger.withUID(stmtID, id))
 	driverStmt, err := c.Conn.Prepare(query)
 
@@ -107,7 +107,7 @@ func (c *connection) PrepareContext(ctx context.Context, query string) (driver.S
 		return nil, driver.ErrSkip
 	}
 
-	lvl, start, id := LevelDebug, time.Now(), uniqueID()
+	lvl, start, id := LevelInfo, time.Now(), uniqueID()
 	logs := append(c.logIDs(), c.logger.withQuery(query), c.logger.withUID(stmtID, id))
 	driverStmt, err := driverPrep.PrepareContext(ctx, query)
 

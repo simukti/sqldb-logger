@@ -224,7 +224,7 @@ func TestStatement_QueryContext2(t *testing.T) {
 	var connOutput bufLog
 	err = json.Unmarshal(bufLogger.Bytes(), &connOutput)
 	assert.NoError(t, err)
-	assert.Equal(t, LevelDebug.String(), connOutput.Level)
+	assert.Equal(t, LevelInfo.String(), connOutput.Level)
 	assert.Equal(t, conn.id, connOutput.Data[connID])
 
 	_, rsErr := stmt.Query([]driver.Value{1})
