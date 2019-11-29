@@ -8,9 +8,24 @@ import (
 	"time"
 )
 
+// rows is a wrapper which implements:
+// - driver.Rows
+// - driver.RowsNextResultSet
+// - driver.RowsColumnTypeScanType
+// - driver.RowsColumnTypeDatabaseTypeName
+// - driver.RowsColumnTypeLength
+// - driver.RowsColumnTypeNullable
+// - driver.RowsColumnTypePrecisionScale
+//
+// rows wrapper only log on error.
 type rows struct {
 	driver.Rows
-	logger *logger
+	logger    *logger
+	connID    string
+	stmtID    string
+	query     string
+	args      []driver.Value
+	namedArgs []driver.NamedValue
 }
 
 // Columns implement driver.Rows
@@ -24,7 +39,7 @@ func (r *rows) Close() error {
 	err := r.Rows.Close()
 
 	if err != nil {
-		r.logger.log(context.Background(), LevelError, "RowsClose", start, err)
+		r.logger.log(context.Background(), LevelError, "RowsClose", start, err, r.logData()...)
 	}
 
 	return err
@@ -36,7 +51,7 @@ func (r *rows) Next(dest []driver.Value) error {
 	err := r.Rows.Next(dest)
 
 	if err != nil && err != io.EOF {
-		r.logger.log(context.Background(), LevelError, "RowsNext", start, err)
+		r.logger.log(context.Background(), LevelError, "RowsNext", start, err, r.logData()...)
 	}
 
 	return err
@@ -62,7 +77,7 @@ func (r *rows) NextResultSet() error {
 	err := rs.NextResultSet()
 
 	if err != nil && err != io.EOF {
-		r.logger.log(context.Background(), LevelError, "RowsNextResultSet", start, err)
+		r.logger.log(context.Background(), LevelError, "RowsNextResultSet", start, err, r.logData()...)
 	}
 
 	return err
@@ -111,4 +126,15 @@ func (r *rows) ColumnTypePrecisionScale(index int) (precision, scale int64, ok b
 	}
 
 	return 0, 0, false
+}
+
+// logData default log data for rows.
+func (r *rows) logData() []dataFunc {
+	return []dataFunc{
+		r.logger.withUID(connID, r.connID),
+		r.logger.withUID(stmtID, r.stmtID),
+		r.logger.withQuery(r.query),
+		r.logger.withArgs(r.args),
+		r.logger.withNamedArgs(r.namedArgs),
+	}
 }

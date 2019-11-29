@@ -2,9 +2,10 @@
 
 [![Build Status](https://travis-ci.com/simukti/sqldb-logger.svg)](https://travis-ci.com/simukti/sqldb-logger) [![Coverage Status](https://coveralls.io/repos/github/simukti/sqldb-logger/badge.svg)](https://coveralls.io/github/simukti/sqldb-logger) [![Go Report Card](https://goreportcard.com/badge/github.com/simukti/sqldb-logger)](https://goreportcard.com/report/github.com/simukti/sqldb-logger) [![GolangCI Status](https://golangci.com/badges/github.com/simukti/sqldb-logger.svg)](https://golangci.com/r/github.com/simukti/sqldb-logger) [![License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://raw.githubusercontent.com/simukti/sqldb-logger/master/LICENSE.txt)
 
- A logger for Go SQL database driver without modify existing `*sql.DB` stdlib usage.
+A logger for Go SQL database driver without modify existing `*sql.DB` stdlib usage.
 
-![shameless console output sample](./logadapter/zerologadapter/console.jpg?raw=true "go sql database logger output")
+![shameless console output sample](./logadapter/zerologadapter/console.jpg?raw=true "go sql database logger output") 
+_Colored console writer output above only for sample/development_
 
 ## INSTALL
 
@@ -132,10 +133,9 @@ type Logger interface {
 I want to:
 
 - Stick to use `*sql.DB`.
-- Level-logging SQL database interaction.
-- Re-use [pgx log interface](https://github.com/jackc/pgx/blob/f3a3ee1a0e5c8fc8991928bcd06fdbcd1ee9d05c/logger.go#L46-L49) for commonly use SQL driver.
 - Have configurable output field.
-- Leverage structured logging with any provider.
+- Leverage structured logging.
+- Re-use [pgx log interface](https://github.com/jackc/pgx/blob/f3a3ee1a0e5c8fc8991928bcd06fdbcd1ee9d05c/logger.go#L46-L49).
 
 I haven't found SQL logger with that features, so why not created myself? 
 

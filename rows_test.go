@@ -16,7 +16,7 @@ import (
 func TestRows_Columns(t *testing.T) {
 	rowsMock := &rowsMock{}
 	rowsMock.On("Columns").Return([]string{"a", "b"})
-	rs := &rows{Rows: rowsMock, logger: testLogger}
+	rs := &rows{Rows: rowsMock, logger: testLogger, connID: uniqueID()}
 
 	cols := rs.Columns()
 	assert.Implements(t, (*driver.Rows)(nil), rs)
@@ -27,7 +27,7 @@ func TestRows_Close(t *testing.T) {
 	t.Run("Error", func(t *testing.T) {
 		rowsMock := &rowsMock{}
 		rowsMock.On("Close").Return(driver.ErrBadConn)
-		rs := &rows{Rows: rowsMock, logger: testLogger}
+		rs := &rows{Rows: rowsMock, logger: testLogger, connID: uniqueID(), stmtID: uniqueID(), query: "SELECT 1"}
 
 		err := rs.Close()
 		assert.Implements(t, (*driver.Rows)(nil), rs)
@@ -38,13 +38,16 @@ func TestRows_Close(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "RowsClose", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
+		assert.NotEmpty(t, output.Data[connID])
+		assert.NotEmpty(t, output.Data[stmtID])
+		assert.NotEmpty(t, output.Data[testOpts.sqlQueryFieldname])
 		bufLogger.Reset()
 	})
 
 	t.Run("Success", func(t *testing.T) {
 		rowsMock := &rowsMock{}
 		rowsMock.On("Close").Return(nil)
-		rs := &rows{Rows: rowsMock, logger: testLogger}
+		rs := &rows{Rows: rowsMock, logger: testLogger, connID: uniqueID()}
 
 		err := rs.Close()
 		assert.Implements(t, (*driver.Rows)(nil), rs)
@@ -56,7 +59,7 @@ func TestRows_Next(t *testing.T) {
 	t.Run("Error io.EOF", func(t *testing.T) {
 		rowsMock := &rowsMock{}
 		rowsMock.On("Next", mock.Anything).Return(io.EOF)
-		rs := &rows{Rows: rowsMock, logger: testLogger}
+		rs := &rows{Rows: rowsMock, logger: testLogger, connID: uniqueID()}
 
 		err := rs.Next([]driver.Value{1})
 		assert.Implements(t, (*driver.Rows)(nil), rs)
@@ -67,7 +70,7 @@ func TestRows_Next(t *testing.T) {
 	t.Run("Error Non-io.EOF", func(t *testing.T) {
 		rowsMock := &rowsMock{}
 		rowsMock.On("Next", mock.Anything).Return(driver.ErrBadConn)
-		rs := &rows{Rows: rowsMock, logger: testLogger}
+		rs := &rows{Rows: rowsMock, logger: testLogger, connID: uniqueID(), stmtID: uniqueID(), query: "SELECT 1"}
 
 		err := rs.Next([]driver.Value{1})
 		assert.Implements(t, (*driver.Rows)(nil), rs)
@@ -78,13 +81,16 @@ func TestRows_Next(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "RowsNext", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
+		assert.NotEmpty(t, output.Data[connID])
+		assert.NotEmpty(t, output.Data[stmtID])
+		assert.NotEmpty(t, output.Data[testOpts.sqlQueryFieldname])
 		bufLogger.Reset()
 	})
 
 	t.Run("Success", func(t *testing.T) {
 		rowsMock := &rowsMock{}
 		rowsMock.On("Next", mock.Anything).Return(nil)
-		rs := &rows{Rows: rowsMock, logger: testLogger}
+		rs := &rows{Rows: rowsMock, logger: testLogger, connID: uniqueID()}
 
 		err := rs.Next([]driver.Value{1})
 		assert.Implements(t, (*driver.Rows)(nil), rs)
@@ -95,7 +101,7 @@ func TestRows_Next(t *testing.T) {
 func TestRows_HasNextResultSet(t *testing.T) {
 	t.Run("Non driver.RowsNextResultSet", func(t *testing.T) {
 		rowsMock := &rowsMock{}
-		rs := &rows{Rows: rowsMock, logger: testLogger}
+		rs := &rows{Rows: rowsMock, logger: testLogger, connID: uniqueID()}
 
 		flag := rs.HasNextResultSet()
 		assert.Equal(t, false, flag)
@@ -104,7 +110,7 @@ func TestRows_HasNextResultSet(t *testing.T) {
 	t.Run("driver.RowsNextResultSet", func(t *testing.T) {
 		rowsMock := &rowsRowsNextResultSetMock{}
 		rowsMock.On("HasNextResultSet").Return(true)
-		rs := &rows{Rows: rowsMock, logger: testLogger}
+		rs := &rows{Rows: rowsMock, logger: testLogger, connID: uniqueID()}
 
 		flag := rs.HasNextResultSet()
 		assert.Equal(t, true, flag)
@@ -114,7 +120,7 @@ func TestRows_HasNextResultSet(t *testing.T) {
 func TestRows_NextResultSet(t *testing.T) {
 	t.Run("Non driver.RowsNextResultSet", func(t *testing.T) {
 		rowsMock := &rowsMock{}
-		rs := &rows{Rows: rowsMock, logger: testLogger}
+		rs := &rows{Rows: rowsMock, logger: testLogger, connID: uniqueID()}
 
 		err := rs.NextResultSet()
 		assert.Error(t, err)
@@ -124,7 +130,7 @@ func TestRows_NextResultSet(t *testing.T) {
 	t.Run("Error io.EOF", func(t *testing.T) {
 		rowsMock := &rowsRowsNextResultSetMock{}
 		rowsMock.On("NextResultSet").Return(io.EOF)
-		rs := &rows{Rows: rowsMock, logger: testLogger}
+		rs := &rows{Rows: rowsMock, logger: testLogger, connID: uniqueID()}
 
 		err := rs.NextResultSet()
 		assert.Error(t, err)
@@ -136,18 +142,17 @@ func TestRows_NextResultSet(t *testing.T) {
 	t.Run("Not Error", func(t *testing.T) {
 		rowsMock := &rowsRowsNextResultSetMock{}
 		rowsMock.On("NextResultSet").Return(nil)
-		rs := &rows{Rows: rowsMock, logger: testLogger}
+		rs := &rows{Rows: rowsMock, logger: testLogger, connID: uniqueID()}
 
 		err := rs.NextResultSet()
 		assert.NoError(t, err)
 		assert.Empty(t, bufLogger.Bytes())
-		bufLogger.Reset()
 	})
 
 	t.Run("Error Non io.EOF", func(t *testing.T) {
 		rowsMock := &rowsRowsNextResultSetMock{}
 		rowsMock.On("NextResultSet").Return(driver.ErrBadConn)
-		rs := &rows{Rows: rowsMock, logger: testLogger}
+		rs := &rows{Rows: rowsMock, logger: testLogger, connID: uniqueID(), stmtID: uniqueID(), query: "SELECT 1"}
 
 		err := rs.NextResultSet()
 		assert.Error(t, err)
@@ -158,6 +163,9 @@ func TestRows_NextResultSet(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "RowsNextResultSet", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
+		assert.NotEmpty(t, output.Data[connID])
+		assert.NotEmpty(t, output.Data[stmtID])
+		assert.NotEmpty(t, output.Data[testOpts.sqlQueryFieldname])
 		bufLogger.Reset()
 	})
 }
