@@ -167,7 +167,10 @@ func WithLogDriverErrorSkip(flag bool) Option {
 //
 // Default: DurationMillisecond
 //
-// Options: DurationMillisecond, DurationMicrosecond, DurationNanosecond
+// Options:
+// - DurationMillisecond
+// - DurationMicrosecond
+// - DurationNanosecond
 func WithDurationUnit(unit DurationUnit) Option {
 	return func(opt *options) {
 		opt.durationUnit = unit
