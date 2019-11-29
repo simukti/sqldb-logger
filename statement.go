@@ -32,7 +32,7 @@ func (s *statement) NumInput() int {
 
 // Exec implements driver.Stmt
 func (s *statement) Exec(args []driver.Value) (driver.Result, error) {
-	logs := append(s.logIDs(), s.logger.withArgs(args))
+	logs := append(s.logData(), s.logger.withArgs(args))
 	lvl, start := LevelInfo, time.Now()
 	res, err := s.Stmt.Exec(args) // nolint: staticcheck
 
@@ -46,12 +46,12 @@ func (s *statement) Exec(args []driver.Value) (driver.Result, error) {
 		return res, err
 	}
 
-	return &result{Result: res, logger: s.logger}, nil
+	return &result{Result: res, logger: s.logger, connID: s.connID, stmtID: s.id, query: s.query, args: args}, nil
 }
 
 // Query implements driver.Stmt
 func (s *statement) Query(args []driver.Value) (driver.Rows, error) {
-	logs := append(s.logIDs(), s.logger.withArgs(args))
+	logs := append(s.logData(), s.logger.withArgs(args))
 	lvl, start := LevelInfo, time.Now()
 	res, err := s.Stmt.Query(args) // nolint: staticcheck
 
@@ -65,7 +65,7 @@ func (s *statement) Query(args []driver.Value) (driver.Rows, error) {
 		return res, err
 	}
 
-	return &rows{Rows: res, logger: s.logger}, nil
+	return &rows{Rows: res, logger: s.logger, connID: s.connID, stmtID: s.id, query: s.query, args: args}, nil
 }
 
 // ExecContext implements driver.StmtExecContext
@@ -75,7 +75,7 @@ func (s *statement) ExecContext(ctx context.Context, args []driver.NamedValue) (
 		return nil, driver.ErrSkip
 	}
 
-	logs := append(s.logIDs(), s.logger.withNamedArgs(args))
+	logs := append(s.logData(), s.logger.withNamedArgs(args))
 	lvl, start := LevelInfo, time.Now()
 	res, err := stmtExecer.ExecContext(ctx, args)
 
@@ -89,7 +89,7 @@ func (s *statement) ExecContext(ctx context.Context, args []driver.NamedValue) (
 		return res, err
 	}
 
-	return &result{Result: res, logger: s.logger}, nil
+	return &result{Result: res, logger: s.logger, connID: s.connID, stmtID: s.id, query: s.query, namedArgs: args}, nil
 }
 
 // QueryContext implements driver.StmtQueryContext
@@ -99,7 +99,7 @@ func (s *statement) QueryContext(ctx context.Context, args []driver.NamedValue) 
 		return nil, driver.ErrSkip
 	}
 
-	logs := append(s.logIDs(), s.logger.withNamedArgs(args))
+	logs := append(s.logData(), s.logger.withNamedArgs(args))
 	lvl, start := LevelInfo, time.Now()
 	res, err := stmtQueryer.QueryContext(ctx, args)
 
@@ -113,7 +113,7 @@ func (s *statement) QueryContext(ctx context.Context, args []driver.NamedValue) 
 		return res, err
 	}
 
-	return &rows{Rows: res, logger: s.logger}, nil
+	return &rows{Rows: res, logger: s.logger, connID: s.connID, stmtID: s.id, query: s.query, namedArgs: args}, nil
 }
 
 // CheckNamedValue implements driver.NamedValueChecker
@@ -127,7 +127,7 @@ func (s *statement) CheckNamedValue(nm *driver.NamedValue) error {
 	err := checker.CheckNamedValue(nm)
 
 	if err != nil {
-		s.logger.log(context.Background(), LevelError, "StmtCheckNamedValue", start, err, s.logIDs()...)
+		s.logger.log(context.Background(), LevelError, "StmtCheckNamedValue", start, err, s.logData()...)
 	}
 
 	return err
@@ -146,7 +146,8 @@ func (s *statement) ColumnConverter(idx int) driver.ValueConverter {
 // stmtID prepared statement log key id
 const stmtID = "stmt.id"
 
-func (s *statement) logIDs() []dataFunc {
+// logData default log data for statement log.
+func (s *statement) logData() []dataFunc {
 	return []dataFunc{
 		s.logger.withUID(connID, s.connID),
 		s.logger.withUID(stmtID, s.id),
