@@ -144,7 +144,7 @@ func (s *statement) ColumnConverter(idx int) driver.ValueConverter {
 }
 
 // stmtID prepared statement log key id
-const stmtID = "stmt.id"
+const stmtID = "stmt_id"
 
 // logData default log data for statement log.
 func (s *statement) logData() []dataFunc {

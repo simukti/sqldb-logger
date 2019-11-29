@@ -277,7 +277,7 @@ func (c *connection) CheckNamedValue(nm *driver.NamedValue) error {
 }
 
 // connID connection log key id
-const connID = "conn.id"
+const connID = "conn_id"
 
 // logData default log data for connection.
 func (c *connection) logData() []dataFunc {

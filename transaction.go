@@ -41,7 +41,7 @@ func (tx *transaction) Rollback() error {
 	return err
 }
 
-const txID = "tx.id"
+const txID = "tx_id"
 
 // logData default log data for transaction.
 func (tx *transaction) logData() []dataFunc {
