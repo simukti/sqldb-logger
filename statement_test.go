@@ -238,13 +238,21 @@ func TestStatement_QueryContext2(t *testing.T) {
 }
 
 func TestStatement_CheckNamedValue(t *testing.T) {
-	t.Run("Return as is", func(t *testing.T) {
+	t.Run("Error", func(t *testing.T) {
 		stmtMock := &statementNamedValueCheckerMock{}
-		stmtMock.On("CheckNamedValue", mock.Anything).Return(nil)
+		stmtMock.On("CheckNamedValue", mock.Anything).Return(driver.ErrBadConn)
 
 		stmt := &statement{Stmt: stmtMock, logger: testLogger, id: uniqueID(), connID: uniqueID()}
 		err := stmt.CheckNamedValue(&driver.NamedValue{Name: "", Ordinal: 0, Value: "testid"})
+		assert.Error(t, err)
+
+		var stmtOutput bufLog
+		err = json.Unmarshal(bufLogger.Bytes(), &stmtOutput)
 		assert.NoError(t, err)
+		assert.Equal(t, LevelError.String(), stmtOutput.Level)
+		assert.Equal(t, "StmtCheckNamedValue", stmtOutput.Message)
+		assert.NotEmpty(t, stmtOutput.Data[stmtID])
+		assert.NotEmpty(t, stmtOutput.Data[connID])
 	})
 
 	t.Run("Not implement driver.NamedValueChecker", func(t *testing.T) {

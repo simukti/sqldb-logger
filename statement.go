@@ -118,11 +118,19 @@ func (s *statement) QueryContext(ctx context.Context, args []driver.NamedValue) 
 
 // CheckNamedValue implements driver.NamedValueChecker
 func (s *statement) CheckNamedValue(nm *driver.NamedValue) error {
-	if checker, ok := s.Stmt.(driver.NamedValueChecker); ok {
-		return checker.CheckNamedValue(nm)
+	checker, ok := s.Stmt.(driver.NamedValueChecker)
+	if !ok {
+		return driver.ErrSkip
 	}
 
-	return driver.ErrSkip
+	start := time.Now()
+	err := checker.CheckNamedValue(nm)
+
+	if err != nil {
+		s.logger.log(context.Background(), LevelError, "StmtCheckNamedValue", start, err, s.logIDs()...)
+	}
+
+	return err
 }
 
 // ColumnConverter implements driver.ColumnConverter
