@@ -22,7 +22,7 @@ func (tx *transaction) Commit() error {
 		lvl = LevelError
 	}
 
-	tx.logger.log(context.Background(), lvl, "Commit", start, err, tx.txIDs()...)
+	tx.logger.log(context.Background(), lvl, "Commit", start, err, tx.logData()...)
 
 	return err
 }
@@ -36,14 +36,15 @@ func (tx *transaction) Rollback() error {
 		lvl = LevelError
 	}
 
-	tx.logger.log(context.Background(), lvl, "Rollback", start, err, tx.txIDs()...)
+	tx.logger.log(context.Background(), lvl, "Rollback", start, err, tx.logData()...)
 
 	return err
 }
 
 const txID = "tx.id"
 
-func (tx *transaction) txIDs() []dataFunc {
+// logData default log data for transaction.
+func (tx *transaction) logData() []dataFunc {
 	return []dataFunc{
 		tx.logger.withUID(connID, tx.connID),
 		tx.logger.withUID(txID, tx.id),
