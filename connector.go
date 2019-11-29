@@ -17,14 +17,15 @@ type connector struct {
 // Connect implement driver.Connector which will open new db connection if none exist
 func (c *connector) Connect(ctx context.Context) (driver.Conn, error) {
 	start, id := time.Now(), uniqueID()
+	logID := c.logger.withUID(connID, id)
 	conn, err := c.driver.Open(c.dsn)
 
 	if err != nil {
-		c.logger.log(ctx, LevelError, "Connect", start, err, c.logger.withUID(connID, id))
+		c.logger.log(ctx, LevelError, "Connect", start, err, logID)
 		return nil, err
 	}
 
-	c.logger.log(ctx, LevelDebug, "Connect", start, err, c.logger.withUID(connID, id))
+	c.logger.log(ctx, LevelDebug, "Connect", start, err, logID)
 
 	return &connection{Conn: conn, logger: c.logger, id: id}, nil
 }
