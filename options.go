@@ -77,38 +77,59 @@ func (tf TimeFormat) format(logTime time.Time) interface{} {
 	}
 }
 
+// Option Logger option func.
 type Option func(*options)
 
+// WithErrorFieldname to customize error fieldname on log output.
+//
+// Default: "error"
 func WithErrorFieldname(name string) Option {
 	return func(opt *options) {
 		opt.errorFieldname = name
 	}
 }
 
+// WithDurationFieldname to customize duration fieldname on log output.
+//
+// Default: "duration"
 func WithDurationFieldname(name string) Option {
 	return func(opt *options) {
 		opt.durationFieldname = name
 	}
 }
 
+// WithTimeFieldname to customize log timestamp fieldname on log output.
+//
+// Default: "time"
 func WithTimeFieldname(name string) Option {
 	return func(opt *options) {
 		opt.timeFieldname = name
 	}
 }
 
+// WithSQLQueryFieldname to customize SQL query fieldname on log output.
+//
+// Default: "query"
 func WithSQLQueryFieldname(name string) Option {
 	return func(opt *options) {
 		opt.sqlQueryFieldname = name
 	}
 }
 
+// WithSQLArgsFieldname to customize SQL query arguments fieldname on log output.
+//
+// Default: "args"
 func WithSQLArgsFieldname(name string) Option {
 	return func(opt *options) {
 		opt.sqlArgsFieldname = name
 	}
 }
 
+// WithSQLArgsFieldname set minimum level to be logged.
+//
+// Default: LevelDebug
+//
+// Options: LevelDebug < LevelInfo < LevelError
 func WithMinimumLevel(lvl Level) Option {
 	return func(opt *options) {
 		if lvl < LevelError || lvl > LevelDebug {
@@ -119,24 +140,49 @@ func WithMinimumLevel(lvl Level) Option {
 	}
 }
 
+// WithLogArguments set flag to log SQL query argument or not.
+//
+// Default: true
+//
+// For some system it is not recommended to log SQL argument because it may contain sensitive payload.
 func WithLogArguments(flag bool) Option {
 	return func(opt *options) {
 		opt.logArgs = flag
 	}
 }
 
+// WithLogDriverErrorSkip set flag for driver.ErrSkip.
+//
+// Default: true
+//
+// If driver not implement optional interfaces, driver will return driver.ErrSkip and sql.DB will handle that.
+// driver.ErrSkip could be false alarm in log analyzer because it was not actual error from app.
 func WithLogDriverErrorSkip(flag bool) Option {
 	return func(opt *options) {
 		opt.logDriverErrSkip = flag
 	}
 }
 
+// WithDurationUnit to customize log duration unit.
+//
+// Default: DurationMillisecond
+//
+// Options: DurationMillisecond, DurationMicrosecond, DurationNanosecond
 func WithDurationUnit(unit DurationUnit) Option {
 	return func(opt *options) {
 		opt.durationUnit = unit
 	}
 }
 
+// WithTimeFormat to customize log time format.
+//
+// Default: TimeFormatUnix
+//
+// Options:
+// - TimeFormatUnix
+// - TimeFormatUnixNano
+// - TimeFormatRFC3339
+// - TimeFormatRFC3339Nano
 func WithTimeFormat(format TimeFormat) Option {
 	return func(opt *options) {
 		if format < TimeFormatUnix || format > TimeFormatRFC3339Nano {
