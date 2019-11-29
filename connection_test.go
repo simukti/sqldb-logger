@@ -522,22 +522,6 @@ func TestConnection_ResetSession(t *testing.T) {
 		assert.Equal(t, LevelError.String(), output.Level)
 		bufLogger.Reset()
 	})
-
-	t.Run("driver.SessionResetter Success", func(t *testing.T) {
-		driverConnMock := &driverConnResetterMock{}
-		driverConnMock.On("ResetSession", mock.Anything).Return(nil)
-
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: uniqueID()}
-		err := conn.ResetSession(context.TODO())
-		assert.NoError(t, err)
-
-		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
-		assert.NoError(t, err)
-		assert.Equal(t, "ResetSession", output.Message)
-		assert.Equal(t, LevelDebug.String(), output.Level)
-		bufLogger.Reset()
-	})
 }
 
 func TestConnection_CheckNamedValue(t *testing.T) {
@@ -568,28 +552,9 @@ func TestConnection_CheckNamedValue(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "CheckNamedValue", output.Message)
+		assert.Equal(t, "ConnCheckNamedValue", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
-		bufLogger.Reset()
-	})
-
-	t.Run("driver.NamedValueChecker Success", func(t *testing.T) {
-		driverConnMock := &driverConnNameValueCheckerMock{}
-		driverConnMock.On("CheckNamedValue", mock.Anything).Return(nil)
-
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: uniqueID()}
-		err := conn.CheckNamedValue(&driver.NamedValue{
-			Name:    "",
-			Ordinal: 0,
-			Value:   "testid",
-		})
-		assert.NoError(t, err)
-
-		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
-		assert.NoError(t, err)
-		assert.Equal(t, "CheckNamedValue", output.Message)
-		assert.Equal(t, LevelDebug.String(), output.Level)
+		assert.NotEmpty(t, output.Data[connID])
 		bufLogger.Reset()
 	})
 }

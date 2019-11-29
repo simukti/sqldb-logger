@@ -244,38 +244,34 @@ func (c *connection) QueryContext(ctx context.Context, query string, args []driv
 
 // ResetSession implements driver.SessionResetter
 func (c *connection) ResetSession(ctx context.Context) error {
-	driverSessionResetter, ok := c.Conn.(driver.SessionResetter)
+	resetter, ok := c.Conn.(driver.SessionResetter)
 	if !ok {
 		return driver.ErrSkip
 	}
 
-	lvl, start := LevelDebug, time.Now()
-	err := driverSessionResetter.ResetSession(ctx)
+	start := time.Now()
+	err := resetter.ResetSession(ctx)
 
 	if err != nil {
-		lvl = LevelError
+		c.logger.log(context.Background(), LevelError, "ResetSession", start, err, c.logIDs()...)
 	}
-
-	c.logger.log(ctx, lvl, "ResetSession", start, err, c.logIDs()...)
 
 	return err
 }
 
 // CheckNamedValue implements driver.NamedValueChecker
 func (c *connection) CheckNamedValue(nm *driver.NamedValue) error {
-	driverNamedValueChecker, ok := c.Conn.(driver.NamedValueChecker)
+	checker, ok := c.Conn.(driver.NamedValueChecker)
 	if !ok {
 		return driver.ErrSkip
 	}
 
-	lvl, start := LevelDebug, time.Now()
-	err := driverNamedValueChecker.CheckNamedValue(nm)
+	start := time.Now()
+	err := checker.CheckNamedValue(nm)
 
 	if err != nil {
-		lvl = LevelError
+		c.logger.log(context.Background(), LevelError, "ConnCheckNamedValue", start, err, c.logIDs()...)
 	}
-
-	c.logger.log(context.Background(), lvl, "CheckNamedValue", start, err, c.logIDs()...)
 
 	return err
 }
