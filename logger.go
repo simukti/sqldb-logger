@@ -109,6 +109,11 @@ func (l *logger) log(ctx context.Context, lvl Level, msg string, start time.Time
 			continue
 		}
 
+		if l.opt.sqlQueryAsMsg && k == l.opt.sqlQueryFieldname {
+			msg = v.(string)
+			continue
+		}
+
 		data[k] = v
 	}
 

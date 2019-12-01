@@ -65,6 +65,7 @@ db, err := sqldblogger.OpenDriver(
     sqldblogger.WithDurationUnit(sqldblogger.DurationNanosecond), // default: millisecond
     sqldblogger.WithTimeFormat(sqldblogger.TimeFormatRFC3339), // default: unix timestamp
     sqldblogger.WithLogDriverErrorSkip(true), // default: false
+    sqldblogger.WithSQLQueryAsMessage(true), // default: false
 )
 ```
 
