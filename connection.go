@@ -166,7 +166,7 @@ func (c *connection) Exec(query string, args []driver.Value) (driver.Result, err
 		return res, err
 	}
 
-	return &result{Result: res, logger: c.logger, connID: c.id, query: query}, nil
+	return &result{Result: res, logger: c.logger, connID: c.id, query: query, args: args}, nil
 }
 
 // ExecContext implements driver.ExecerContext
@@ -190,7 +190,7 @@ func (c *connection) ExecContext(ctx context.Context, query string, args []drive
 		return res, err
 	}
 
-	return &result{Result: res, logger: c.logger, connID: c.id, query: query}, nil
+	return &result{Result: res, logger: c.logger, connID: c.id, query: query, namedArgs: args}, nil
 }
 
 // Query implements driver.Queryer
@@ -215,7 +215,7 @@ func (c *connection) Query(query string, args []driver.Value) (driver.Rows, erro
 		return res, err
 	}
 
-	return &rows{Rows: res, logger: c.logger, connID: c.id}, nil
+	return &rows{Rows: res, logger: c.logger, connID: c.id, query: query, args: args}, nil
 }
 
 // QueryContext implements driver.QueryerContext
@@ -239,7 +239,7 @@ func (c *connection) QueryContext(ctx context.Context, query string, args []driv
 		return res, err
 	}
 
-	return &rows{Rows: res, logger: c.logger, connID: c.id}, nil
+	return &rows{Rows: res, logger: c.logger, connID: c.id, query: query, namedArgs: args}, nil
 }
 
 // ResetSession implements driver.SessionResetter
