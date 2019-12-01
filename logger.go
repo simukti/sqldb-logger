@@ -48,6 +48,10 @@ type dataFunc func() (string, interface{})
 
 func (l *logger) withUID(k, v string) dataFunc {
 	return func() (string, interface{}) {
+		if v == "" {
+			return k, nil
+		}
+
 		return k, v
 	}
 }

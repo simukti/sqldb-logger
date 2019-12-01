@@ -153,6 +153,7 @@ func TestLogTrimStringArgs(t *testing.T) {
 		"msg",
 		time.Now(),
 		nil,
+		l.withUID(stmtID, ""),
 		l.withQuery("query"),
 		l.withArgs([]driver.Value{
 			longArgVal,
@@ -168,6 +169,7 @@ func TestLogTrimStringArgs(t *testing.T) {
 	assert.Contains(t, content.Data, cfg.timeFieldname)
 	assert.Contains(t, content.Data, cfg.durationFieldname)
 	assert.Contains(t, content.Data, cfg.sqlArgsFieldname)
+	assert.NotContains(t, content.Data, stmtID)
 	trimmedArg, ok := content.Data[cfg.sqlArgsFieldname].([]interface{})
 	assert.True(t, ok)
 	assert.Equal(t,
@@ -298,6 +300,7 @@ func TestWithSQLQueryAsMessage2(t *testing.T) {
 		"msg",
 		time.Now(),
 		nil,
+		testLogger.withUID(stmtID, uniqueID()),
 		testLogger.withQuery("query"),
 		testLogger.withArgs([]driver.Value{}),
 	)
@@ -309,6 +312,7 @@ func TestWithSQLQueryAsMessage2(t *testing.T) {
 	assert.Equal(t, "query", content.Message)
 	assert.Contains(t, content.Data, cfg.timeFieldname)
 	assert.Contains(t, content.Data, cfg.durationFieldname)
+	assert.Contains(t, content.Data, stmtID)
 	// empty args will not logged
 	assert.NotContains(t, content.Data, cfg.sqlArgsFieldname)
 }
