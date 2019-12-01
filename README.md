@@ -7,6 +7,16 @@ A logger for Go SQL database driver without modify existing `*sql.DB` stdlib usa
 ![shameless console output sample](./logadapter/zerologadapter/console.jpg?raw=true "go sql database logger output") 
 _Colored console writer output above only for sample/development_
 
+## FEATURES
+
+- Leveled and [configurable](./options.go) logging.
+- Keep `*sql.DB` as is (_from existing sql.DB usage perspective_).
+- Bring your own logger backend using simple log interface.
+- Trackable log output:
+    - Every call has its own unique ID.
+    - Prepared statement and execution will have same ID.
+    - On execution/result error, it will include query, arguments, params, and related IDs. 
+
 ## INSTALL
 
 ```bash
@@ -107,21 +117,14 @@ db, err := sqldblogger.OpenDriver(dsn, oci8.OCI8Driver, loggerAdapter /*, ...opt
 
 ## LOGGER ADAPTER
 
-There are 3 logger adapters within this repo:
+This library does not include a logger backend, but provide adapters that uses well known JSON structured logger:
 
 - [Zerolog adapter](logadapter/zerologadapter): Using [rs/zerolog](https://github.com/rs/zerolog) as its logger.
-
-![zerolog output sample](./logadapter/zerologadapter/zerolog.jpg?raw=true "go sql database logger output")
-
 - [Onelog adapter](logadapter/onelogadapter): Using [francoispqt/onelog](https://github.com/francoispqt/onelog) as its logger.
-
-![onelog output sample](./logadapter/onelogadapter/onelog.jpg?raw=true "go sql database logger output")
-
 - [Zap adapter](logadapter/zapadapter): Using [uber-go/zap](https://github.com/uber-go/zap) as its logger.
+- [Logrus adapter](logadapter/logrusadapter): Using [sirupsen/logrus](https://github.com/sirupsen/logrus) as its logger.
 
-![zap output sample](./logadapter/zapadapter/zap.jpg?raw=true "go sql database logger output")
-
-If you want to implement another logger, `Logger` interface is just as simple as following:
+For another/custom logger backend, `Logger` interface is just as simple as following:
 
 ```go
 type Logger interface {
