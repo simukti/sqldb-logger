@@ -8,6 +8,7 @@ type options struct {
 	timeFieldname     string
 	sqlQueryFieldname string
 	sqlArgsFieldname  string
+	sqlQueryAsMsg     bool
 	logArgs           bool
 	logDriverErrSkip  bool
 	minimumLogLevel   Level
@@ -23,6 +24,7 @@ func setDefaultOptions(opt *options) {
 	opt.timeFieldname = "time"
 	opt.sqlQueryFieldname = "query"
 	opt.sqlArgsFieldname = "args"
+	opt.sqlQueryAsMsg = false
 	opt.minimumLogLevel = LevelDebug
 	opt.logArgs = true
 	opt.logDriverErrSkip = false
@@ -193,5 +195,14 @@ func WithTimeFormat(format TimeFormat) Option {
 		}
 
 		opt.timeFormat = format
+	}
+}
+
+// WithSQLQueryAsMessage set SQL query as message in log output (only for function call with SQL query).
+//
+// Default: false
+func WithSQLQueryAsMessage(flag bool) Option {
+	return func(opt *options) {
+		opt.sqlQueryAsMsg = flag
 	}
 }

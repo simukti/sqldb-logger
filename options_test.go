@@ -17,6 +17,7 @@ func TestDefaultConfigs(t *testing.T) {
 	assert.Equal(t, "time", cfg.timeFieldname)
 	assert.Equal(t, "query", cfg.sqlQueryFieldname)
 	assert.Equal(t, "args", cfg.sqlArgsFieldname)
+	assert.Equal(t, false, cfg.sqlQueryAsMsg)
 	assert.Equal(t, true, cfg.logArgs)
 	assert.Equal(t, false, cfg.logDriverErrSkip)
 	assert.Equal(t, LevelDebug, cfg.minimumLogLevel)
@@ -130,4 +131,11 @@ func TestWithTimeFormatResult(t *testing.T) {
 		v := tc.tf.format(now)
 		assert.Equal(t, tc.val, v)
 	}
+}
+
+func TestWithSQLQueryAsMessage(t *testing.T) {
+	cfg := &options{}
+	setDefaultOptions(cfg)
+	WithSQLQueryAsMessage(true)(cfg)
+	assert.Equal(t, true, cfg.sqlQueryAsMsg)
 }

@@ -284,6 +284,35 @@ func TestWithErrorDriverSkip(t *testing.T) {
 	})
 }
 
+func TestWithSQLQueryAsMessage2(t *testing.T) {
+	cfg := &options{}
+	setDefaultOptions(cfg)
+	bl := &bufferTestLogger{}
+	l := &logger{opt: cfg, logger: bl}
+
+	WithSQLQueryAsMessage(true)(cfg)
+
+	l.log(
+		context.TODO(),
+		LevelInfo,
+		"msg",
+		time.Now(),
+		nil,
+		testLogger.withQuery("query"),
+		testLogger.withArgs([]driver.Value{}),
+	)
+
+	var content bufLog
+	err := json.Unmarshal(bl.Bytes(), &content)
+	assert.NoError(t, err)
+	assert.NotContains(t, content.Data, cfg.sqlQueryFieldname)
+	assert.Equal(t, "query", content.Message)
+	assert.Contains(t, content.Data, cfg.timeFieldname)
+	assert.Contains(t, content.Data, cfg.durationFieldname)
+	// empty args will not logged
+	assert.NotContains(t, content.Data, cfg.sqlArgsFieldname)
+}
+
 type bufferTestLogger struct {
 	bytes.Buffer
 }
