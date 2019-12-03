@@ -5,7 +5,7 @@
 ```go
 logger := zerolog.New(os.Stdout)
 // populate log pre-fields here before set to
-db, err := sqldblogger.OpenDriver(
+db := sqldblogger.OpenDriver(
     dsn,
     &mysql.MySQLDriver{},
     zerologadapter.New(logger),
