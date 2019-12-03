@@ -21,8 +21,7 @@ func TestOpenDriver(t *testing.T) {
 		mockDriver := &driverMock{}
 		mockDriver.On("Open", mock.Anything).Return(&driverConnMock{}, nil)
 
-		db, err := OpenDriver("test", mockDriver, bufLogger)
-		assert.NoError(t, err)
+		db := OpenDriver("test", mockDriver, bufLogger)
 		_, ok := interface{}(db).(*sql.DB)
 		assert.True(t, ok)
 	})
@@ -31,11 +30,10 @@ func TestOpenDriver(t *testing.T) {
 		mockDriver := &driverMock{}
 		mockDriver.On("Open", mock.Anything).Return(&driverConnMock{}, driver.ErrBadConn)
 
-		db, err := OpenDriver("test", mockDriver, bufLogger, WithErrorFieldname("errtest"), WithMinimumLevel(LevelDebug))
-		assert.NoError(t, err)
+		db := OpenDriver("test", mockDriver, bufLogger, WithErrorFieldname("errtest"), WithMinimumLevel(LevelDebug))
 		_, ok := interface{}(db).(*sql.DB)
 		assert.True(t, ok)
-		err = db.Ping()
+		err := db.Ping()
 		assert.Error(t, err)
 
 		var output bufLog
