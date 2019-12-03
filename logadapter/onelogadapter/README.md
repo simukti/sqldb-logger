@@ -5,7 +5,7 @@
 ```go
 logger := onelog.New(os.Stdout, onelog.ALL)
 // populate log pre-fields here before set to OpenDriver
-db, err := sqldblogger.OpenDriver(
+db := sqldblogger.OpenDriver(
     dsn,
     &mysql.MySQLDriver{},
     onelogadapter.New(logger),
