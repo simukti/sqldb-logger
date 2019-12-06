@@ -22,6 +22,9 @@ func TestDefaultConfigs(t *testing.T) {
 	assert.Equal(t, false, cfg.logDriverErrSkip)
 	assert.Equal(t, LevelDebug, cfg.minimumLogLevel)
 	assert.Equal(t, DurationMillisecond, cfg.durationUnit)
+	assert.Equal(t, "conn_id", cfg.connIDFieldname)
+	assert.Equal(t, "stmt_id", cfg.stmtIDFieldname)
+	assert.Equal(t, "tx_id", cfg.txIDFieldname)
 }
 
 func TestWithErrorFieldname(t *testing.T) {
@@ -138,4 +141,22 @@ func TestWithSQLQueryAsMessage(t *testing.T) {
 	setDefaultOptions(cfg)
 	WithSQLQueryAsMessage(true)(cfg)
 	assert.Equal(t, true, cfg.sqlQueryAsMsg)
+}
+
+func TestWithConnectionIDFieldname(t *testing.T) {
+	cfg := &options{}
+	WithConnectionIDFieldname("connid")(cfg)
+	assert.Equal(t, "connid", cfg.connIDFieldname)
+}
+
+func TestWithStatementIDFieldname(t *testing.T) {
+	cfg := &options{}
+	WithStatementIDFieldname("stmtid")(cfg)
+	assert.Equal(t, "stmtid", cfg.stmtIDFieldname)
+}
+
+func TestWithTransactionIDFieldname(t *testing.T) {
+	cfg := &options{}
+	WithTransactionIDFieldname("trxid")(cfg)
+	assert.Equal(t, "trxid", cfg.txIDFieldname)
 }
