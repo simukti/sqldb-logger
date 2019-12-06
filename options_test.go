@@ -41,8 +41,8 @@ func TestWithDurationFieldname(t *testing.T) {
 
 func TestWithMinimumLevel(t *testing.T) {
 	cfg := &options{}
-	WithMinimumLevel(LevelDebug)(cfg)
-	assert.Equal(t, LevelDebug, cfg.minimumLogLevel)
+	WithMinimumLevel(LevelTrace)(cfg)
+	assert.Equal(t, LevelTrace, cfg.minimumLogLevel)
 
 	WithMinimumLevel(Level(99))(cfg)
 	assert.NotEqual(t, Level(99), cfg.minimumLogLevel)

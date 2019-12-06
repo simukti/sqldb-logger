@@ -137,10 +137,10 @@ func WithSQLArgsFieldname(name string) Option {
 //
 // Default: LevelDebug
 //
-// Options: LevelDebug < LevelInfo < LevelError
+// Options: LevelTrace < LevelDebug < LevelInfo < LevelError
 func WithMinimumLevel(lvl Level) Option {
 	return func(opt *options) {
-		if lvl < LevelError || lvl > LevelDebug {
+		if lvl > LevelError || lvl < LevelTrace {
 			return
 		}
 
