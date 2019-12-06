@@ -16,6 +16,7 @@ const (
 	LevelError Level = iota
 	LevelInfo
 	LevelDebug
+	LevelTrace
 )
 
 func (l Level) String() string {
@@ -26,6 +27,8 @@ func (l Level) String() string {
 		return "info" // nolint: goconst
 	case LevelDebug:
 		return "debug" // nolint: goconst
+	case LevelTrace:
+		return "trace" // nolint: goconst
 	default:
 		return fmt.Sprintf("(invalid level): %d", l)
 	}
@@ -46,6 +49,7 @@ type logger struct {
 // dataFunc for extra data to be added to log
 type dataFunc func() (string, interface{})
 
+// withUID used to set unique id per call scope.
 func (l *logger) withUID(k, v string) dataFunc {
 	return func() (string, interface{}) {
 		if v == "" {
@@ -62,20 +66,42 @@ func (l *logger) withQuery(query string) dataFunc {
 	}
 }
 
+// withArgs named args ONLY from Queryer, QueryerContext, Execer, and ExecerContext
 func (l *logger) withArgs(args []driver.Value) dataFunc {
 	return func() (string, interface{}) {
-		if !l.opt.logArgs || len(args) == 0 {
+		if !l.opt.logArgs {
 			return l.opt.sqlArgsFieldname, nil
 		}
 
-		return l.opt.sqlArgsFieldname, parseArgs(args)
+		return l.withKeyArgs(l.opt.sqlArgsFieldname, args)()
 	}
 }
 
+func (l *logger) withKeyArgs(key string, args []driver.Value) dataFunc {
+	return func() (string, interface{}) {
+		if len(args) == 0 {
+			return key, nil
+		}
+
+		return key, parseArgs(args)
+	}
+}
+
+// withNamedArgs named args ONLY from Queryer, QueryerContext, Execer, and ExecerContext
 func (l *logger) withNamedArgs(args []driver.NamedValue) dataFunc {
 	return func() (string, interface{}) {
-		if !l.opt.logArgs || len(args) == 0 {
+		if !l.opt.logArgs {
 			return l.opt.sqlArgsFieldname, nil
+		}
+
+		return l.withKeyNamedArgs(l.opt.sqlArgsFieldname, args)()
+	}
+}
+
+func (l *logger) withKeyNamedArgs(key string, args []driver.NamedValue) dataFunc {
+	return func() (string, interface{}) {
+		if len(args) == 0 {
+			return key, nil
 		}
 
 		argsVal := make([]driver.Value, len(args))
@@ -84,7 +110,7 @@ func (l *logger) withNamedArgs(args []driver.NamedValue) dataFunc {
 			argsVal[k] = v.Value
 		}
 
-		return l.opt.sqlArgsFieldname, parseArgs(argsVal)
+		return key, parseArgs(argsVal)
 	}
 }
 
