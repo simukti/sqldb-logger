@@ -123,12 +123,14 @@ func (s *statement) CheckNamedValue(nm *driver.NamedValue) error {
 		return driver.ErrSkip
 	}
 
-	start := time.Now()
+	lvl, start := LevelTrace, time.Now()
 	err := checker.CheckNamedValue(nm)
 
 	if err != nil {
-		s.logger.log(context.Background(), LevelError, "StmtCheckNamedValue", start, err, s.logData()...)
+		lvl = LevelError
 	}
+
+	s.logger.log(context.Background(), lvl, "StmtCheckNamedValue", start, err, s.logData()...)
 
 	return err
 }
@@ -143,14 +145,11 @@ func (s *statement) ColumnConverter(idx int) driver.ValueConverter {
 	return driver.DefaultParameterConverter
 }
 
-// stmtID prepared statement log key id
-const stmtID = "stmt_id"
-
 // logData default log data for statement log.
 func (s *statement) logData() []dataFunc {
 	return []dataFunc{
-		s.logger.withUID(connID, s.connID),
-		s.logger.withUID(stmtID, s.id),
+		s.logger.withUID(s.logger.opt.connIDFieldname, s.connID),
+		s.logger.withUID(s.logger.opt.stmtIDFieldname, s.id),
 		s.logger.withQuery(s.query),
 	}
 }

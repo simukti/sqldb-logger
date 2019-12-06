@@ -35,24 +35,28 @@ func (r *rows) Columns() []string {
 
 // Close implement driver.Rows
 func (r *rows) Close() error {
-	start := time.Now()
+	lvl, start := LevelTrace, time.Now()
 	err := r.Rows.Close()
 
 	if err != nil {
-		r.logger.log(context.Background(), LevelError, "RowsClose", start, err, r.logData()...)
+		lvl = LevelError
 	}
+
+	r.logger.log(context.Background(), lvl, "RowsClose", start, err, r.logData()...)
 
 	return err
 }
 
 // Next implement driver.Rows
 func (r *rows) Next(dest []driver.Value) error {
-	start := time.Now()
+	lvl, start := LevelTrace, time.Now()
 	err := r.Rows.Next(dest)
 
 	if err != nil && err != io.EOF {
-		r.logger.log(context.Background(), LevelError, "RowsNext", start, err, r.logData()...)
+		lvl = LevelError
 	}
+
+	r.logger.log(context.Background(), lvl, "RowsNext", start, err, r.logData()...)
 
 	return err
 }
@@ -73,12 +77,14 @@ func (r *rows) NextResultSet() error {
 		return io.EOF
 	}
 
-	start := time.Now()
+	lvl, start := LevelTrace, time.Now()
 	err := rs.NextResultSet()
 
 	if err != nil && err != io.EOF {
-		r.logger.log(context.Background(), LevelError, "RowsNextResultSet", start, err, r.logData()...)
+		lvl = LevelError
 	}
+
+	r.logger.log(context.Background(), lvl, "RowsNextResultSet", start, err, r.logData()...)
 
 	return err
 }
@@ -131,8 +137,8 @@ func (r *rows) ColumnTypePrecisionScale(index int) (precision, scale int64, ok b
 // logData default log data for rows.
 func (r *rows) logData() []dataFunc {
 	return []dataFunc{
-		r.logger.withUID(connID, r.connID),
-		r.logger.withUID(stmtID, r.stmtID),
+		r.logger.withUID(r.logger.opt.connIDFieldname, r.connID),
+		r.logger.withUID(r.logger.opt.stmtIDFieldname, r.stmtID),
 		r.logger.withQuery(r.query),
 		r.logger.withArgs(r.args),
 		r.logger.withNamedArgs(r.namedArgs),
