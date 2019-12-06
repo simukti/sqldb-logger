@@ -2,30 +2,34 @@ package sqldblogger
 
 import (
 	"context"
+	cryptoRand "crypto/rand"
 	"database/sql/driver"
+	"encoding/binary"
 	"fmt"
+	"math/rand"
 	"strconv"
 	"time"
-
-	"github.com/rs/xid"
 )
 
 type Level uint8
 
 const (
-	LevelError Level = iota
-	LevelInfo
+	LevelTrace Level = iota
 	LevelDebug
+	LevelInfo
+	LevelError
 )
 
 func (l Level) String() string {
 	switch l {
-	case LevelError:
-		return "error" // nolint: goconst
-	case LevelInfo:
-		return "info" // nolint: goconst
+	case LevelTrace:
+		return "trace" // nolint: goconst
 	case LevelDebug:
 		return "debug" // nolint: goconst
+	case LevelInfo:
+		return "info" // nolint: goconst
+	case LevelError:
+		return "error" // nolint: goconst
 	default:
 		return fmt.Sprintf("(invalid level): %d", l)
 	}
@@ -46,6 +50,7 @@ type logger struct {
 // dataFunc for extra data to be added to log
 type dataFunc func() (string, interface{})
 
+// withUID used to set unique id per call scope.
 func (l *logger) withUID(k, v string) dataFunc {
 	return func() (string, interface{}) {
 		if v == "" {
@@ -62,20 +67,42 @@ func (l *logger) withQuery(query string) dataFunc {
 	}
 }
 
+// withArgs named args ONLY from Queryer, QueryerContext, Execer, and ExecerContext
 func (l *logger) withArgs(args []driver.Value) dataFunc {
 	return func() (string, interface{}) {
-		if !l.opt.logArgs || len(args) == 0 {
+		if !l.opt.logArgs {
 			return l.opt.sqlArgsFieldname, nil
 		}
 
-		return l.opt.sqlArgsFieldname, parseArgs(args)
+		return l.withKeyArgs(l.opt.sqlArgsFieldname, args)()
 	}
 }
 
+func (l *logger) withKeyArgs(key string, args []driver.Value) dataFunc {
+	return func() (string, interface{}) {
+		if len(args) == 0 {
+			return key, nil
+		}
+
+		return key, parseArgs(args)
+	}
+}
+
+// withNamedArgs named args ONLY from Queryer, QueryerContext, Execer, and ExecerContext
 func (l *logger) withNamedArgs(args []driver.NamedValue) dataFunc {
 	return func() (string, interface{}) {
-		if !l.opt.logArgs || len(args) == 0 {
+		if !l.opt.logArgs {
 			return l.opt.sqlArgsFieldname, nil
+		}
+
+		return l.withKeyNamedArgs(l.opt.sqlArgsFieldname, args)()
+	}
+}
+
+func (l *logger) withKeyNamedArgs(key string, args []driver.NamedValue) dataFunc {
+	return func() (string, interface{}) {
+		if len(args) == 0 {
+			return key, nil
 		}
 
 		argsVal := make([]driver.Value, len(args))
@@ -84,12 +111,12 @@ func (l *logger) withNamedArgs(args []driver.NamedValue) dataFunc {
 			argsVal[k] = v.Value
 		}
 
-		return l.opt.sqlArgsFieldname, parseArgs(argsVal)
+		return key, parseArgs(argsVal)
 	}
 }
 
 func (l *logger) log(ctx context.Context, lvl Level, msg string, start time.Time, err error, datas ...dataFunc) {
-	if !(lvl <= l.opt.minimumLogLevel) {
+	if !(lvl >= l.opt.minimumLogLevel) {
 		return
 	}
 
@@ -153,10 +180,32 @@ func parseArgs(argsVal []driver.Value) []interface{} {
 	return args
 }
 
+// init required to seed math/rand and make sure rand.Seed is not 1.
+// rand.Seed will be used by rand.Read inside uniqueID().
+// nolint: gochecknoinits
+func init() {
+	var s [16]byte
+	_, _ = cryptoRand.Read(s[:])
+
+	rand.Seed(int64(binary.LittleEndian.Uint64(s[:])))
+}
+
+const (
+	uidLen      = 16
+	uidCharlist = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_"
+)
+
 // uniqueID generate random ID for id per db call context:
 // - connection
 // - transaction
 // - statement
 func uniqueID() string {
-	return xid.New().String()
+	var random, uid [uidLen]byte
+	_, _ = rand.Read(random[:]) // nolint: gosec
+
+	for i := 0; i < uidLen; i++ {
+		uid[i] = uidCharlist[random[i]&63]
+	}
+
+	return string(uid[:])
 }

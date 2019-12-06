@@ -16,7 +16,7 @@ func New(logger *zap.Logger) sqldblogger.Logger {
 }
 
 // Log implements sqldblogger.Logger
-func (zp *zapAdapter) Log(ctx context.Context, level sqldblogger.Level, msg string, data map[string]interface{}) {
+func (zp *zapAdapter) Log(_ context.Context, level sqldblogger.Level, msg string, data map[string]interface{}) {
 	fields := make([]zap.Field, len(data))
 	i := 0
 
@@ -33,6 +33,7 @@ func (zp *zapAdapter) Log(ctx context.Context, level sqldblogger.Level, msg stri
 	case sqldblogger.LevelDebug:
 		zp.logger.Debug(msg, fields...)
 	default:
+		// trace will use zap debug
 		zp.logger.Debug(msg, fields...)
 	}
 }

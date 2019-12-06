@@ -20,24 +20,28 @@ type result struct {
 
 // LastInsertId implement driver.Result
 func (r *result) LastInsertId() (int64, error) {
-	start := time.Now()
+	lvl, start := LevelTrace, time.Now()
 	id, err := r.Result.LastInsertId()
 
 	if err != nil {
-		r.logger.log(context.Background(), LevelError, "ResultLastInsertId", start, err, r.logData()...)
+		lvl = LevelError
 	}
+
+	r.logger.log(context.Background(), lvl, "ResultLastInsertId", start, err, r.logData()...)
 
 	return id, err
 }
 
 // RowsAffected implement driver.Result
 func (r *result) RowsAffected() (int64, error) {
-	start := time.Now()
+	lvl, start := LevelTrace, time.Now()
 	num, err := r.Result.RowsAffected()
 
 	if err != nil {
-		r.logger.log(context.Background(), LevelError, "ResultRowsAffected", start, err, r.logData()...)
+		lvl = LevelError
 	}
+
+	r.logger.log(context.Background(), lvl, "ResultRowsAffected", start, err, r.logData()...)
 
 	return num, err
 }
@@ -45,8 +49,8 @@ func (r *result) RowsAffected() (int64, error) {
 // logData default log data for result.
 func (r *result) logData() []dataFunc {
 	return []dataFunc{
-		r.logger.withUID(connID, r.connID),
-		r.logger.withUID(stmtID, r.stmtID),
+		r.logger.withUID(r.logger.opt.connIDFieldname, r.connID),
+		r.logger.withUID(r.logger.opt.stmtIDFieldname, r.stmtID),
 		r.logger.withQuery(r.query),
 		r.logger.withArgs(r.args),
 		r.logger.withNamedArgs(r.namedArgs),

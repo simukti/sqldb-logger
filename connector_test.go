@@ -26,7 +26,7 @@ func TestConnector_Connect(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "Connect", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
-		assert.NotEmpty(t, output.Data[connID])
+		assert.NotEmpty(t, output.Data[testOpts.connIDFieldname])
 	})
 
 	t.Run("Connect Success", func(t *testing.T) {
@@ -42,7 +42,7 @@ func TestConnector_Connect(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "Connect", output.Message)
 		assert.Equal(t, LevelDebug.String(), output.Level)
-		assert.NotEmpty(t, output.Data[connID])
+		assert.NotEmpty(t, output.Data[testOpts.connIDFieldname])
 	})
 }
 

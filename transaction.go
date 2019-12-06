@@ -41,12 +41,10 @@ func (tx *transaction) Rollback() error {
 	return err
 }
 
-const txID = "tx_id"
-
 // logData default log data for transaction.
 func (tx *transaction) logData() []dataFunc {
 	return []dataFunc{
-		tx.logger.withUID(connID, tx.connID),
-		tx.logger.withUID(txID, tx.id),
+		tx.logger.withUID(tx.logger.opt.connIDFieldname, tx.connID),
+		tx.logger.withUID(tx.logger.opt.txIDFieldname, tx.id),
 	}
 }

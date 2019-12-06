@@ -26,7 +26,7 @@ type connection struct {
 // Begin implements driver.Conn
 func (c *connection) Begin() (driver.Tx, error) {
 	lvl, start, id := LevelDebug, time.Now(), uniqueID()
-	logs := append(c.logData(), c.logger.withUID(txID, id))
+	logs := append(c.logData(), c.logger.withUID(c.logger.opt.txIDFieldname, id))
 	connTx, err := c.Conn.Begin() // nolint: staticcheck
 
 	if err != nil {
@@ -45,7 +45,7 @@ func (c *connection) Begin() (driver.Tx, error) {
 // Prepare implements driver.Conn
 func (c *connection) Prepare(query string) (driver.Stmt, error) {
 	lvl, start, id := LevelInfo, time.Now(), uniqueID()
-	logs := append(c.logData(), c.logger.withQuery(query), c.logger.withUID(stmtID, id))
+	logs := append(c.logData(), c.logger.withQuery(query), c.logger.withUID(c.logger.opt.stmtIDFieldname, id))
 	driverStmt, err := c.Conn.Prepare(query)
 
 	if err != nil {
@@ -84,7 +84,7 @@ func (c *connection) BeginTx(ctx context.Context, opts driver.TxOptions) (driver
 	}
 
 	lvl, start, id := LevelDebug, time.Now(), uniqueID()
-	logs := append(c.logData(), c.logger.withUID(txID, id))
+	logs := append(c.logData(), c.logger.withUID(c.logger.opt.txIDFieldname, id))
 	connTx, err := drvTx.BeginTx(ctx, opts)
 
 	if err != nil {
@@ -108,7 +108,7 @@ func (c *connection) PrepareContext(ctx context.Context, query string) (driver.S
 	}
 
 	lvl, start, id := LevelInfo, time.Now(), uniqueID()
-	logs := append(c.logData(), c.logger.withQuery(query), c.logger.withUID(stmtID, id))
+	logs := append(c.logData(), c.logger.withQuery(query), c.logger.withUID(c.logger.opt.stmtIDFieldname, id))
 	driverStmt, err := driverPrep.PrepareContext(ctx, query)
 
 	if err != nil {
@@ -249,12 +249,14 @@ func (c *connection) ResetSession(ctx context.Context) error {
 		return driver.ErrSkip
 	}
 
-	start := time.Now()
+	lvl, start := LevelTrace, time.Now()
 	err := resetter.ResetSession(ctx)
 
 	if err != nil {
-		c.logger.log(context.Background(), LevelError, "ResetSession", start, err, c.logData()...)
+		lvl = LevelError
 	}
+
+	c.logger.log(context.Background(), lvl, "ResetSession", start, err, c.logData()...)
 
 	return err
 }
@@ -266,22 +268,21 @@ func (c *connection) CheckNamedValue(nm *driver.NamedValue) error {
 		return driver.ErrSkip
 	}
 
-	start := time.Now()
+	lvl, start := LevelTrace, time.Now()
 	err := checker.CheckNamedValue(nm)
 
 	if err != nil {
-		c.logger.log(context.Background(), LevelError, "ConnCheckNamedValue", start, err, c.logData()...)
+		lvl = LevelError
 	}
+
+	c.logger.log(context.Background(), lvl, "ConnCheckNamedValue", start, err, c.logData()...)
 
 	return err
 }
 
-// connID connection log key id
-const connID = "conn_id"
-
 // logData default log data for connection.
 func (c *connection) logData() []dataFunc {
 	return []dataFunc{
-		c.logger.withUID(connID, c.id),
+		c.logger.withUID(c.logger.opt.connIDFieldname, c.id),
 	}
 }

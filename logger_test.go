@@ -19,6 +19,7 @@ func TestLevel_String(t *testing.T) {
 		LevelError: "error",
 		LevelInfo:  "info",
 		LevelDebug: "debug",
+		LevelTrace: "trace",
 		Level(99):  "(invalid level): 99",
 	}
 
@@ -153,7 +154,7 @@ func TestLogTrimStringArgs(t *testing.T) {
 		"msg",
 		time.Now(),
 		nil,
-		l.withUID(stmtID, ""),
+		l.withUID(cfg.stmtIDFieldname, ""),
 		l.withQuery("query"),
 		l.withArgs([]driver.Value{
 			longArgVal,
@@ -169,7 +170,7 @@ func TestLogTrimStringArgs(t *testing.T) {
 	assert.Contains(t, content.Data, cfg.timeFieldname)
 	assert.Contains(t, content.Data, cfg.durationFieldname)
 	assert.Contains(t, content.Data, cfg.sqlArgsFieldname)
-	assert.NotContains(t, content.Data, stmtID)
+	assert.NotContains(t, content.Data, cfg.stmtIDFieldname)
 	trimmedArg, ok := content.Data[cfg.sqlArgsFieldname].([]interface{})
 	assert.True(t, ok)
 	assert.Equal(t,
@@ -300,7 +301,7 @@ func TestWithSQLQueryAsMessage2(t *testing.T) {
 		"msg",
 		time.Now(),
 		nil,
-		testLogger.withUID(stmtID, uniqueID()),
+		testLogger.withUID(cfg.stmtIDFieldname, uniqueID()),
 		testLogger.withQuery("query"),
 		testLogger.withArgs([]driver.Value{}),
 	)
@@ -312,7 +313,7 @@ func TestWithSQLQueryAsMessage2(t *testing.T) {
 	assert.Equal(t, "query", content.Message)
 	assert.Contains(t, content.Data, cfg.timeFieldname)
 	assert.Contains(t, content.Data, cfg.durationFieldname)
-	assert.Contains(t, content.Data, stmtID)
+	assert.Contains(t, content.Data, cfg.stmtIDFieldname)
 	// empty args will not logged
 	assert.NotContains(t, content.Data, cfg.sqlArgsFieldname)
 }
