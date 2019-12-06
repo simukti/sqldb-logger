@@ -36,6 +36,7 @@ func TestZapAdapter_Log(t *testing.T) {
 		sqldblogger.LevelError: "error",
 		sqldblogger.LevelInfo:  "info",
 		sqldblogger.LevelDebug: "debug",
+		sqldblogger.LevelTrace: "debug",
 		sqldblogger.Level(99):  "debug", // unknown
 	}
 

@@ -15,7 +15,7 @@ func New(logger *onelog.Logger) sqldblogger.Logger {
 	return &onelogAdapter{logger: logger}
 }
 
-func (oa *onelogAdapter) Log(ctx context.Context, level sqldblogger.Level, msg string, data map[string]interface{}) {
+func (oa *onelogAdapter) Log(_ context.Context, level sqldblogger.Level, msg string, data map[string]interface{}) {
 	var chain onelog.ChainEntry
 
 	switch level {
@@ -26,6 +26,7 @@ func (oa *onelogAdapter) Log(ctx context.Context, level sqldblogger.Level, msg s
 	case sqldblogger.LevelDebug:
 		chain = oa.logger.DebugWith(msg)
 	default:
+		// trace will use onelog debug
 		chain = oa.logger.DebugWith(msg)
 	}
 
