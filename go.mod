@@ -4,7 +4,6 @@ go 1.13
 
 require (
 	github.com/francoispqt/onelog v0.0.0-20190306043706-8c2bb31b10a4
-	github.com/rs/xid v1.2.1
 	github.com/rs/zerolog v1.17.2
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.4.0
