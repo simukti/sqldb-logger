@@ -27,6 +27,8 @@ func (l *logrusAdapter) Log(ctx context.Context, level sqldblogger.Level, msg st
 		entry.Info(msg)
 	case sqldblogger.LevelDebug:
 		entry.Debug(msg)
+	case sqldblogger.LevelTrace:
+		entry.Trace(msg)
 	default:
 		entry.Debug(msg)
 	}

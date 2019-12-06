@@ -16,7 +16,7 @@ func New(logger zerolog.Logger) sqldblogger.Logger {
 }
 
 // Log implements sqldblogger.Logger
-func (zl *zerologAdapter) Log(ctx context.Context, level sqldblogger.Level, msg string, data map[string]interface{}) {
+func (zl *zerologAdapter) Log(_ context.Context, level sqldblogger.Level, msg string, data map[string]interface{}) {
 	var lvl zerolog.Level
 
 	switch level {
@@ -26,6 +26,8 @@ func (zl *zerologAdapter) Log(ctx context.Context, level sqldblogger.Level, msg 
 		lvl = zerolog.InfoLevel
 	case sqldblogger.LevelDebug:
 		lvl = zerolog.DebugLevel
+	case sqldblogger.LevelTrace:
+		lvl = zerolog.TraceLevel
 	default:
 		lvl = zerolog.DebugLevel
 	}

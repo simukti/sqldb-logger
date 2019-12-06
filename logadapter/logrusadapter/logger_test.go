@@ -29,7 +29,7 @@ func TestLogrusAdapter_Log(t *testing.T) {
 	wr := &bytes.Buffer{}
 	lr := logrus.New()
 	lr.Out = wr
-	lr.Level = logrus.DebugLevel
+	lr.Level = logrus.TraceLevel
 	lr.Formatter = &logrus.JSONFormatter{}
 	logger := New(lr)
 
@@ -37,6 +37,7 @@ func TestLogrusAdapter_Log(t *testing.T) {
 		sqldblogger.LevelError: "error",
 		sqldblogger.LevelInfo:  "info",
 		sqldblogger.LevelDebug: "debug",
+		sqldblogger.LevelTrace: "trace",
 		sqldblogger.Level(99):  "debug", // unknown
 	}
 

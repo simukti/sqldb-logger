@@ -32,6 +32,7 @@ func TestZerologAdapter_Log(t *testing.T) {
 		sqldblogger.LevelError: "error",
 		sqldblogger.LevelInfo:  "info",
 		sqldblogger.LevelDebug: "debug",
+		sqldblogger.LevelTrace: "trace",
 		sqldblogger.Level(99):  "debug", // unknown
 	}
 
