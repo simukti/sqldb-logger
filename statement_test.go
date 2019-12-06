@@ -225,7 +225,7 @@ func TestStatement_QueryContext2(t *testing.T) {
 	err = json.Unmarshal(bufLogger.Bytes(), &connOutput)
 	assert.NoError(t, err)
 	assert.Equal(t, LevelInfo.String(), connOutput.Level)
-	assert.Equal(t, conn.id, connOutput.Data[connID])
+	assert.Equal(t, conn.id, connOutput.Data[testOpts.connIDFieldname])
 
 	_, rsErr := stmt.Query([]driver.Value{1})
 	assert.NoError(t, rsErr)
@@ -233,8 +233,8 @@ func TestStatement_QueryContext2(t *testing.T) {
 	err = json.Unmarshal(bufLogger.Bytes(), &stmtOutput)
 	assert.NoError(t, err)
 	assert.Equal(t, LevelInfo.String(), stmtOutput.Level)
-	assert.Equal(t, conn.id, stmtOutput.Data[connID])
-	assert.NotEmpty(t, stmtOutput.Data[stmtID])
+	assert.Equal(t, conn.id, stmtOutput.Data[testOpts.connIDFieldname])
+	assert.NotEmpty(t, stmtOutput.Data[testOpts.stmtIDFieldname])
 }
 
 func TestStatement_CheckNamedValue(t *testing.T) {
@@ -251,8 +251,8 @@ func TestStatement_CheckNamedValue(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, LevelError.String(), stmtOutput.Level)
 		assert.Equal(t, "StmtCheckNamedValue", stmtOutput.Message)
-		assert.NotEmpty(t, stmtOutput.Data[stmtID])
-		assert.NotEmpty(t, stmtOutput.Data[connID])
+		assert.NotEmpty(t, stmtOutput.Data[testOpts.stmtIDFieldname])
+		assert.NotEmpty(t, stmtOutput.Data[testOpts.connIDFieldname])
 	})
 
 	t.Run("Not implement driver.NamedValueChecker", func(t *testing.T) {
