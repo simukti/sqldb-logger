@@ -8,6 +8,9 @@ type options struct {
 	timeFieldname     string
 	sqlQueryFieldname string
 	sqlArgsFieldname  string
+	stmtIDFieldname   string
+	connIDFieldname   string
+	txIDFieldname     string
 	sqlQueryAsMsg     bool
 	logArgs           bool
 	logDriverErrSkip  bool
@@ -24,6 +27,9 @@ func setDefaultOptions(opt *options) {
 	opt.timeFieldname = "time"
 	opt.sqlQueryFieldname = "query"
 	opt.sqlArgsFieldname = "args"
+	opt.stmtIDFieldname = "stmt_id"
+	opt.connIDFieldname = "conn_id"
+	opt.txIDFieldname = "tx_id"
 	opt.sqlQueryAsMsg = false
 	opt.minimumLogLevel = LevelDebug
 	opt.logArgs = true
@@ -204,5 +210,32 @@ func WithTimeFormat(format TimeFormat) Option {
 func WithSQLQueryAsMessage(flag bool) Option {
 	return func(opt *options) {
 		opt.sqlQueryAsMsg = flag
+	}
+}
+
+// WithConnectionIDFieldname to customize connection ID fieldname on log output.
+//
+// Default: "conn_id"
+func WithConnectionIDFieldname(name string) Option {
+	return func(opt *options) {
+		opt.connIDFieldname = name
+	}
+}
+
+// WithStatementIDFieldname to customize prepared statement ID fieldname on log output.
+//
+// Default: "stmt_id"
+func WithStatementIDFieldname(name string) Option {
+	return func(opt *options) {
+		opt.stmtIDFieldname = name
+	}
+}
+
+// WithTransactionIDFieldname to customize database transaction ID fieldname on log output.
+//
+// Default: "tx_id"
+func WithTransactionIDFieldname(name string) Option {
+	return func(opt *options) {
+		opt.txIDFieldname = name
 	}
 }
