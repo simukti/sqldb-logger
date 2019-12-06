@@ -49,6 +49,7 @@ func (r *rows) Close() error {
 
 // Next implement driver.Rows
 func (r *rows) Next(dest []driver.Value) error {
+	logs := append(r.logData(), r.logger.withKeyArgs("rows_dest", dest))
 	lvl, start := LevelTrace, time.Now()
 	err := r.Rows.Next(dest)
 
@@ -56,7 +57,7 @@ func (r *rows) Next(dest []driver.Value) error {
 		lvl = LevelError
 	}
 
-	r.logger.log(context.Background(), lvl, "RowsNext", start, err, r.logData()...)
+	r.logger.log(context.Background(), lvl, "RowsNext", start, err, logs...)
 
 	return err
 }

@@ -90,11 +90,24 @@ func TestRows_Next(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		rowsMock := &rowsMock{}
 		rowsMock.On("Next", mock.Anything).Return(nil)
-		rs := &rows{Rows: rowsMock, logger: testLogger, connID: uniqueID()}
+		WithMinimumLevel(LevelTrace)(testOpts)
+		rs := &rows{Rows: rowsMock, logger: testLogger, connID: uniqueID(), stmtID: uniqueID(), query: "SELECT 1"}
 
 		err := rs.Next([]driver.Value{1})
 		assert.Implements(t, (*driver.Rows)(nil), rs)
 		assert.NoError(t, err)
+
+		var output bufLog
+		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		assert.NoError(t, err)
+		assert.Equal(t, "RowsNext", output.Message)
+		assert.Equal(t, LevelTrace.String(), output.Level)
+		assert.NotEmpty(t, output.Data[testOpts.connIDFieldname])
+		assert.NotEmpty(t, output.Data[testOpts.stmtIDFieldname])
+		assert.NotEmpty(t, output.Data[testOpts.sqlQueryFieldname])
+		assert.NotEmpty(t, output.Data["rows_args"])
+		bufLogger.Reset()
+		setDefaultOptions(testOpts)
 	})
 }
 
@@ -142,11 +155,22 @@ func TestRows_NextResultSet(t *testing.T) {
 	t.Run("Not Error", func(t *testing.T) {
 		rowsMock := &rowsRowsNextResultSetMock{}
 		rowsMock.On("NextResultSet").Return(nil)
-		rs := &rows{Rows: rowsMock, logger: testLogger, connID: uniqueID()}
+		WithMinimumLevel(LevelTrace)(testOpts)
+		rs := &rows{Rows: rowsMock, logger: testLogger, connID: uniqueID(), stmtID: uniqueID(), query: "SELECT 1"}
 
 		err := rs.NextResultSet()
 		assert.NoError(t, err)
-		assert.Empty(t, bufLogger.Bytes())
+
+		var output bufLog
+		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		assert.NoError(t, err)
+		assert.Equal(t, "RowsNextResultSet", output.Message)
+		assert.Equal(t, LevelTrace.String(), output.Level)
+		assert.NotEmpty(t, output.Data[testOpts.connIDFieldname])
+		assert.NotEmpty(t, output.Data[testOpts.stmtIDFieldname])
+		assert.NotEmpty(t, output.Data[testOpts.sqlQueryFieldname])
+		bufLogger.Reset()
+		setDefaultOptions(testOpts)
 	})
 
 	t.Run("Error Non io.EOF", func(t *testing.T) {
