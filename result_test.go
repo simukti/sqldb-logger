@@ -15,7 +15,7 @@ func TestResult_LastInsertId(t *testing.T) {
 	t.Run("Error", func(t *testing.T) {
 		resMock := &resultMock{}
 		resMock.On("LastInsertId").Return(0, errors.New("dummy"))
-		r := &result{Result: resMock, logger: testLogger, connID: uniqueID(), query: "SELECT 1"}
+		r := &result{Result: resMock, logger: testLogger, connID: testLogger.opt.uidGenerator.UniqueID(), query: "SELECT 1"}
 		id, err := r.LastInsertId()
 		assert.Equal(t, int64(0), id)
 		assert.Error(t, err)
@@ -33,7 +33,7 @@ func TestResult_LastInsertId(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		resMock := &resultMock{}
 		resMock.On("LastInsertId").Return(1, nil)
-		r := &result{Result: resMock, logger: testLogger, connID: uniqueID(), query: "SELECT 1"}
+		r := &result{Result: resMock, logger: testLogger, connID: testLogger.opt.uidGenerator.UniqueID(), query: "SELECT 1"}
 		id, err := r.LastInsertId()
 		assert.Equal(t, int64(1), id)
 		assert.NoError(t, err)
@@ -49,7 +49,7 @@ func TestResult_RowsAffected(t *testing.T) {
 	t.Run("Error", func(t *testing.T) {
 		resMock := &resultMock{}
 		resMock.On("RowsAffected").Return(0, errors.New("dummy"))
-		r := &result{Result: resMock, logger: testLogger, connID: uniqueID(), query: "SELECT 1"}
+		r := &result{Result: resMock, logger: testLogger, connID: testLogger.opt.uidGenerator.UniqueID(), query: "SELECT 1"}
 		id, err := r.RowsAffected()
 		assert.Equal(t, int64(0), id)
 		assert.Error(t, err)
@@ -67,7 +67,7 @@ func TestResult_RowsAffected(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		resMock := &resultMock{}
 		resMock.On("RowsAffected").Return(1, nil)
-		r := &result{Result: resMock, logger: testLogger, connID: uniqueID()}
+		r := &result{Result: resMock, logger: testLogger, connID: testLogger.opt.uidGenerator.UniqueID()}
 		id, err := r.RowsAffected()
 		assert.Equal(t, int64(1), id)
 		assert.NoError(t, err)

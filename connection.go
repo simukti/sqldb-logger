@@ -25,7 +25,7 @@ type connection struct {
 
 // Begin implements driver.Conn
 func (c *connection) Begin() (driver.Tx, error) {
-	lvl, start, id := LevelDebug, time.Now(), uniqueID()
+	lvl, start, id := LevelDebug, time.Now(), c.logger.opt.uidGenerator.UniqueID()
 	logs := append(c.logData(), c.logger.withUID(c.logger.opt.txIDFieldname, id))
 	connTx, err := c.Conn.Begin() // nolint: staticcheck
 
@@ -44,7 +44,7 @@ func (c *connection) Begin() (driver.Tx, error) {
 
 // Prepare implements driver.Conn
 func (c *connection) Prepare(query string) (driver.Stmt, error) {
-	lvl, start, id := LevelInfo, time.Now(), uniqueID()
+	lvl, start, id := LevelInfo, time.Now(), c.logger.opt.uidGenerator.UniqueID()
 	logs := append(c.logData(), c.logger.withQuery(query), c.logger.withUID(c.logger.opt.stmtIDFieldname, id))
 	driverStmt, err := c.Conn.Prepare(query)
 
@@ -83,7 +83,7 @@ func (c *connection) BeginTx(ctx context.Context, opts driver.TxOptions) (driver
 		return nil, driver.ErrSkip
 	}
 
-	lvl, start, id := LevelDebug, time.Now(), uniqueID()
+	lvl, start, id := LevelDebug, time.Now(), c.logger.opt.uidGenerator.UniqueID()
 	logs := append(c.logData(), c.logger.withUID(c.logger.opt.txIDFieldname, id))
 	connTx, err := drvTx.BeginTx(ctx, opts)
 
@@ -107,7 +107,7 @@ func (c *connection) PrepareContext(ctx context.Context, query string) (driver.S
 		return nil, driver.ErrSkip
 	}
 
-	lvl, start, id := LevelInfo, time.Now(), uniqueID()
+	lvl, start, id := LevelInfo, time.Now(), c.logger.opt.uidGenerator.UniqueID()
 	logs := append(c.logData(), c.logger.withQuery(query), c.logger.withUID(c.logger.opt.stmtIDFieldname, id))
 	driverStmt, err := driverPrep.PrepareContext(ctx, query)
 

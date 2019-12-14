@@ -3,6 +3,9 @@
 package sqldblogger
 
 import (
+	"context"
+	"database/sql/driver"
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -29,18 +32,21 @@ func TestDefaultConfigs(t *testing.T) {
 
 func TestWithErrorFieldname(t *testing.T) {
 	cfg := &options{}
+	setDefaultOptions(cfg)
 	WithErrorFieldname("errorfield")(cfg)
 	assert.Equal(t, "errorfield", cfg.errorFieldname)
 }
 
 func TestWithDurationFieldname(t *testing.T) {
 	cfg := &options{}
+	setDefaultOptions(cfg)
 	WithDurationFieldname("durfield")(cfg)
 	assert.Equal(t, "durfield", cfg.durationFieldname)
 }
 
 func TestWithMinimumLevel(t *testing.T) {
 	cfg := &options{}
+	setDefaultOptions(cfg)
 	WithMinimumLevel(LevelTrace)(cfg)
 	assert.Equal(t, LevelTrace, cfg.minimumLogLevel)
 
@@ -50,36 +56,42 @@ func TestWithMinimumLevel(t *testing.T) {
 
 func TestWithTimestampFieldname(t *testing.T) {
 	cfg := &options{}
+	setDefaultOptions(cfg)
 	WithTimeFieldname("ts")(cfg)
 	assert.Equal(t, "ts", cfg.timeFieldname)
 }
 
 func TestWithSQLQueryFieldname(t *testing.T) {
 	cfg := &options{}
+	setDefaultOptions(cfg)
 	WithSQLQueryFieldname("sqlq")(cfg)
 	assert.Equal(t, "sqlq", cfg.sqlQueryFieldname)
 }
 
 func TestWithSQLArgsFieldname(t *testing.T) {
 	cfg := &options{}
+	setDefaultOptions(cfg)
 	WithSQLArgsFieldname("sqlargs")(cfg)
 	assert.Equal(t, "sqlargs", cfg.sqlArgsFieldname)
 }
 
 func TestWithLogArguments(t *testing.T) {
 	cfg := &options{}
+	setDefaultOptions(cfg)
 	WithLogArguments(false)(cfg)
 	assert.Equal(t, false, cfg.logArgs)
 }
 
 func TestWithLogDriverErrSkip(t *testing.T) {
 	cfg := &options{}
+	setDefaultOptions(cfg)
 	WithLogDriverErrorSkip(true)(cfg)
 	assert.Equal(t, true, cfg.logDriverErrSkip)
 }
 
 func TestWithDurationUnit(t *testing.T) {
 	cfg := &options{}
+	setDefaultOptions(cfg)
 	WithDurationUnit(DurationMicrosecond)(cfg)
 	assert.Equal(t, DurationMicrosecond, cfg.durationUnit)
 }
@@ -106,12 +118,14 @@ func TestWithDurationUnitFormat(t *testing.T) {
 func TestWithTimeFormat(t *testing.T) {
 	t.Run("Valid format", func(t *testing.T) {
 		cfg := &options{}
+		setDefaultOptions(cfg)
 		WithTimeFormat(TimeFormatRFC3339)(cfg)
 		assert.Equal(t, TimeFormatRFC3339, cfg.timeFormat)
 	})
 
 	t.Run("Invalid format", func(t *testing.T) {
 		cfg := &options{}
+		setDefaultOptions(cfg)
 		WithTimeFormat(TimeFormat(99))(cfg)
 		assert.Equal(t, TimeFormatUnix, cfg.timeFormat)
 	})
@@ -145,18 +159,73 @@ func TestWithSQLQueryAsMessage(t *testing.T) {
 
 func TestWithConnectionIDFieldname(t *testing.T) {
 	cfg := &options{}
+	setDefaultOptions(cfg)
 	WithConnectionIDFieldname("connid")(cfg)
 	assert.Equal(t, "connid", cfg.connIDFieldname)
 }
 
 func TestWithStatementIDFieldname(t *testing.T) {
 	cfg := &options{}
+	setDefaultOptions(cfg)
 	WithStatementIDFieldname("stmtid")(cfg)
 	assert.Equal(t, "stmtid", cfg.stmtIDFieldname)
 }
 
 func TestWithTransactionIDFieldname(t *testing.T) {
 	cfg := &options{}
+	setDefaultOptions(cfg)
 	WithTransactionIDFieldname("trxid")(cfg)
 	assert.Equal(t, "trxid", cfg.txIDFieldname)
+}
+
+type testNullUID struct{}
+
+func (n *testNullUID) UniqueID() string { return "" }
+
+func TestWithUIDGenerator(t *testing.T) {
+	t.Run("Success", func(t *testing.T) {
+		cfg := &options{}
+		setDefaultOptions(cfg)
+		WithUIDGenerator(&testNullUID{})(cfg)
+
+		_, ok := interface{}(cfg.uidGenerator).(*testNullUID)
+		assert.True(t, ok)
+	})
+
+	t.Run("Empty UID should not exist in log output", func(t *testing.T) {
+		cfg := &options{}
+		setDefaultOptions(cfg)
+		WithUIDGenerator(&testNullUID{})(cfg)
+
+		bl := &bufferTestLogger{}
+		l := &logger{opt: cfg, logger: bl}
+
+		l.log(
+			context.TODO(),
+			LevelInfo,
+			"msg",
+			time.Now(),
+			nil,
+			testLogger.withUID(cfg.stmtIDFieldname, l.opt.uidGenerator.UniqueID()),
+			testLogger.withQuery("query"),
+			testLogger.withArgs([]driver.Value{}),
+		)
+
+		var content bufLog
+		err := json.Unmarshal(bl.Bytes(), &content)
+		assert.NoError(t, err)
+		assert.NotContains(t, content.Data, cfg.stmtIDFieldname)
+		bl.Reset()
+	})
+}
+
+var uidBtest = newDefaultUIDDGenerator()
+
+func BenchmarkUniqueID(b *testing.B) {
+	b.ReportAllocs()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			uidBtest.UniqueID()
+		}
+	})
 }

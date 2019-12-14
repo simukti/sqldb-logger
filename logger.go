@@ -2,11 +2,8 @@ package sqldblogger
 
 import (
 	"context"
-	cryptoRand "crypto/rand"
 	"database/sql/driver"
-	"encoding/binary"
 	"fmt"
-	"math/rand"
 	"strconv"
 	"time"
 )
@@ -178,34 +175,4 @@ func parseArgs(argsVal []driver.Value) []interface{} {
 	}
 
 	return args
-}
-
-// init required to seed math/rand and make sure rand.Seed is not 1.
-// rand.Seed will be used by rand.Read inside uniqueID().
-// nolint: gochecknoinits
-func init() {
-	var s [16]byte
-	_, _ = cryptoRand.Read(s[:])
-
-	rand.Seed(int64(binary.LittleEndian.Uint64(s[:])))
-}
-
-const (
-	uidLen      = 16
-	uidCharlist = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_"
-)
-
-// uniqueID generate random ID for id per db call context:
-// - connection
-// - transaction
-// - statement
-func uniqueID() string {
-	var random, uid [uidLen]byte
-	_, _ = rand.Read(random[:]) // nolint: gosec
-
-	for i := 0; i < uidLen; i++ {
-		uid[i] = uidCharlist[random[i]&63]
-	}
-
-	return string(uid[:])
 }

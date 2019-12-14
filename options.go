@@ -1,6 +1,12 @@
 package sqldblogger
 
-import "time"
+import (
+	cryptoRand "crypto/rand"
+	"encoding/binary"
+	"fmt"
+	"math/rand"
+	"time"
+)
 
 type options struct {
 	errorFieldname    string
@@ -17,6 +23,7 @@ type options struct {
 	minimumLogLevel   Level
 	durationUnit      DurationUnit
 	timeFormat        TimeFormat
+	uidGenerator      UIDGenerator
 }
 
 // setDefaultOptions called first time before Log() called (see: OpenDriver()).
@@ -36,6 +43,7 @@ func setDefaultOptions(opt *options) {
 	opt.logDriverErrSkip = false
 	opt.durationUnit = DurationMillisecond
 	opt.timeFormat = TimeFormatUnix
+	opt.uidGenerator = newDefaultUIDDGenerator()
 }
 
 type DurationUnit uint8
@@ -85,8 +93,57 @@ func (tf TimeFormat) format(logTime time.Time) interface{} {
 	}
 }
 
+// UIDGenerator interface to generate unique ID for context call (connection, statement, transaction).
+type UIDGenerator interface {
+	UniqueID() string
+}
+
+const (
+	defaultUIDLen      = 16
+	defaultUIDCharlist = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_"
+)
+
+// newDefaultUIDDGenerator default unique id generator using crypto/rand as math/rand seed.
+func newDefaultUIDDGenerator() UIDGenerator {
+	var s [16]byte
+	if _, err := cryptoRand.Read(s[:]); err != nil {
+		panic(fmt.Sprintf("sqldblogger: could not get random bytes from cryto/rand: '%s'", err.Error()))
+	}
+
+	// seed math/rand with 16 random bytes from crypto/rand to make sure rand.Seed is not 1.
+	// rand.Seed will be used by rand.Read inside UniqueID().
+	rand.Seed(int64(binary.LittleEndian.Uint64(s[:])))
+
+	return &defaultUID{}
+}
+
+type defaultUID struct{}
+
+// UniqueID Generate default 16 byte unique id using math/rand.
+func (u *defaultUID) UniqueID() string {
+	var random, uid [defaultUIDLen]byte
+	// nolint: gosec
+	if _, err := rand.Read(random[:]); err != nil {
+		panic(fmt.Sprintf("sqldblogger: random read error from math/rand: '%s'", err.Error()))
+	}
+
+	for i := 0; i < defaultUIDLen; i++ {
+		uid[i] = defaultUIDCharlist[random[i]&62]
+	}
+
+	return string(uid[:])
+}
+
 // Option Logger option func.
 type Option func(*options)
+
+// WithUIDGenerator set custom unique id generator for context call (connection, statement, transaction).
+// To disable unique id, set UIDGenerator with UniqueID() return empty string.
+func WithUIDGenerator(gen UIDGenerator) Option {
+	return func(opt *options) {
+		opt.uidGenerator = gen
+	}
+}
 
 // WithErrorFieldname to customize error fieldname on log output.
 //
