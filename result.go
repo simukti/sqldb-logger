@@ -7,15 +7,13 @@ import (
 )
 
 // result is a wrapper for driver.Result.
-// result wrapper will only log on error.
 type result struct {
 	driver.Result
-	logger    *logger
-	connID    string
-	stmtID    string
-	query     string
-	args      []driver.Value
-	namedArgs []driver.NamedValue
+	logger *logger
+	connID string
+	stmtID string
+	query  string
+	args   []driver.Value
 }
 
 // LastInsertId implement driver.Result
@@ -53,6 +51,5 @@ func (r *result) logData() []dataFunc {
 		r.logger.withUID(r.logger.opt.stmtIDFieldname, r.stmtID),
 		r.logger.withQuery(r.query),
 		r.logger.withArgs(r.args),
-		r.logger.withNamedArgs(r.namedArgs),
 	}
 }
