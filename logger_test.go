@@ -301,7 +301,7 @@ func TestWithSQLQueryAsMessage2(t *testing.T) {
 		"msg",
 		time.Now(),
 		nil,
-		testLogger.withUID(cfg.stmtIDFieldname, uniqueID()),
+		testLogger.withUID(cfg.stmtIDFieldname, l.opt.uidGenerator.UniqueID()),
 		testLogger.withQuery("query"),
 		testLogger.withArgs([]driver.Value{}),
 	)
@@ -331,14 +331,4 @@ type bufLog struct {
 func (bl *bufferTestLogger) Log(_ context.Context, level Level, msg string, data map[string]interface{}) {
 	bl.Reset()
 	_ = json.NewEncoder(bl).Encode(bufLog{level.String(), msg, data})
-}
-
-func BenchmarkUniqueID(b *testing.B) {
-	b.Log(uniqueID())
-	b.ReportAllocs()
-	b.RunParallel(func(pb *testing.PB) {
-		for pb.Next() {
-			uniqueID()
-		}
-	})
 }
