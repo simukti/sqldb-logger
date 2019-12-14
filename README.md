@@ -49,7 +49,7 @@ dsn := "username:passwd@tcp(mysqlserver:3306)/dbname?parseTime=true"
 db := sqldblogger.OpenDriver(dsn, &mysql.MySQLDriver{}, loggerAdapter) // db is still *sql.DB
 ``` 
 
-Without giving 4th argument to `OpenDriver`, it will use [default options](./options.go#L19-L29).
+Without giving 4th argument to `OpenDriver`, it will use [default options](./options.go#L31-L47).
 
 That's it. Use `db` object as usual.
 
@@ -74,8 +74,14 @@ db := sqldblogger.OpenDriver(
     sqldblogger.WithTimeFormat(sqldblogger.TimeFormatRFC3339), // default: unix timestamp
     sqldblogger.WithLogDriverErrorSkip(true), // default: false
     sqldblogger.WithSQLQueryAsMessage(true), // default: false
+    sqldblogger.WithUIDGenerator(sqldblogger.UIDGenerator), // default: *defaultUID
+    sqldblogger.WithConnectionIDFieldname("con_id"), // default: conn_id
+    sqldblogger.WithStatementIDFieldname("stm_id"), // default: stmt_id
+    sqldblogger.WithTransactionIDFieldname("trx_id"), // default: tx_id
 )
 ```
+
+[Click here](https://godoc.org/github.com/simukti/sqldb-logger#Option) for options documentation.
 
 ## SQL DRIVER INTEGRATION
 
@@ -124,6 +130,7 @@ For example, from:
 ```go
 dsn := "username:passwd@tcp(mysqlserver:3306)/dbname?parseTime=true"
 db, err := sql.Open("mysql", dsn) // db is *sql.DB
+db.Ping() // to check connectivity
 ```
 
 To:
@@ -134,6 +141,7 @@ db, err := sql.Open("mysql", dsn) // db is *sql.DB
 // handle err
 loggerAdapter := zerologadapter.New(zerolog.New(os.Stdout)) // zerolog.New(zerolog.NewConsoleWriter()) // <-- for colored console
 db = sqldblogger.OpenDriver(dsn, db.Driver(), loggerAdapter/*, using_default_options*/) // db is still *sql.DB
+db.Ping() // to check connectivity
 ```
 
 ## LOGGER ADAPTER
@@ -144,6 +152,8 @@ sqldb-logger does not include a logger backend, but provide adapters that uses w
 - [Onelog adapter](logadapter/onelogadapter): Using [francoispqt/onelog](https://github.com/francoispqt/onelog) as its logger.
 - [Zap adapter](logadapter/zapadapter): Using [uber-go/zap](https://github.com/uber-go/zap) as its logger.
 - [Logrus adapter](logadapter/logrusadapter): Using [sirupsen/logrus](https://github.com/sirupsen/logrus) as its logger.
+
+[Provided adapters](./logadapter) does not use given `context`, you need to copy it and adjust with your needs. _(example: add http request id/whatever value from context to query log when you call `QueryerContext` and`ExecerContext` methods)_
 
 For another/custom logger backend, [`Logger`](./logger.go) interface is just as simple as following:
 
