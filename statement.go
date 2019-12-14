@@ -42,11 +42,7 @@ func (s *statement) Exec(args []driver.Value) (driver.Result, error) {
 
 	s.logger.log(context.Background(), lvl, "StmtExec", start, err, logs...)
 
-	if err != nil {
-		return res, err
-	}
-
-	return &result{Result: res, logger: s.logger, connID: s.connID, stmtID: s.id, query: s.query, args: args}, nil
+	return s.result(res, err, args)
 }
 
 // Query implements driver.Stmt
@@ -61,11 +57,7 @@ func (s *statement) Query(args []driver.Value) (driver.Rows, error) {
 
 	s.logger.log(context.Background(), lvl, "StmtQuery", start, err, logs...)
 
-	if err != nil {
-		return res, err
-	}
-
-	return &rows{Rows: res, logger: s.logger, connID: s.connID, stmtID: s.id, query: s.query, args: args}, nil
+	return s.rows(res, err, args)
 }
 
 // ExecContext implements driver.StmtExecContext
@@ -75,7 +67,8 @@ func (s *statement) ExecContext(ctx context.Context, args []driver.NamedValue) (
 		return nil, driver.ErrSkip
 	}
 
-	logs := append(s.logData(), s.logger.withNamedArgs(args))
+	logArgs := namedValuesToValues(args)
+	logs := append(s.logData(), s.logger.withArgs(logArgs))
 	lvl, start := LevelInfo, time.Now()
 	res, err := stmtExecer.ExecContext(ctx, args)
 
@@ -85,11 +78,7 @@ func (s *statement) ExecContext(ctx context.Context, args []driver.NamedValue) (
 
 	s.logger.log(ctx, lvl, "StmtExecContext", start, err, logs...)
 
-	if err != nil {
-		return res, err
-	}
-
-	return &result{Result: res, logger: s.logger, connID: s.connID, stmtID: s.id, query: s.query, namedArgs: args}, nil
+	return s.result(res, err, logArgs)
 }
 
 // QueryContext implements driver.StmtQueryContext
@@ -99,7 +88,8 @@ func (s *statement) QueryContext(ctx context.Context, args []driver.NamedValue) 
 		return nil, driver.ErrSkip
 	}
 
-	logs := append(s.logData(), s.logger.withNamedArgs(args))
+	logArgs := namedValuesToValues(args)
+	logs := append(s.logData(), s.logger.withArgs(logArgs))
 	lvl, start := LevelInfo, time.Now()
 	res, err := stmtQueryer.QueryContext(ctx, args)
 
@@ -109,11 +99,7 @@ func (s *statement) QueryContext(ctx context.Context, args []driver.NamedValue) 
 
 	s.logger.log(ctx, lvl, "StmtQueryContext", start, err, logs...)
 
-	if err != nil {
-		return res, err
-	}
-
-	return &rows{Rows: res, logger: s.logger, connID: s.connID, stmtID: s.id, query: s.query, namedArgs: args}, nil
+	return s.rows(res, err, logArgs)
 }
 
 // CheckNamedValue implements driver.NamedValueChecker
@@ -143,6 +129,22 @@ func (s *statement) ColumnConverter(idx int) driver.ValueConverter {
 	}
 
 	return driver.DefaultParameterConverter
+}
+
+func (s *statement) rows(res driver.Rows, err error, args []driver.Value) (driver.Rows, error) {
+	if !s.logger.opt.wrapResult || err != nil {
+		return res, err
+	}
+
+	return &rows{Rows: res, logger: s.logger, connID: s.id, stmtID: s.id, query: s.query, args: args}, nil
+}
+
+func (s *statement) result(res driver.Result, err error, args []driver.Value) (driver.Result, error) {
+	if !s.logger.opt.wrapResult || err != nil {
+		return res, err
+	}
+
+	return &result{Result: res, logger: s.logger, connID: s.id, stmtID: s.id, query: s.query, args: args}, nil
 }
 
 // logData default log data for statement log.

@@ -20,6 +20,7 @@ type options struct {
 	sqlQueryAsMsg     bool
 	logArgs           bool
 	logDriverErrSkip  bool
+	wrapResult        bool
 	minimumLogLevel   Level
 	durationUnit      DurationUnit
 	timeFormat        TimeFormat
@@ -41,6 +42,7 @@ func setDefaultOptions(opt *options) {
 	opt.minimumLogLevel = LevelDebug
 	opt.logArgs = true
 	opt.logDriverErrSkip = false
+	opt.wrapResult = true
 	opt.durationUnit = DurationMillisecond
 	opt.timeFormat = TimeFormatUnix
 	opt.uidGenerator = newDefaultUIDDGenerator()
@@ -294,5 +296,14 @@ func WithStatementIDFieldname(name string) Option {
 func WithTransactionIDFieldname(name string) Option {
 	return func(opt *options) {
 		opt.txIDFieldname = name
+	}
+}
+
+// WithWrapResult set flag to wrap query and exec result and rows.
+//
+// Default: true
+func WithWrapResult(flag bool) Option {
+	return func(opt *options) {
+		opt.wrapResult = flag
 	}
 }

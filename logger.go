@@ -64,7 +64,6 @@ func (l *logger) withQuery(query string) dataFunc {
 	}
 }
 
-// withArgs named args ONLY from Queryer, QueryerContext, Execer, and ExecerContext
 func (l *logger) withArgs(args []driver.Value) dataFunc {
 	return func() (string, interface{}) {
 		if !l.opt.logArgs {
@@ -82,33 +81,6 @@ func (l *logger) withKeyArgs(key string, args []driver.Value) dataFunc {
 		}
 
 		return key, parseArgs(args)
-	}
-}
-
-// withNamedArgs named args ONLY from Queryer, QueryerContext, Execer, and ExecerContext
-func (l *logger) withNamedArgs(args []driver.NamedValue) dataFunc {
-	return func() (string, interface{}) {
-		if !l.opt.logArgs {
-			return l.opt.sqlArgsFieldname, nil
-		}
-
-		return l.withKeyNamedArgs(l.opt.sqlArgsFieldname, args)()
-	}
-}
-
-func (l *logger) withKeyNamedArgs(key string, args []driver.NamedValue) dataFunc {
-	return func() (string, interface{}) {
-		if len(args) == 0 {
-			return key, nil
-		}
-
-		argsVal := make([]driver.Value, len(args))
-
-		for k, v := range args {
-			argsVal[k] = v.Value
-		}
-
-		return key, parseArgs(argsVal)
 	}
 }
 
@@ -175,4 +147,15 @@ func parseArgs(argsVal []driver.Value) []interface{} {
 	}
 
 	return args
+}
+
+// namedValuesToValues this conversion is used for logging arguments.
+func namedValuesToValues(args []driver.NamedValue) []driver.Value {
+	argsVal := make([]driver.Value, len(args))
+
+	for k, v := range args {
+		argsVal[k] = v.Value
+	}
+
+	return argsVal
 }

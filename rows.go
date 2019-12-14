@@ -16,16 +16,13 @@ import (
 // - driver.RowsColumnTypeLength
 // - driver.RowsColumnTypeNullable
 // - driver.RowsColumnTypePrecisionScale
-//
-// rows wrapper only log on error.
 type rows struct {
 	driver.Rows
-	logger    *logger
-	connID    string
-	stmtID    string
-	query     string
-	args      []driver.Value
-	namedArgs []driver.NamedValue
+	logger *logger
+	connID string
+	stmtID string
+	query  string
+	args   []driver.Value
 }
 
 // Columns implement driver.Rows
@@ -49,7 +46,14 @@ func (r *rows) Close() error {
 
 // Next implement driver.Rows
 func (r *rows) Next(dest []driver.Value) error {
-	logs := append(r.logData(), r.logger.withKeyArgs("rows_args", dest))
+	logs := r.logData()
+
+	// dest contain value from database.
+	// If query arg not logged, dest arg here will also not logged.
+	if r.logger.opt.logArgs {
+		logs = append(logs, r.logger.withKeyArgs("rows_dest", dest))
+	}
+
 	lvl, start := LevelTrace, time.Now()
 	err := r.Rows.Next(dest)
 
@@ -142,6 +146,5 @@ func (r *rows) logData() []dataFunc {
 		r.logger.withUID(r.logger.opt.stmtIDFieldname, r.stmtID),
 		r.logger.withQuery(r.query),
 		r.logger.withArgs(r.args),
-		r.logger.withNamedArgs(r.namedArgs),
 	}
 }
