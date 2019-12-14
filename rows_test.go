@@ -67,7 +67,7 @@ func TestRows_Next(t *testing.T) {
 		assert.Equal(t, io.EOF, err)
 	})
 
-	t.Run("Error Non-io.EOF", func(t *testing.T) {
+	t.Run("Error Non-io.EOF With Dest Value", func(t *testing.T) {
 		rowsMock := &rowsMock{}
 		rowsMock.On("Next", mock.Anything).Return(driver.ErrBadConn)
 		rs := &rows{Rows: rowsMock, logger: testLogger, connID: testLogger.opt.uidGenerator.UniqueID(), stmtID: testLogger.opt.uidGenerator.UniqueID(), query: "SELECT 1"}
@@ -84,10 +84,35 @@ func TestRows_Next(t *testing.T) {
 		assert.NotEmpty(t, output.Data[testOpts.connIDFieldname])
 		assert.NotEmpty(t, output.Data[testOpts.stmtIDFieldname])
 		assert.NotEmpty(t, output.Data[testOpts.sqlQueryFieldname])
+		assert.NotEmpty(t, output.Data["rows_dest"])
 		bufLogger.Reset()
 	})
 
-	t.Run("Success", func(t *testing.T) {
+	t.Run("Error Non-io.EOF Without Dest Value", func(t *testing.T) {
+		rowsMock := &rowsMock{}
+		rowsMock.On("Next", mock.Anything).Return(driver.ErrBadConn)
+		WithLogArguments(false)(testOpts)
+
+		rs := &rows{Rows: rowsMock, logger: testLogger, connID: testLogger.opt.uidGenerator.UniqueID(), stmtID: testLogger.opt.uidGenerator.UniqueID(), query: "SELECT 1"}
+
+		err := rs.Next([]driver.Value{1})
+		assert.Implements(t, (*driver.Rows)(nil), rs)
+		assert.Error(t, err)
+
+		var output bufLog
+		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		assert.NoError(t, err)
+		assert.Equal(t, "RowsNext", output.Message)
+		assert.Equal(t, LevelError.String(), output.Level)
+		assert.NotEmpty(t, output.Data[testOpts.connIDFieldname])
+		assert.NotEmpty(t, output.Data[testOpts.stmtIDFieldname])
+		assert.NotEmpty(t, output.Data[testOpts.sqlQueryFieldname])
+		assert.NotContains(t, output.Data, "rows_dest")
+		bufLogger.Reset()
+		setDefaultOptions(testOpts)
+	})
+
+	t.Run("Success With Dest Value", func(t *testing.T) {
 		rowsMock := &rowsMock{}
 		rowsMock.On("Next", mock.Anything).Return(nil)
 		WithMinimumLevel(LevelTrace)(testOpts)
@@ -105,7 +130,31 @@ func TestRows_Next(t *testing.T) {
 		assert.NotEmpty(t, output.Data[testOpts.connIDFieldname])
 		assert.NotEmpty(t, output.Data[testOpts.stmtIDFieldname])
 		assert.NotEmpty(t, output.Data[testOpts.sqlQueryFieldname])
-		assert.NotEmpty(t, output.Data["rows_args"])
+		assert.NotEmpty(t, output.Data["rows_dest"])
+		bufLogger.Reset()
+		setDefaultOptions(testOpts)
+	})
+
+	t.Run("Success Without Dest Value", func(t *testing.T) {
+		rowsMock := &rowsMock{}
+		rowsMock.On("Next", mock.Anything).Return(nil)
+		WithMinimumLevel(LevelTrace)(testOpts)
+		WithLogArguments(false)(testOpts)
+		rs := &rows{Rows: rowsMock, logger: testLogger, connID: testLogger.opt.uidGenerator.UniqueID(), stmtID: testLogger.opt.uidGenerator.UniqueID(), query: "SELECT 1"}
+
+		err := rs.Next([]driver.Value{1})
+		assert.Implements(t, (*driver.Rows)(nil), rs)
+		assert.NoError(t, err)
+
+		var output bufLog
+		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		assert.NoError(t, err)
+		assert.Equal(t, "RowsNext", output.Message)
+		assert.Equal(t, LevelTrace.String(), output.Level)
+		assert.NotEmpty(t, output.Data[testOpts.connIDFieldname])
+		assert.NotEmpty(t, output.Data[testOpts.stmtIDFieldname])
+		assert.NotEmpty(t, output.Data[testOpts.sqlQueryFieldname])
+		assert.NotContains(t, output.Data, "rows_dest")
 		bufLogger.Reset()
 		setDefaultOptions(testOpts)
 	})
