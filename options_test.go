@@ -178,6 +178,13 @@ func TestWithTransactionIDFieldname(t *testing.T) {
 	assert.Equal(t, "trxid", cfg.txIDFieldname)
 }
 
+func TestWithWrapResult(t *testing.T) {
+	cfg := &options{}
+	setDefaultOptions(cfg)
+	WithWrapResult(false)(cfg)
+	assert.Equal(t, false, cfg.wrapResult)
+}
+
 type testNullUID struct{}
 
 func (n *testNullUID) UniqueID() string { return "" }
