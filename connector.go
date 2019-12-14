@@ -16,7 +16,7 @@ type connector struct {
 
 // Connect implement driver.Connector which will open new db connection if none exist
 func (c *connector) Connect(ctx context.Context) (driver.Conn, error) {
-	start, id := time.Now(), uniqueID()
+	start, id := time.Now(), c.logger.opt.uidGenerator.UniqueID()
 	logID := c.logger.withUID(c.logger.opt.connIDFieldname, id)
 	conn, err := c.driver.Open(c.dsn)
 

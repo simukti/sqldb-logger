@@ -17,7 +17,7 @@ func TestStatement_Close(t *testing.T) {
 	stmtMock := &statementMock{}
 	stmtMock.On("Close").Return(driver.ErrBadConn)
 
-	stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: uniqueID(), connID: uniqueID()}
+	stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
 	err := stmt.Close()
 	assert.Error(t, err)
 }
@@ -27,7 +27,7 @@ func TestStatement_NumInput(t *testing.T) {
 	stmtMock := &statementMock{}
 	stmtMock.On("NumInput").Return(1)
 
-	stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: uniqueID(), connID: uniqueID()}
+	stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
 	input := stmt.NumInput()
 	assert.Equal(t, 1, input)
 }
@@ -38,7 +38,7 @@ func TestStatement_Exec(t *testing.T) {
 		stmtMock := &statementMock{}
 		stmtMock.On("Exec", mock.Anything).Return(driver.ResultNoRows, driver.ErrBadConn)
 
-		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: uniqueID(), connID: uniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
 		_, err := stmt.Exec([]driver.Value{"testid"})
 		assert.Error(t, err)
 
@@ -57,7 +57,7 @@ func TestStatement_Exec(t *testing.T) {
 		stmtMock := &statementMock{}
 		stmtMock.On("Exec", mock.Anything).Return(&resultMock{}, nil)
 
-		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: uniqueID(), connID: uniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
 		_, err := stmt.Exec([]driver.Value{"testid"})
 		assert.NoError(t, err)
 
@@ -77,7 +77,7 @@ func TestStatement_Query(t *testing.T) {
 		stmtMock := &statementMock{}
 		stmtMock.On("Query", mock.Anything).Return(&rowsMock{}, driver.ErrBadConn)
 
-		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: uniqueID(), connID: uniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
 		_, err := stmt.Query([]driver.Value{"testid"})
 		assert.Error(t, err)
 
@@ -96,7 +96,7 @@ func TestStatement_Query(t *testing.T) {
 		stmtMock := &statementMock{}
 		stmtMock.On("Query", mock.Anything).Return(&rowsMock{}, nil)
 
-		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: uniqueID(), connID: uniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
 		_, err := stmt.Query([]driver.Value{"testid"})
 		assert.NoError(t, err)
 
@@ -114,7 +114,7 @@ func TestStatement_ExecContext(t *testing.T) {
 	t.Run("Not implement driver.StmtExecContext", func(t *testing.T) {
 		q := "SELECT * FROM tt WHERE id = ?"
 		stmtMock := &statementMock{}
-		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: uniqueID(), connID: uniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
 
 		_, err := stmt.ExecContext(context.TODO(), []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.Error(t, err)
@@ -126,7 +126,7 @@ func TestStatement_ExecContext(t *testing.T) {
 		stmtMock := &statementExecerContextMock{}
 		stmtMock.On("ExecContext", mock.Anything, mock.Anything).Return(&resultMock{}, driver.ErrBadConn)
 
-		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: uniqueID(), connID: uniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
 		_, err := stmt.ExecContext(context.TODO(), []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.Error(t, err)
 		assert.Equal(t, driver.ErrBadConn, err)
@@ -146,7 +146,7 @@ func TestStatement_ExecContext(t *testing.T) {
 		stmtMock := &statementExecerContextMock{}
 		stmtMock.On("ExecContext", mock.Anything, mock.Anything).Return(&resultMock{}, nil)
 
-		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: uniqueID(), connID: uniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
 		_, err := stmt.ExecContext(context.TODO(), []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.NoError(t, err)
 
@@ -164,7 +164,7 @@ func TestStatement_QueryContext(t *testing.T) {
 	t.Run("Not implement driver.StmtQueryContext", func(t *testing.T) {
 		q := "SELECT * FROM tt WHERE id = ?"
 		stmtMock := &statementMock{}
-		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: uniqueID(), connID: uniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
 
 		_, err := stmt.QueryContext(context.TODO(), []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.Error(t, err)
@@ -176,7 +176,7 @@ func TestStatement_QueryContext(t *testing.T) {
 		stmtMock := &statementQueryerContextMock{}
 		stmtMock.On("QueryContext", mock.Anything, mock.Anything).Return(&rowsMock{}, driver.ErrBadConn)
 
-		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: uniqueID(), connID: uniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
 		_, err := stmt.QueryContext(context.TODO(), []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.Error(t, err)
 		assert.Equal(t, driver.ErrBadConn, err)
@@ -196,7 +196,7 @@ func TestStatement_QueryContext(t *testing.T) {
 		stmtMock := &statementQueryerContextMock{}
 		stmtMock.On("QueryContext", mock.Anything, mock.Anything).Return(&rowsMock{}, nil)
 
-		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: uniqueID(), connID: uniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
 		_, err := stmt.QueryContext(context.TODO(), []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.NoError(t, err)
 
@@ -217,7 +217,7 @@ func TestStatement_QueryContext2(t *testing.T) {
 	stmtMock.On("Query", mock.Anything).Return(&rowsMock{}, nil)
 	driverConnMock.On("Prepare", mock.Anything).Return(stmtMock, nil)
 	q := "SELECT * FROM tt WHERE id = ?"
-	conn := &connection{Conn: driverConnMock, logger: testLogger, id: uniqueID()}
+	conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
 	stmt, err := conn.Prepare(q)
 	assert.NoError(t, err)
 
@@ -242,7 +242,7 @@ func TestStatement_CheckNamedValue(t *testing.T) {
 		stmtMock := &statementNamedValueCheckerMock{}
 		stmtMock.On("CheckNamedValue", mock.Anything).Return(driver.ErrBadConn)
 
-		stmt := &statement{Stmt: stmtMock, logger: testLogger, id: uniqueID(), connID: uniqueID()}
+		stmt := &statement{Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
 		err := stmt.CheckNamedValue(&driver.NamedValue{Name: "", Ordinal: 0, Value: "testid"})
 		assert.Error(t, err)
 
@@ -258,7 +258,7 @@ func TestStatement_CheckNamedValue(t *testing.T) {
 	t.Run("Not implement driver.NamedValueChecker", func(t *testing.T) {
 		stmtMock := &statementMock{}
 
-		stmt := &statement{Stmt: stmtMock, logger: testLogger, id: uniqueID(), connID: uniqueID()}
+		stmt := &statement{Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
 		err := stmt.CheckNamedValue(&driver.NamedValue{Name: "", Ordinal: 0, Value: "testid"})
 		assert.Error(t, err)
 		assert.Equal(t, driver.ErrSkip, err)
@@ -270,7 +270,7 @@ func TestStatement_ColumnConverter(t *testing.T) {
 		stmtMock := &statementValueConverterMock{}
 		stmtMock.On("ColumnConverter", mock.Anything).Return(driver.NotNull{Converter: driver.DefaultParameterConverter})
 
-		stmt := &statement{Stmt: stmtMock, logger: testLogger, id: uniqueID(), connID: uniqueID()}
+		stmt := &statement{Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
 		cnv := stmt.ColumnConverter(1)
 		val, err := cnv.ConvertValue(1)
 		assert.NoError(t, err)
@@ -281,7 +281,7 @@ func TestStatement_ColumnConverter(t *testing.T) {
 
 	t.Run("Not implement driver.ColumnConverter", func(t *testing.T) {
 		stmtMock := &statementMock{}
-		stmt := &statement{Stmt: stmtMock, logger: testLogger, id: uniqueID(), connID: uniqueID()}
+		stmt := &statement{Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
 		cnv := stmt.ColumnConverter(1)
 		assert.Equal(t, driver.DefaultParameterConverter, cnv)
 	})
