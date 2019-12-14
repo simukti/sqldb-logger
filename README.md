@@ -49,7 +49,7 @@ dsn := "username:passwd@tcp(mysqlserver:3306)/dbname?parseTime=true"
 db := sqldblogger.OpenDriver(dsn, &mysql.MySQLDriver{}, loggerAdapter) // db is still *sql.DB
 ``` 
 
-Without giving 4th argument to `OpenDriver`, it will use [default options](./options.go#L31-L47).
+Without giving 4th argument to `OpenDriver`, it will use [default options](./options.go#L32-L49).
 
 That's it. Use `db` object as usual.
 
@@ -78,6 +78,7 @@ db := sqldblogger.OpenDriver(
     sqldblogger.WithConnectionIDFieldname("con_id"), // default: conn_id
     sqldblogger.WithStatementIDFieldname("stm_id"), // default: stmt_id
     sqldblogger.WithTransactionIDFieldname("trx_id"), // default: tx_id
+    sqldblogger.WithWrapResult(false), // default: true
 )
 ```
 
