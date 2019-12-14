@@ -136,7 +136,7 @@ func (s *statement) rows(res driver.Rows, err error, args []driver.Value) (drive
 		return res, err
 	}
 
-	return &rows{Rows: res, logger: s.logger, connID: s.id, stmtID: s.id, query: s.query, args: args}, nil
+	return &rows{Rows: res, logger: s.logger, connID: s.connID, stmtID: s.id, query: s.query, args: args}, nil
 }
 
 func (s *statement) result(res driver.Result, err error, args []driver.Value) (driver.Result, error) {
@@ -144,7 +144,7 @@ func (s *statement) result(res driver.Result, err error, args []driver.Value) (d
 		return res, err
 	}
 
-	return &result{Result: res, logger: s.logger, connID: s.id, stmtID: s.id, query: s.query, args: args}, nil
+	return &result{Result: res, logger: s.logger, connID: s.connID, stmtID: s.id, query: s.query, args: args}, nil
 }
 
 // logData default log data for statement log.
