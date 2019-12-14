@@ -54,28 +54,19 @@ func TestWithArgs(t *testing.T) {
 		assert.Equal(t, []interface{}{1}, v)
 	})
 
+	t.Run("Non Empty Named Args", func(t *testing.T) {
+		k, v := l.withArgs(namedValuesToValues([]driver.NamedValue{
+			{"test", 1, 9},
+		}))()
+		assert.Equal(t, cfg.sqlArgsFieldname, k)
+		assert.Equal(t, []interface{}{9}, v)
+	})
+
 	t.Run("Empty Args", func(t *testing.T) {
 		k, v := l.withArgs([]driver.Value{})()
 		assert.Equal(t, cfg.sqlArgsFieldname, k)
 		assert.Equal(t, nil, v)
 	})
-}
-
-func TestWithNamedArgs(t *testing.T) {
-	args := []driver.NamedValue{
-		{
-			Name:    "n1",
-			Ordinal: 0,
-			Value:   "arg1",
-		},
-	}
-
-	cfg := &options{}
-	setDefaultOptions(cfg)
-	l := &logger{opt: cfg}
-	k, v := l.withNamedArgs(args)()
-	assert.Equal(t, cfg.sqlArgsFieldname, k)
-	assert.Equal(t, []interface{}{"arg1"}, v)
 }
 
 func TestLogInternalWithMinimumLevel(t *testing.T) {
@@ -206,9 +197,6 @@ func TestWithLogArgumentsFalse(t *testing.T) {
 			1,
 			[]byte("kedua"),
 			[]byte("lanjut"),
-		}),
-		l.withNamedArgs([]driver.NamedValue{
-			{"", 1, driver.Value(1)},
 		}),
 	)
 
