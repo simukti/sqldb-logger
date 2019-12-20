@@ -185,24 +185,20 @@ func TestWithWrapResult(t *testing.T) {
 	assert.Equal(t, false, cfg.wrapResult)
 }
 
-type testNullUID struct{}
-
-func (n *testNullUID) UniqueID() string { return "" }
-
 func TestWithUIDGenerator(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		cfg := &options{}
 		setDefaultOptions(cfg)
-		WithUIDGenerator(&testNullUID{})(cfg)
+		WithUIDGenerator(&NullUID{})(cfg)
 
-		_, ok := interface{}(cfg.uidGenerator).(*testNullUID)
+		_, ok := interface{}(cfg.uidGenerator).(*NullUID)
 		assert.True(t, ok)
 	})
 
 	t.Run("Empty UID should not exist in log output", func(t *testing.T) {
 		cfg := &options{}
 		setDefaultOptions(cfg)
-		WithUIDGenerator(&testNullUID{})(cfg)
+		WithUIDGenerator(&NullUID{})(cfg)
 
 		bl := &bufferTestLogger{}
 		l := &logger{opt: cfg, logger: bl}

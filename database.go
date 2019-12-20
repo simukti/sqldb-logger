@@ -1,3 +1,4 @@
+// Package sqldblogger act as thin and transparent logger without having to change existing *sql.DB usage.
 package sqldblogger
 
 import (

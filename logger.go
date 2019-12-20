@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// Level
 type Level uint8
 
 const (
@@ -17,6 +18,7 @@ const (
 	LevelError
 )
 
+// String implement Stringer to convert type Level to string.
 func (l Level) String() string {
 	switch l {
 	case LevelTrace:
@@ -105,11 +107,16 @@ func (l *logger) log(ctx context.Context, lvl Level, msg string, start time.Time
 	for _, d := range datas {
 		k, v := d()
 
-		if (!l.opt.logArgs && k == l.opt.sqlArgsFieldname) || v == nil {
+		if k == l.opt.sqlArgsFieldname && !l.opt.logArgs {
 			continue
 		}
 
-		if l.opt.sqlQueryAsMsg && k == l.opt.sqlQueryFieldname {
+		// don't log nil value
+		if v == nil {
+			continue
+		}
+
+		if k == l.opt.sqlQueryFieldname && l.opt.sqlQueryAsMsg {
 			msg = v.(string)
 			continue
 		}
@@ -135,11 +142,11 @@ func parseArgs(argsVal []driver.Value) []interface{} {
 			if len(v) < maxArgValueLen {
 				a = string(v)
 			} else {
-				a = string(v[:maxArgValueLen]) + " (truncated " + strconv.Itoa(len(v)-maxArgValueLen) + " bytes)"
+				a = string(v[:maxArgValueLen]) + " (" + strconv.Itoa(len(v)-maxArgValueLen) + " bytes truncated)"
 			}
 		case string:
 			if len(v) > maxArgValueLen {
-				a = v[:maxArgValueLen] + " (truncated " + strconv.Itoa(len(v)-maxArgValueLen) + " bytes)"
+				a = v[:maxArgValueLen] + " (" + strconv.Itoa(len(v)-maxArgValueLen) + " bytes truncated)"
 			}
 		}
 

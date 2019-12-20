@@ -11,11 +11,13 @@ type zapAdapter struct {
 	logger *zap.Logger
 }
 
+// New set zap logger as backend as an example on how it process log from sqldblogger.Log().
 func New(logger *zap.Logger) sqldblogger.Logger {
 	return &zapAdapter{logger: logger}
 }
 
-// Log implements sqldblogger.Logger
+// Log implement sqldblogger.Logger and log it as is.
+// To use context.Context values, please copy this file and adjust to your needs.
 func (zp *zapAdapter) Log(_ context.Context, level sqldblogger.Level, msg string, data map[string]interface{}) {
 	fields := make([]zap.Field, len(data))
 	i := 0
