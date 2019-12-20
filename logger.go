@@ -8,13 +8,18 @@ import (
 	"time"
 )
 
-// Level
+// Level is a log level which filterable by minimum level option.
 type Level uint8
 
 const (
+	// LevelTrace is the lowest level and the most detailed.
+	// Use this if you want to know interaction flow from prepare, statement, execution to result/rows.
 	LevelTrace Level = iota
+	// LevelDebug is used by non Queryer(Context) and Execer(Context) call like Ping() and Connect().
 	LevelDebug
+	// LevelInfo is used by Queryer, Execer, Preparer, and Stmt.
 	LevelInfo
+	// LevelError is used on actual driver error or when driver not implement some optional sql/driver interface.
 	LevelError
 )
 
@@ -156,7 +161,7 @@ func parseArgs(argsVal []driver.Value) []interface{} {
 	return args
 }
 
-// namedValuesToValues this conversion is used for logging arguments.
+// namedValuesToValues is type conversion ONLY for logging arguments.
 func namedValuesToValues(args []driver.NamedValue) []driver.Value {
 	argsVal := make([]driver.Value, len(args))
 
