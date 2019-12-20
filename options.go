@@ -48,11 +48,15 @@ func setDefaultOptions(opt *options) {
 	opt.uidGenerator = newDefaultUIDDGenerator()
 }
 
+// DurationUnit is total time spent on an actual driver function call calculated by time.Since(start).
 type DurationUnit uint8
 
 const (
+	// DurationNanosecond will format time.Since() result to nanosecond unit (1/1_000_000_000 second).
 	DurationNanosecond DurationUnit = iota
+	// DurationMicrosecond will format time.Since() result to microsecond unit (1/1_000_000 second).
 	DurationMicrosecond
+	// DurationMillisecond will format time.Since() result to millisecond unit (1/1_000 second).
 	DurationMillisecond
 )
 
@@ -71,12 +75,17 @@ func (du DurationUnit) format(duration time.Duration) float64 {
 	}
 }
 
+// TimeFormat is time.Now() format when Log() deliver the log message.
 type TimeFormat uint8
 
 const (
+	// TimeFormatUnix will format log time to unix timestamp.
 	TimeFormatUnix TimeFormat = iota
+	// TimeFormatUnixNano will format log time to unix timestamp with nano seconds.
 	TimeFormatUnixNano
+	// TimeFormatRFC3339 will format log time to time.RFC3339 format.
 	TimeFormatRFC3339
+	// TimeFormatRFC3339Nano will format log time to time.RFC3339Nano format.
 	TimeFormatRFC3339Nano
 )
 
@@ -95,7 +104,10 @@ func (tf TimeFormat) format(logTime time.Time) interface{} {
 	}
 }
 
-// UIDGenerator interface to generate unique ID for context call (connection, statement, transaction).
+// UIDGenerator is an interface to generate unique ID for context call (connection, statement, transaction).
+// The point of having unique id per context call is to easily track and analyze logs.
+//
+// Note: no possible way to track id when statement Execer(Context),Queryer(Context) called from under db.Tx.
 type UIDGenerator interface {
 	UniqueID() string
 }
@@ -124,6 +136,10 @@ type defaultUID struct{}
 // UniqueID Generate default 16 byte unique id using math/rand.
 func (u *defaultUID) UniqueID() string {
 	var random, uid [defaultUIDLen]byte
+
+	// using math/rand.Read because it's slightly faster than crypto/rand.Read
+	// unique id always scoped under connectionID so there is no need to super-secure-random using crypto/rand.
+	//
 	// nolint: gosec
 	if _, err := rand.Read(random[:]); err != nil {
 		panic(fmt.Sprintf("sqldblogger: random read error from math/rand: '%s'", err.Error()))
@@ -136,11 +152,20 @@ func (u *defaultUID) UniqueID() string {
 	return string(uid[:])
 }
 
-// Option Logger option func.
+// NullUID is used to disable unique id when set to WithUIDGenerator().
+type NullUID struct{}
+
+// UniqueID() return empty string and unique id will not logged.
+func (u *NullUID) UniqueID() string { return "" }
+
+// Option is optional variadic type in OpenDriver().
 type Option func(*options)
 
 // WithUIDGenerator set custom unique id generator for context call (connection, statement, transaction).
-// To disable unique id, set UIDGenerator with UniqueID() return empty string.
+//
+// To disable unique id in log output, use &NullUID{}.
+//
+// Default: newDefaultUIDDGenerator() called from setDefaultOptions().
 func WithUIDGenerator(gen UIDGenerator) Option {
 	return func(opt *options) {
 		opt.uidGenerator = gen
@@ -192,11 +217,11 @@ func WithSQLArgsFieldname(name string) Option {
 	}
 }
 
-// WithSQLArgsFieldname set minimum level to be logged.
-//
-// Default: LevelDebug
+// WithMinimumLevel set minimum level to be logged. Logger will always log level >= minimum level.
 //
 // Options: LevelTrace < LevelDebug < LevelInfo < LevelError
+//
+// Default: LevelDebug
 func WithMinimumLevel(lvl Level) Option {
 	return func(opt *options) {
 		if lvl > LevelError || lvl < LevelTrace {
@@ -209,9 +234,11 @@ func WithMinimumLevel(lvl Level) Option {
 
 // WithLogArguments set flag to log SQL query argument or not.
 //
-// Default: true
+// When set to false, any SQL and result/rows argument on Queryer(Context) and Execer(Context) will not logged.
 //
-// For some system it is not recommended to log SQL argument because it may contain sensitive payload.
+// When set to true, argument type string and []byte will subject to trim on parseArgs() log output.
+//
+// Default: true
 func WithLogArguments(flag bool) Option {
 	return func(opt *options) {
 		opt.logArgs = flag
@@ -220,10 +247,12 @@ func WithLogArguments(flag bool) Option {
 
 // WithLogDriverErrorSkip set flag for driver.ErrSkip.
 //
-// Default: true
-//
 // If driver not implement optional interfaces, driver will return driver.ErrSkip and sql.DB will handle that.
 // driver.ErrSkip could be false alarm in log analyzer because it was not actual error from app.
+//
+// When set to false, logger will log any driver.ErrSkip.
+//
+// Default: true
 func WithLogDriverErrorSkip(flag bool) Option {
 	return func(opt *options) {
 		opt.logDriverErrSkip = flag
@@ -232,12 +261,9 @@ func WithLogDriverErrorSkip(flag bool) Option {
 
 // WithDurationUnit to customize log duration unit.
 //
-// Default: DurationMillisecond
+// Options: DurationMillisecond | DurationMicrosecond | DurationNanosecond
 //
-// Options:
-// - DurationMillisecond
-// - DurationMicrosecond
-// - DurationNanosecond
+// Default: DurationMillisecond
 func WithDurationUnit(unit DurationUnit) Option {
 	return func(opt *options) {
 		opt.durationUnit = unit
@@ -246,13 +272,9 @@ func WithDurationUnit(unit DurationUnit) Option {
 
 // WithTimeFormat to customize log time format.
 //
-// Default: TimeFormatUnix
+// Options: TimeFormatUnix | TimeFormatUnixNano | TimeFormatRFC3339 | TimeFormatRFC3339Nano
 //
-// Options:
-// - TimeFormatUnix
-// - TimeFormatUnixNano
-// - TimeFormatRFC3339
-// - TimeFormatRFC3339Nano
+// Default: TimeFormatUnix
 func WithTimeFormat(format TimeFormat) Option {
 	return func(opt *options) {
 		if format < TimeFormatUnix || format > TimeFormatRFC3339Nano {
@@ -299,7 +321,10 @@ func WithTransactionIDFieldname(name string) Option {
 	}
 }
 
-// WithWrapResult set flag to wrap query and exec result and rows.
+// WithWrapResult set flag to wrap Queryer(Context) and Execer(Context) driver.Rows/driver.Result response.
+//
+// When set to false, result returned from db (driver.Rows/driver.Result object),
+// will returned as is without wrapped inside &rows{} and &result{}.
 //
 // Default: true
 func WithWrapResult(flag bool) Option {

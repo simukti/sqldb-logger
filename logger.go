@@ -8,15 +8,22 @@ import (
 	"time"
 )
 
+// Level is a log level which filterable by minimum level option.
 type Level uint8
 
 const (
+	// LevelTrace is the lowest level and the most detailed.
+	// Use this if you want to know interaction flow from prepare, statement, execution to result/rows.
 	LevelTrace Level = iota
+	// LevelDebug is used by non Queryer(Context) and Execer(Context) call like Ping() and Connect().
 	LevelDebug
+	// LevelInfo is used by Queryer, Execer, Preparer, and Stmt.
 	LevelInfo
+	// LevelError is used on actual driver error or when driver not implement some optional sql/driver interface.
 	LevelError
 )
 
+// String implement Stringer to convert type Level to string.
 func (l Level) String() string {
 	switch l {
 	case LevelTrace:
@@ -105,11 +112,16 @@ func (l *logger) log(ctx context.Context, lvl Level, msg string, start time.Time
 	for _, d := range datas {
 		k, v := d()
 
-		if (!l.opt.logArgs && k == l.opt.sqlArgsFieldname) || v == nil {
+		if k == l.opt.sqlArgsFieldname && !l.opt.logArgs {
 			continue
 		}
 
-		if l.opt.sqlQueryAsMsg && k == l.opt.sqlQueryFieldname {
+		// don't log nil value
+		if v == nil {
+			continue
+		}
+
+		if k == l.opt.sqlQueryFieldname && l.opt.sqlQueryAsMsg {
 			msg = v.(string)
 			continue
 		}
@@ -135,11 +147,11 @@ func parseArgs(argsVal []driver.Value) []interface{} {
 			if len(v) < maxArgValueLen {
 				a = string(v)
 			} else {
-				a = string(v[:maxArgValueLen]) + " (truncated " + strconv.Itoa(len(v)-maxArgValueLen) + " bytes)"
+				a = string(v[:maxArgValueLen]) + " (" + strconv.Itoa(len(v)-maxArgValueLen) + " bytes truncated)"
 			}
 		case string:
 			if len(v) > maxArgValueLen {
-				a = v[:maxArgValueLen] + " (truncated " + strconv.Itoa(len(v)-maxArgValueLen) + " bytes)"
+				a = v[:maxArgValueLen] + " (" + strconv.Itoa(len(v)-maxArgValueLen) + " bytes truncated)"
 			}
 		}
 
@@ -149,7 +161,7 @@ func parseArgs(argsVal []driver.Value) []interface{} {
 	return args
 }
 
-// namedValuesToValues this conversion is used for logging arguments.
+// namedValuesToValues is type conversion ONLY for logging arguments.
 func namedValuesToValues(args []driver.NamedValue) []driver.Value {
 	argsVal := make([]driver.Value, len(args))
 

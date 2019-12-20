@@ -165,11 +165,11 @@ func TestLogTrimStringArgs(t *testing.T) {
 	trimmedArg, ok := content.Data[cfg.sqlArgsFieldname].([]interface{})
 	assert.True(t, ok)
 	assert.Equal(t,
-		fmt.Sprintf("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do  (truncated %d bytes)", len(longArgVal)-maxArgValueLen),
+		fmt.Sprintf("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do  (%d bytes truncated)", len(longArgVal)-maxArgValueLen),
 		trimmedArg[0],
 	)
 	assert.Equal(t,
-		fmt.Sprintf("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do  (truncated %d bytes)", len(longArgVal)-maxArgValueLen),
+		fmt.Sprintf("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do  (%d bytes truncated)", len(longArgVal)-maxArgValueLen),
 		trimmedArg[1],
 	)
 	assert.Equal(t,

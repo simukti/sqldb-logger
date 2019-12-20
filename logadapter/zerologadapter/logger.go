@@ -11,11 +11,13 @@ type zerologAdapter struct {
 	logger zerolog.Logger
 }
 
+// New set zerolog logger as backend as an example on how it process log from sqldblogger.Log().
 func New(logger zerolog.Logger) sqldblogger.Logger {
 	return &zerologAdapter{logger: logger}
 }
 
-// Log implements sqldblogger.Logger
+// Log implement sqldblogger.Logger and log it as is.
+// To use context.Context values, please copy this file and adjust to your needs.
 func (zl *zerologAdapter) Log(_ context.Context, level sqldblogger.Level, msg string, data map[string]interface{}) {
 	var lvl zerolog.Level
 
