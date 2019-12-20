@@ -155,7 +155,7 @@ func (u *defaultUID) UniqueID() string {
 // NullUID is used to disable unique id when set to WithUIDGenerator().
 type NullUID struct{}
 
-// UniqueID() return empty string and unique id will not logged.
+// UniqueID return empty string and unique id will not logged.
 func (u *NullUID) UniqueID() string { return "" }
 
 // Option is optional variadic type in OpenDriver().
