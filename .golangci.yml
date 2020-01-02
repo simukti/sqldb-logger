@@ -78,4 +78,4 @@ run:
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration
 service:
-  golangci-lint-version: 1.20.x
+  golangci-lint-version: 1.22.x
