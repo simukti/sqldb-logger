@@ -27,6 +27,7 @@ linters-settings:
       - dupImport # https://github.com/go-critic/go-critic/issues/845
       - ifElseChain
       - octalLiteral
+      - whyNoLint
   funlen:
     lines: 100
     statements: 50
@@ -73,7 +74,6 @@ run:
     - vendor/
   skip-files:
     - ./*_test.go
-    - ./util.go
 
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration
