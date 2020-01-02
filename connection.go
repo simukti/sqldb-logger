@@ -55,11 +55,10 @@ func (c *connection) Prepare(query string) (driver.Stmt, error) {
 
 // Prepare implements driver.Conn
 func (c *connection) Close() error {
-	var err error
-
 	lvl, start := LevelDebug, time.Now()
+	err := c.Conn.Close()
 
-	if err = c.Conn.Close(); err != nil {
+	if err != nil {
 		lvl = LevelError
 	}
 
@@ -115,11 +114,10 @@ func (c *connection) Ping(ctx context.Context) error {
 		return driver.ErrSkip
 	}
 
-	var err error
-
 	lvl, start := LevelDebug, time.Now()
+	err := driverPinger.Ping(ctx)
 
-	if err = driverPinger.Ping(ctx); err != nil {
+	if err != nil {
 		lvl = LevelError
 	}
 
@@ -245,7 +243,7 @@ func (c *connection) CheckNamedValue(nm *driver.NamedValue) error {
 		lvl = LevelError
 	}
 
-	c.logger.log(context.Background(), lvl, "ConnCheckNamedValue", start, err, c.logData()...)
+	c.logger.log(context.Background(), lvl, "CheckNamedValue", start, err, c.logData()...)
 
 	return err
 }

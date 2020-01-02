@@ -559,7 +559,7 @@ func TestConnection_CheckNamedValue(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "ConnCheckNamedValue", output.Message)
+		assert.Equal(t, "CheckNamedValue", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
 		assert.NotEmpty(t, output.Data[testOpts.connIDFieldname])
 		assert.Equal(t, conn.id, output.Data[testOpts.connIDFieldname])

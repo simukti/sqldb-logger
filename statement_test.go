@@ -13,13 +13,44 @@ import (
 )
 
 func TestStatement_Close(t *testing.T) {
-	q := "SELECT * FROM tt WHERE id = ?"
-	stmtMock := &statementMock{}
-	stmtMock.On("Close").Return(driver.ErrBadConn)
+	t.Run("Error", func(t *testing.T) {
+		q := "SELECT * FROM tt WHERE id = ?"
+		stmtMock := &statementMock{}
+		stmtMock.On("Close").Return(driver.ErrBadConn)
 
-	stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
-	err := stmt.Close()
-	assert.Error(t, err)
+		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
+		err := stmt.Close()
+		assert.Error(t, err)
+
+		var output bufLog
+		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		assert.NoError(t, err)
+		assert.Equal(t, "StmtClose", output.Message)
+		assert.Equal(t, LevelError.String(), output.Level)
+		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testOpts.errorFieldname])
+		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
+		assert.Equal(t, stmt.connID, output.Data[testOpts.connIDFieldname])
+		assert.Equal(t, stmt.id, output.Data[testOpts.stmtIDFieldname])
+	})
+
+	t.Run("Success", func(t *testing.T) {
+		q := "SELECT * FROM tt WHERE id = ?"
+		stmtMock := &statementMock{}
+		stmtMock.On("Close").Return(nil)
+
+		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
+		err := stmt.Close()
+		assert.NoError(t, err)
+
+		var output bufLog
+		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		assert.NoError(t, err)
+		assert.Equal(t, "StmtClose", output.Message)
+		assert.NotContains(t, output.Data, testOpts.errorFieldname)
+		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
+		assert.Equal(t, stmt.connID, output.Data[testOpts.connIDFieldname])
+		assert.Equal(t, stmt.id, output.Data[testOpts.stmtIDFieldname])
+	})
 }
 
 func TestStatement_NumInput(t *testing.T) {

@@ -22,7 +22,16 @@ type statement struct {
 
 // Close implements driver.Stmt
 func (s *statement) Close() error {
-	return s.Stmt.Close()
+	lvl, start := LevelDebug, time.Now()
+	err := s.Stmt.Close()
+
+	if err != nil {
+		lvl = LevelError
+	}
+
+	s.logger.log(context.Background(), lvl, "StmtClose", start, err, s.logData()...)
+
+	return err
 }
 
 // NumInput implements driver.Stmt

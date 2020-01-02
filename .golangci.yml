@@ -73,7 +73,6 @@ run:
     - vendor/
   skip-files:
     - ./*_test.go
-    - ./util.go
 
 # golangci.com configuration
 # https://github.com/golangci/golangci/wiki/Configuration
