@@ -24,16 +24,17 @@ const (
 )
 
 // String implement Stringer to convert type Level to string.
+// nolint // disable goconst check
 func (l Level) String() string {
 	switch l {
 	case LevelTrace:
-		return "trace" // nolint: goconst
+		return "trace"
 	case LevelDebug:
-		return "debug" // nolint: goconst
+		return "debug"
 	case LevelInfo:
-		return "info" // nolint: goconst
+		return "info"
 	case LevelError:
-		return "error" // nolint: goconst
+		return "error"
 	default:
 		return fmt.Sprintf("(invalid level): %d", l)
 	}
@@ -103,6 +104,10 @@ func (l *logger) log(ctx context.Context, lvl Level, msg string, start time.Time
 	data := map[string]interface{}{
 		l.opt.timeFieldname:     l.opt.timeFormat.format(time.Now()),
 		l.opt.durationFieldname: l.opt.durationUnit.format(time.Since(start)),
+	}
+
+	if l.opt.includeStartTime {
+		data[l.opt.startTimeFieldname] = l.opt.timeFormat.format(start)
 	}
 
 	if lvl == LevelError {
