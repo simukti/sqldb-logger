@@ -103,6 +103,32 @@ func TestConnection_Prepare(t *testing.T) {
 		assert.Equal(t, conn.id, output.Data[testOpts.connIDFieldname])
 		assert.NotEmpty(t, output.Data[testOpts.stmtIDFieldname])
 	})
+
+	t.Run("Success with custom level", func(t *testing.T) {
+		driverConnMock := &driverConnMock{}
+		stmtMock := &statementMock{}
+		driverConnMock.On("Prepare", mock.Anything).Return(stmtMock, nil)
+		q := "SELECT * FROM tt WHERE id = ?"
+
+		custOpt := *testOpts
+		WithPreparerLevel(LevelDebug)(&custOpt)
+		custLogger := *testLogger
+		custLogger.opt = &custOpt
+
+		conn := &connection{Conn: driverConnMock, logger: &custLogger, id: custLogger.opt.uidGenerator.UniqueID()}
+		stmt, err := conn.Prepare(q)
+		assert.NoError(t, err)
+		assert.Implements(t, (*driver.Stmt)(nil), stmt)
+
+		var output bufLog
+		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		assert.NoError(t, err)
+		assert.Equal(t, "Prepare", output.Message)
+		assert.Equal(t, LevelDebug.String(), output.Level)
+		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
+		assert.Equal(t, conn.id, output.Data[testOpts.connIDFieldname])
+		assert.NotEmpty(t, output.Data[testOpts.stmtIDFieldname])
+	})
 }
 
 func TestConnection_Close(t *testing.T) {
@@ -246,6 +272,32 @@ func TestConnection_PrepareContext(t *testing.T) {
 		assert.Equal(t, conn.id, output.Data[testOpts.connIDFieldname])
 		assert.NotEmpty(t, output.Data[testOpts.stmtIDFieldname])
 	})
+
+	t.Run("With driver.ConnBeginTx Success and custom preparer level", func(t *testing.T) {
+		driverConnMock := &driverConnWithContextMock{}
+		stmtMock := &statementMock{}
+		driverConnMock.On("PrepareContext", mock.Anything).Return(stmtMock, nil)
+
+		custOpt := *testOpts
+		WithPreparerLevel(LevelDebug)(&custOpt)
+		custLogger := *testLogger
+		custLogger.opt = &custOpt
+
+		q := "SELECT * FROM tt WHERE id = ?"
+		conn := &connection{Conn: driverConnMock, logger: &custLogger, id: custLogger.opt.uidGenerator.UniqueID()}
+		stmt, err := conn.PrepareContext(context.TODO(), q)
+		assert.NoError(t, err)
+		assert.Implements(t, (*driver.Stmt)(nil), stmt)
+
+		var output bufLog
+		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		assert.NoError(t, err)
+		assert.Equal(t, "PrepareContext", output.Message)
+		assert.Equal(t, LevelDebug.String(), output.Level)
+		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
+		assert.Equal(t, conn.id, output.Data[testOpts.connIDFieldname])
+		assert.NotEmpty(t, output.Data[testOpts.stmtIDFieldname])
+	})
 }
 
 func TestConnection_Ping(t *testing.T) {
@@ -341,6 +393,31 @@ func TestConnection_Exec(t *testing.T) {
 		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
 		assert.Equal(t, conn.id, output.Data[testOpts.connIDFieldname])
 	})
+
+	t.Run("driver.Execer Success With Custom Level", func(t *testing.T) {
+		driverConnMock := &driverConnExecerMock{}
+		resultMock := driver.ResultNoRows
+		driverConnMock.On("Exec", mock.Anything, mock.Anything).Return(resultMock, nil)
+
+		q := "SELECT * FROM tt WHERE id = ?"
+		custOpt := *testOpts
+		WithExecerLevel(LevelDebug)(&custOpt)
+		custLogger := *testLogger
+		custLogger.opt = &custOpt
+
+		conn := &connection{Conn: driverConnMock, logger: &custLogger, id: custLogger.opt.uidGenerator.UniqueID()}
+		_, err := conn.Exec(q, []driver.Value{"testid"})
+		assert.NoError(t, err)
+
+		var output bufLog
+		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		assert.NoError(t, err)
+		assert.Equal(t, "Exec", output.Message)
+		assert.Equal(t, LevelDebug.String(), output.Level)
+		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
+		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
+		assert.Equal(t, conn.id, output.Data[testOpts.connIDFieldname])
+	})
 }
 
 func TestConnection_ExecContext(t *testing.T) {
@@ -390,6 +467,31 @@ func TestConnection_ExecContext(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "ExecContext", output.Message)
 		assert.Equal(t, LevelInfo.String(), output.Level)
+		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
+		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
+		assert.Equal(t, conn.id, output.Data[testOpts.connIDFieldname])
+	})
+
+	t.Run("driver.ExecerContext Success", func(t *testing.T) {
+		driverConnMock := &driverConnExecerContextMock{}
+		resultMock := driver.ResultNoRows
+		driverConnMock.On("ExecContext", mock.Anything, mock.Anything, mock.Anything).Return(resultMock, nil)
+
+		q := "SELECT * FROM tt WHERE id = ?"
+		custOpt := *testOpts
+		WithExecerLevel(LevelDebug)(&custOpt)
+		custLogger := *testLogger
+		custLogger.opt = &custOpt
+
+		conn := &connection{Conn: driverConnMock, logger: &custLogger, id: custLogger.opt.uidGenerator.UniqueID()}
+		_, err := conn.ExecContext(context.TODO(), q, []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
+		assert.NoError(t, err)
+
+		var output bufLog
+		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		assert.NoError(t, err)
+		assert.Equal(t, "ExecContext", output.Message)
+		assert.Equal(t, LevelDebug.String(), output.Level)
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
 		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
 		assert.Equal(t, conn.id, output.Data[testOpts.connIDFieldname])
@@ -449,6 +551,31 @@ func TestConnection_Query(t *testing.T) {
 		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
 		assert.Equal(t, conn.id, output.Data[testOpts.connIDFieldname])
 	})
+
+	t.Run("driver.Queryer Success With Custom Level", func(t *testing.T) {
+		driverConnMock := &driverConnQueryerMock{}
+		resultMock := &rowsMock{}
+		driverConnMock.On("Query", mock.Anything, mock.Anything).Return(resultMock, nil)
+
+		q := "SELECT * FROM tt WHERE id = ?"
+		custOpt := *testOpts
+		WithQueryerLevel(LevelDebug)(&custOpt)
+		custLogger := *testLogger
+		custLogger.opt = &custOpt
+
+		conn := &connection{Conn: driverConnMock, logger: &custLogger, id: custLogger.opt.uidGenerator.UniqueID()}
+		_, err := conn.Query(q, []driver.Value{"testid"})
+		assert.NoError(t, err)
+
+		var output bufLog
+		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		assert.NoError(t, err)
+		assert.Equal(t, "Query", output.Message)
+		assert.Equal(t, LevelDebug.String(), output.Level)
+		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
+		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
+		assert.Equal(t, conn.id, output.Data[testOpts.connIDFieldname])
+	})
 }
 
 func TestConnection_QueryContext(t *testing.T) {
@@ -499,6 +626,31 @@ func TestConnection_QueryContext(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, "QueryContext", output.Message)
 		assert.Equal(t, LevelInfo.String(), output.Level)
+		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
+		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
+		assert.Equal(t, conn.id, output.Data[testOpts.connIDFieldname])
+	})
+
+	t.Run("driver.QueryerContext Success With Custom Level", func(t *testing.T) {
+		driverConnMock := &driverConnQueryerContextMock{}
+		resultMock := &rowsMock{}
+		driverConnMock.On("QueryContext", mock.Anything, mock.Anything, mock.Anything).Return(resultMock, nil)
+
+		q := "SELECT * FROM tt WHERE id = ?"
+		custOpt := *testOpts
+		WithQueryerLevel(LevelDebug)(&custOpt)
+		custLogger := *testLogger
+		custLogger.opt = &custOpt
+
+		conn := &connection{Conn: driverConnMock, logger: &custLogger, id: custLogger.opt.uidGenerator.UniqueID()}
+		_, err := conn.QueryContext(context.TODO(), q, []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
+		assert.NoError(t, err)
+
+		var output bufLog
+		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		assert.NoError(t, err)
+		assert.Equal(t, "QueryContext", output.Message)
+		assert.Equal(t, LevelDebug.String(), output.Level)
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
 		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
 		assert.Equal(t, conn.id, output.Data[testOpts.connIDFieldname])

@@ -27,7 +27,7 @@ type connection struct {
 func (c *connection) Begin() (driver.Tx, error) {
 	lvl, start, id := LevelDebug, time.Now(), c.logger.opt.uidGenerator.UniqueID()
 	logs := append(c.logData(), c.logger.withUID(c.logger.opt.txIDFieldname, id))
-	connTx, err := c.Conn.Begin() // nolint: staticcheck
+	connTx, err := c.Conn.Begin() // nolint // disable static check on deprecated driver method
 
 	if err != nil {
 		lvl = LevelError
@@ -40,7 +40,7 @@ func (c *connection) Begin() (driver.Tx, error) {
 
 // Prepare implements driver.Conn
 func (c *connection) Prepare(query string) (driver.Stmt, error) {
-	lvl, start, id := LevelInfo, time.Now(), c.logger.opt.uidGenerator.UniqueID()
+	lvl, start, id := c.logger.opt.preparerLevel, time.Now(), c.logger.opt.uidGenerator.UniqueID()
 	logs := append(c.logData(), c.logger.withQuery(query), c.logger.withUID(c.logger.opt.stmtIDFieldname, id))
 	driverStmt, err := c.Conn.Prepare(query)
 
@@ -94,7 +94,7 @@ func (c *connection) PrepareContext(ctx context.Context, query string) (driver.S
 		return nil, driver.ErrSkip
 	}
 
-	lvl, start, id := LevelInfo, time.Now(), c.logger.opt.uidGenerator.UniqueID()
+	lvl, start, id := c.logger.opt.preparerLevel, time.Now(), c.logger.opt.uidGenerator.UniqueID()
 	logs := append(c.logData(), c.logger.withQuery(query), c.logger.withUID(c.logger.opt.stmtIDFieldname, id))
 	driverStmt, err := driverPrep.PrepareContext(ctx, query)
 
@@ -129,13 +129,13 @@ func (c *connection) Ping(ctx context.Context) error {
 // Exec implements driver.Execer
 // Deprecated: use ExecContext() instead
 func (c *connection) Exec(query string, args []driver.Value) (driver.Result, error) {
-	driverExecer, ok := c.Conn.(driver.Execer) // nolint: staticcheck
+	driverExecer, ok := c.Conn.(driver.Execer) // nolint // disable static check on deprecated driver method
 	if !ok {
 		return nil, driver.ErrSkip
 	}
 
 	logs := append(c.logData(), c.logger.withQuery(query), c.logger.withArgs(args))
-	lvl, start := LevelInfo, time.Now()
+	lvl, start := c.logger.opt.execerLevel, time.Now()
 	res, err := driverExecer.Exec(query, args)
 
 	if err != nil {
@@ -156,7 +156,7 @@ func (c *connection) ExecContext(ctx context.Context, query string, args []drive
 
 	logArgs := namedValuesToValues(args)
 	logs := append(c.logData(), c.logger.withQuery(query), c.logger.withArgs(logArgs))
-	lvl, start := LevelInfo, time.Now()
+	lvl, start := c.logger.opt.execerLevel, time.Now()
 	res, err := driverExecerContext.ExecContext(ctx, query, args)
 
 	if err != nil {
@@ -171,13 +171,13 @@ func (c *connection) ExecContext(ctx context.Context, query string, args []drive
 // Query implements driver.Queryer
 // Deprecated: use QueryContext() instead
 func (c *connection) Query(query string, args []driver.Value) (driver.Rows, error) {
-	driverQueryer, ok := c.Conn.(driver.Queryer) // nolint: staticcheck
+	driverQueryer, ok := c.Conn.(driver.Queryer) // nolint // disable static check on deprecated driver method
 	if !ok {
 		return nil, driver.ErrSkip
 	}
 
 	logs := append(c.logData(), c.logger.withQuery(query), c.logger.withArgs(args))
-	lvl, start := LevelInfo, time.Now()
+	lvl, start := c.logger.opt.queryerLevel, time.Now()
 	res, err := driverQueryer.Query(query, args)
 
 	if err != nil {
@@ -198,7 +198,7 @@ func (c *connection) QueryContext(ctx context.Context, query string, args []driv
 
 	logArgs := namedValuesToValues(args)
 	logs := append(c.logData(), c.logger.withQuery(query), c.logger.withArgs(logArgs))
-	lvl, start := LevelInfo, time.Now()
+	lvl, start := c.logger.opt.queryerLevel, time.Now()
 	res, err := driverQueryerContext.QueryContext(ctx, query, args)
 
 	if err != nil {
