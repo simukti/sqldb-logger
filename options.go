@@ -9,22 +9,27 @@ import (
 )
 
 type options struct {
-	errorFieldname    string
-	durationFieldname string
-	timeFieldname     string
-	sqlQueryFieldname string
-	sqlArgsFieldname  string
-	stmtIDFieldname   string
-	connIDFieldname   string
-	txIDFieldname     string
-	sqlQueryAsMsg     bool
-	logArgs           bool
-	logDriverErrSkip  bool
-	wrapResult        bool
-	minimumLogLevel   Level
-	durationUnit      DurationUnit
-	timeFormat        TimeFormat
-	uidGenerator      UIDGenerator
+	errorFieldname     string
+	durationFieldname  string
+	timeFieldname      string
+	startTimeFieldname string
+	sqlQueryFieldname  string
+	sqlArgsFieldname   string
+	stmtIDFieldname    string
+	connIDFieldname    string
+	txIDFieldname      string
+	sqlQueryAsMsg      bool
+	logArgs            bool
+	logDriverErrSkip   bool
+	wrapResult         bool
+	minimumLogLevel    Level
+	durationUnit       DurationUnit
+	timeFormat         TimeFormat
+	uidGenerator       UIDGenerator
+	includeStartTime   bool
+	preparerLevel      Level
+	queryerLevel       Level
+	execerLevel        Level
 }
 
 // setDefaultOptions called first time before Log() called (see: OpenDriver()).
@@ -33,6 +38,7 @@ func setDefaultOptions(opt *options) {
 	opt.errorFieldname = "error"
 	opt.durationFieldname = "duration"
 	opt.timeFieldname = "time"
+	opt.startTimeFieldname = "start"
 	opt.sqlQueryFieldname = "query"
 	opt.sqlArgsFieldname = "args"
 	opt.stmtIDFieldname = "stmt_id"
@@ -46,6 +52,10 @@ func setDefaultOptions(opt *options) {
 	opt.durationUnit = DurationMillisecond
 	opt.timeFormat = TimeFormatUnix
 	opt.uidGenerator = newDefaultUIDDGenerator()
+	opt.includeStartTime = false
+	opt.preparerLevel = LevelInfo
+	opt.queryerLevel = LevelInfo
+	opt.execerLevel = LevelInfo
 }
 
 // DurationUnit is total time spent on an actual driver function call calculated by time.Since(start).
@@ -140,7 +150,7 @@ func (u *defaultUID) UniqueID() string {
 	// using math/rand.Read because it's slightly faster than crypto/rand.Read
 	// unique id always scoped under connectionID so there is no need to super-secure-random using crypto/rand.
 	//
-	// nolint: gosec
+	// nolint // disable gosec check as it does not need crypto/rand
 	if _, err := rand.Read(random[:]); err != nil {
 		panic(fmt.Sprintf("sqldblogger: random read error from math/rand: '%s'", err.Error()))
 	}
@@ -330,5 +340,55 @@ func WithTransactionIDFieldname(name string) Option {
 func WithWrapResult(flag bool) Option {
 	return func(opt *options) {
 		opt.wrapResult = flag
+	}
+}
+
+// WithIncludeStartTime flag to include actual start time before actual driver execution.
+//
+// Can be useful if we want to combine Log implementation with tracing from context
+// and set start time span manually.
+//
+// Default: false
+func WithIncludeStartTime(flag bool) Option {
+	return func(opt *options) {
+		opt.includeStartTime = flag
+	}
+}
+
+// WithStartTimeFieldname to customize start time fieldname on log output.
+//
+// If WithIncludeStartTime true, start time fieldname will use this value.
+//
+// Default: "start"
+func WithStartTimeFieldname(name string) Option {
+	return func(opt *options) {
+		opt.startTimeFieldname = name
+	}
+}
+
+// WithPreparerLevel set default level of Prepare(Context) method calls.
+//
+// Default: LevelInfo
+func WithPreparerLevel(lvl Level) Option {
+	return func(opt *options) {
+		opt.preparerLevel = lvl
+	}
+}
+
+// WithQueryerLevel set default level of Query(Context) method calls.
+//
+// Default: LevelInfo
+func WithQueryerLevel(lvl Level) Option {
+	return func(opt *options) {
+		opt.queryerLevel = lvl
+	}
+}
+
+// WithExecerLevel set default level of Exec(Context) method calls.
+//
+// Default: LevelInfo
+func WithExecerLevel(lvl Level) Option {
+	return func(opt *options) {
+		opt.execerLevel = lvl
 	}
 }

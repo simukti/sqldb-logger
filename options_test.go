@@ -222,6 +222,98 @@ func TestWithUIDGenerator(t *testing.T) {
 	})
 }
 
+func TestWithIncludeStartTime(t *testing.T) {
+	t.Run("Default not include", func(t *testing.T) {
+		cfg := &options{}
+		setDefaultOptions(cfg)
+
+		assert.False(t, cfg.includeStartTime)
+	})
+
+	t.Run("Set start time flag true", func(t *testing.T) {
+		cfg := &options{}
+		setDefaultOptions(cfg)
+		WithIncludeStartTime(true)(cfg)
+		WithStartTimeFieldname("start_time")(cfg)
+		WithTimeFormat(TimeFormatUnix)(cfg)
+
+		assert.True(t, cfg.includeStartTime)
+		assert.Equal(t, "start_time", cfg.startTimeFieldname)
+
+		bl := &bufferTestLogger{}
+		l := &logger{opt: cfg, logger: bl}
+		start := time.Now()
+		l.log(
+			context.TODO(),
+			LevelInfo,
+			"msg",
+			start,
+			nil,
+			testLogger.withUID(cfg.stmtIDFieldname, l.opt.uidGenerator.UniqueID()),
+			testLogger.withQuery("query"),
+			testLogger.withArgs([]driver.Value{}),
+		)
+
+		var content bufLog
+		err := json.Unmarshal(bl.Bytes(), &content)
+		assert.NoError(t, err)
+		assert.Contains(t, content.Data, cfg.startTimeFieldname)
+		assert.Equal(t, float64(start.Unix()), content.Data["start_time"])
+		bl.Reset()
+	})
+}
+
+func TestWithPreparerLevel(t *testing.T) {
+	t.Run("Default value", func(t *testing.T) {
+		cfg := &options{}
+		setDefaultOptions(cfg)
+
+		assert.Equal(t, cfg.preparerLevel, LevelInfo)
+	})
+
+	t.Run("Custom value", func(t *testing.T) {
+		cfg := &options{}
+		setDefaultOptions(cfg)
+		WithPreparerLevel(LevelDebug)(cfg)
+
+		assert.Equal(t, cfg.preparerLevel, LevelDebug)
+	})
+}
+
+func TestWithQueryerLevel(t *testing.T) {
+	t.Run("Default value", func(t *testing.T) {
+		cfg := &options{}
+		setDefaultOptions(cfg)
+
+		assert.Equal(t, cfg.queryerLevel, LevelInfo)
+	})
+
+	t.Run("Custom value", func(t *testing.T) {
+		cfg := &options{}
+		setDefaultOptions(cfg)
+		WithQueryerLevel(LevelDebug)(cfg)
+
+		assert.Equal(t, cfg.queryerLevel, LevelDebug)
+	})
+}
+
+func TestWithExecerLevel(t *testing.T) {
+	t.Run("Default value", func(t *testing.T) {
+		cfg := &options{}
+		setDefaultOptions(cfg)
+
+		assert.Equal(t, cfg.execerLevel, LevelInfo)
+	})
+
+	t.Run("Custom value", func(t *testing.T) {
+		cfg := &options{}
+		setDefaultOptions(cfg)
+		WithExecerLevel(LevelDebug)(cfg)
+
+		assert.Equal(t, cfg.execerLevel, LevelDebug)
+	})
+}
+
 var uidBtest = newDefaultUIDDGenerator()
 
 func BenchmarkUniqueID(b *testing.B) {
