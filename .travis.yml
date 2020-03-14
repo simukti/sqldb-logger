@@ -4,6 +4,7 @@ go:
   - 1.11.x
   - 1.12.x
   - 1.13.x
+  - 1.14.x
   - master
 
 matrix:
@@ -26,8 +27,14 @@ branches:
 before_install:
   - go get -u -v github.com/mattn/goveralls
 
+# golangci.com will be closed on 2020-04-15
+# https://medium.com/golangci/golangci-com-is-closing-d1fc1bd30e0e
+before_script:
+  - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/v1.23.8/install.sh | sh -s -- -b $GOPATH/bin v1.23.8
+
 script:
   - go vet
+  - golangci-lint run
   - test -z "$(go fmt ./...)" # fail if not formatted properly
   - go test -v -race -coverprofile=coverage.out -covermode=atomic -tags=unit ./...
 
