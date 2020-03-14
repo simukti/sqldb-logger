@@ -1,6 +1,6 @@
 # SQLDB-Logger
 
-[![Build Status](https://travis-ci.com/simukti/sqldb-logger.svg)](https://travis-ci.com/simukti/sqldb-logger) [![Coverage Status](https://coveralls.io/repos/github/simukti/sqldb-logger/badge.svg)](https://coveralls.io/github/simukti/sqldb-logger) [![Go Report Card](https://goreportcard.com/badge/github.com/simukti/sqldb-logger)](https://goreportcard.com/report/github.com/simukti/sqldb-logger) [![GolangCI Status](https://golangci.com/badges/github.com/simukti/sqldb-logger.svg)](https://golangci.com/r/github.com/simukti/sqldb-logger) [![Documentation](https://godoc.org/github.com/simukti/sqldb-logger?status.svg)](http://godoc.org/github.com/simukti/sqldb-logger) [![License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://raw.githubusercontent.com/simukti/sqldb-logger/master/LICENSE.txt)
+[![Build Status](https://travis-ci.com/simukti/sqldb-logger.svg)](https://travis-ci.com/simukti/sqldb-logger) [![Coverage Status](https://coveralls.io/repos/github/simukti/sqldb-logger/badge.svg)](https://coveralls.io/github/simukti/sqldb-logger) [![Go Report Card](https://goreportcard.com/badge/github.com/simukti/sqldb-logger)](https://goreportcard.com/report/github.com/simukti/sqldb-logger) [![Documentation](https://godoc.org/github.com/simukti/sqldb-logger?status.svg)](http://godoc.org/github.com/simukti/sqldb-logger) [![License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](https://raw.githubusercontent.com/simukti/sqldb-logger/master/LICENSE.txt)
 
 A logger for Go SQL database driver without modify existing `*sql.DB` stdlib usage.
 
@@ -49,7 +49,7 @@ dsn := "username:passwd@tcp(mysqlserver:3306)/dbname?parseTime=true"
 db := sqldblogger.OpenDriver(dsn, &mysql.MySQLDriver{}, loggerAdapter) // db is still *sql.DB
 ``` 
 
-Without giving 4th argument to `OpenDriver`, it will use [default options](./options.go#L32-L49).
+Without giving 4th argument to `OpenDriver`, it will use [default options](./options.go#L37-L59).
 
 That's it. Use `db` object as usual.
 
@@ -79,6 +79,11 @@ db := sqldblogger.OpenDriver(
     sqldblogger.WithStatementIDFieldname("stm_id"), // default: stmt_id
     sqldblogger.WithTransactionIDFieldname("trx_id"), // default: tx_id
     sqldblogger.WithWrapResult(false), // default: true
+    sqldblogger.WithIncludeStartTime(true), // default: false
+    sqldblogger.WithStartTimeFieldname("start_time"), // default: start
+    sqldblogger.WithPreparerLevel(LevelDebug), // default: LevelInfo
+    sqldblogger.WithQueryerLevel(LevelDebug), // default: LevelInfo
+    sqldblogger.WithExecerLevel(LevelDebug), // default: LevelInfo
 )
 ```
 
