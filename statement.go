@@ -42,8 +42,8 @@ func (s *statement) NumInput() int {
 // Exec implements driver.Stmt
 func (s *statement) Exec(args []driver.Value) (driver.Result, error) {
 	logs := append(s.logData(), s.logger.withArgs(args))
-	lvl, start := LevelInfo, time.Now()
-	res, err := s.Stmt.Exec(args) // nolint: staticcheck
+	lvl, start := s.logger.opt.execerLevel, time.Now()
+	res, err := s.Stmt.Exec(args) // nolint // disable static check on deprecated driver method
 
 	if err != nil {
 		lvl = LevelError
@@ -57,8 +57,8 @@ func (s *statement) Exec(args []driver.Value) (driver.Result, error) {
 // Query implements driver.Stmt
 func (s *statement) Query(args []driver.Value) (driver.Rows, error) {
 	logs := append(s.logData(), s.logger.withArgs(args))
-	lvl, start := LevelInfo, time.Now()
-	res, err := s.Stmt.Query(args) // nolint: staticcheck
+	lvl, start := s.logger.opt.queryerLevel, time.Now()
+	res, err := s.Stmt.Query(args) // nolint // disable static check on deprecated driver method
 
 	if err != nil {
 		lvl = LevelError
@@ -78,7 +78,7 @@ func (s *statement) ExecContext(ctx context.Context, args []driver.NamedValue) (
 
 	logArgs := namedValuesToValues(args)
 	logs := append(s.logData(), s.logger.withArgs(logArgs))
-	lvl, start := LevelInfo, time.Now()
+	lvl, start := s.logger.opt.execerLevel, time.Now()
 	res, err := stmtExecer.ExecContext(ctx, args)
 
 	if err != nil {
@@ -99,7 +99,7 @@ func (s *statement) QueryContext(ctx context.Context, args []driver.NamedValue) 
 
 	logArgs := namedValuesToValues(args)
 	logs := append(s.logData(), s.logger.withArgs(logArgs))
-	lvl, start := LevelInfo, time.Now()
+	lvl, start := s.logger.opt.queryerLevel, time.Now()
 	res, err := stmtQueryer.QueryContext(ctx, args)
 
 	if err != nil {
@@ -132,7 +132,7 @@ func (s *statement) CheckNamedValue(nm *driver.NamedValue) error {
 
 // ColumnConverter implements driver.ColumnConverter
 func (s *statement) ColumnConverter(idx int) driver.ValueConverter {
-	// nolint: staticcheck
+	// nolint // disable static check on deprecated driver method
 	if converter, ok := s.Stmt.(driver.ColumnConverter); ok {
 		return converter.ColumnConverter(idx)
 	}
