@@ -7,5 +7,5 @@ require (
 	github.com/rs/zerolog v1.18.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.5.1
-	go.uber.org/zap v1.14.0
+	go.uber.org/zap v1.14.1
 )
