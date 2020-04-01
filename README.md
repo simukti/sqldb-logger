@@ -9,8 +9,8 @@ _Colored console writer output above only for sample/development_
 
 ## FEATURES
 
-- Leveled and [configurable](./options.go) logging.
-- Keep using `*sql.DB` as is (_from existing sql.DB usage perspective_).
+- Leveled, detailed and [configurable](./options.go) logging.
+- Keep using (or re-use existing) `*sql.DB` as is.
 - Bring your own logger backend via simple log interface.
 - Trackable log output:
     - Every call has its own unique ID.
@@ -27,71 +27,56 @@ _Version pinning using dependency manager such as [Mod](https://github.com/golan
 
 ## USAGE
 
-### TL;DR VERSION
+As a start, `Logger` is just a simple interface:
 
-Replace `sql.Open()` with `sqldblogger.OpenDriver()`, both will return `*sql.DB`.
+```go
+type Logger interface {
+	Log(ctx context.Context, level Level, msg string, data map[string]interface{})
+}
+``` 
 
-### DETAILED VERSION
+There are 4 included basic implementation that uses well known JSON structured logger for quickstart:
 
-Assuming we have existing `sql.Open` using commonly-used [go-sql-driver/mysql](https://github.com/go-sql-driver/mysql) driver, 
-and wants to log its `*sql.DB` interaction using [rs/zerolog](https://github.com/rs/zerolog).
+- [Zerolog adapter](logadapter/zerologadapter): Using [rs/zerolog](https://github.com/rs/zerolog) as its logger.
+- [Onelog adapter](logadapter/onelogadapter): Using [francoispqt/onelog](https://github.com/francoispqt/onelog) as its logger.
+- [Zap adapter](logadapter/zapadapter): Using [uber-go/zap](https://github.com/uber-go/zap) as its logger.
+- [Logrus adapter](logadapter/logrusadapter): Using [sirupsen/logrus](https://github.com/sirupsen/logrus) as its logger.
+
+_Note: [those adapters](./logadapter) does not use given `context`, you need to modify it and adjust with your needs._ 
+_(example: add http request id/whatever value from context to query log when you call `QueryerContext` and`ExecerContext` methods)_
+
+Then for that logger to works, you need to integrate with compatible driver which will be used by `*sql.DB`.
+
+### INTEGRATE WITH EXISTING SQL DB DRIVER
+ 
+Re-use from existing `*sql.DB` driver, this is the simplest way:
+
+For example, from:
 
 ```go
 dsn := "username:passwd@tcp(mysqlserver:3306)/dbname?parseTime=true"
 db, err := sql.Open("mysql", dsn) // db is *sql.DB
+db.Ping() // to check connectivity and DSN correctness
 ```
 
-Change it with:
+To:
 
 ```go
-loggerAdapter := zerologadapter.New(zerolog.New(os.Stdout)) // zerolog.New(zerolog.NewConsoleWriter()) // <-- for colored console
+// import sqldblogger "github.com/simukti/sqldb-logger"
+// import "github.com/simukti/sqldb-logger/logadapter/zerologadapter"
 dsn := "username:passwd@tcp(mysqlserver:3306)/dbname?parseTime=true"
-db := sqldblogger.OpenDriver(dsn, &mysql.MySQLDriver{}, loggerAdapter) // db is still *sql.DB
-``` 
-
-Without giving 4th argument to `OpenDriver`, it will use [default options](./options.go#L37-L59).
-
-That's it. Use `db` object as usual.
-
-### DETAILED + OPTIONS VERSION
-
-For full control of log output (field name, time format, etc...), pass variadic `sqldblogger.Option` as 4th argument as below:
-
-```go
-db := sqldblogger.OpenDriver(
-    dsn, 
-    &mysql.MySQLDriver{}, 
-    loggerAdapter,
-    // zero or more option
-    sqldblogger.WithErrorFieldname("sql_error"), // default: error
-    sqldblogger.WithDurationFieldname("query_duration"), // default: duration
-    sqldblogger.WithTimeFieldname("log_time"), // default: time
-    sqldblogger.WithSQLQueryFieldname("sql_query"), // default: query
-    sqldblogger.WithSQLArgsFieldname("sql_args"), // default: args
-    sqldblogger.WithMinimumLevel(sqldblogger.LevelInfo), // default: LevelDebug
-    sqldblogger.WithLogArguments(false), // default: true
-    sqldblogger.WithDurationUnit(sqldblogger.DurationNanosecond), // default: millisecond
-    sqldblogger.WithTimeFormat(sqldblogger.TimeFormatRFC3339), // default: unix timestamp
-    sqldblogger.WithLogDriverErrorSkip(true), // default: false
-    sqldblogger.WithSQLQueryAsMessage(true), // default: false
-    sqldblogger.WithUIDGenerator(sqldblogger.UIDGenerator), // default: *defaultUID
-    sqldblogger.WithConnectionIDFieldname("con_id"), // default: conn_id
-    sqldblogger.WithStatementIDFieldname("stm_id"), // default: stmt_id
-    sqldblogger.WithTransactionIDFieldname("trx_id"), // default: tx_id
-    sqldblogger.WithWrapResult(false), // default: true
-    sqldblogger.WithIncludeStartTime(true), // default: false
-    sqldblogger.WithStartTimeFieldname("start_time"), // default: start
-    sqldblogger.WithPreparerLevel(LevelDebug), // default: LevelInfo
-    sqldblogger.WithQueryerLevel(LevelDebug), // default: LevelInfo
-    sqldblogger.WithExecerLevel(LevelDebug), // default: LevelInfo
-)
+db, err := sql.Open("mysql", dsn) // db is *sql.DB
+// handle err
+loggerAdapter := zerologadapter.New(zerolog.New(os.Stdout))
+db = sqldblogger.OpenDriver(dsn, db.Driver(), loggerAdapter/*, using_default_options*/) // db is STILL *sql.DB
+db.Ping() // to check connectivity and DSN correctness
 ```
 
-[Click here](https://godoc.org/github.com/simukti/sqldb-logger#Option) for options documentation.
+That's it, all `*sql.DB` interaction now logged.
 
-## SQL DRIVER INTEGRATION
+### INTEGRATE WITH SQL DRIVER STRUCT
 
-It is compatible with following public empty struct driver: 
+It is also possible to integrate with following public empty struct driver directly: 
 
 #### MySQL ([go-sql-driver/mysql](https://github.com/go-sql-driver/mysql))
 
@@ -111,7 +96,7 @@ db := sqldblogger.OpenDriver(dsn, &pq.Driver{}, loggerAdapter /*, ...options */)
 db := sqldblogger.OpenDriver(dsn, &sqlite3.SQLiteDriver{}, loggerAdapter /*, ...options */)
 ```
 
-_Following drivers **maybe** compatible:_ 
+_Following struct drivers **maybe** compatible:_ 
 
 #### SQL Server ([denisenkom/go-mssqldb](https://github.com/denisenkom/go-mssqldb))
 
@@ -125,49 +110,43 @@ db := sqldblogger.OpenDriver(dsn, &mssql.Driver{}, loggerAdapter /*, ...options 
 db := sqldblogger.OpenDriver(dsn, oci8.OCI8Driver, loggerAdapter /*, ...options */)
 ```
 
-### ANOTHER SQL DRIVER INTEGRATION
+## LOGGER OPTIONS
 
-_Specifically for non-public driver_
- 
-It is also possible to re-use existing `*sql.DB` driver:
+When using `sqldblogger.OpenDriver(dsn, driver, logger, opt...)` without 4th variadic argument, it will uses [default options](./options.go#L37-L59).
 
-For example, from:
+Here is sample of `OpenDriver()` using all available options and use non-default value:
 
 ```go
-dsn := "username:passwd@tcp(mysqlserver:3306)/dbname?parseTime=true"
-db, err := sql.Open("mysql", dsn) // db is *sql.DB
-db.Ping() // to check connectivity
+db = sqldblogger.OpenDriver(
+    dsn, 
+    db.Driver(), 
+    loggerAdapter,
+    // AVAILABLE OPTIONS
+    sqldblogger.WithErrorFieldname("sql_error"),                    // default: error
+    sqldblogger.WithDurationFieldname("query_duration"),            // default: duration
+    sqldblogger.WithTimeFieldname("log_time"),                      // default: time
+    sqldblogger.WithSQLQueryFieldname("sql_query"),                 // default: query
+    sqldblogger.WithSQLArgsFieldname("sql_args"),                   // default: args
+    sqldblogger.WithMinimumLevel(sqldblogger.LevelTrace),           // default: LevelDebug
+    sqldblogger.WithLogArguments(false),                            // default: true
+    sqldblogger.WithDurationUnit(sqldblogger.DurationNanosecond),   // default: DurationMillisecond
+    sqldblogger.WithTimeFormat(sqldblogger.TimeFormatRFC3339),      // default: TimeFormatUnix
+    sqldblogger.WithLogDriverErrorSkip(true),                       // default: false
+    sqldblogger.WithSQLQueryAsMessage(true),                        // default: false
+    sqldblogger.WithUIDGenerator(sqldblogger.UIDGenerator),         // default: *defaultUID
+    sqldblogger.WithConnectionIDFieldname("con_id"),                // default: conn_id
+    sqldblogger.WithStatementIDFieldname("stm_id"),                 // default: stmt_id
+    sqldblogger.WithTransactionIDFieldname("trx_id"),               // default: tx_id
+    sqldblogger.WithWrapResult(false),                              // default: true
+    sqldblogger.WithIncludeStartTime(true),                         // default: false
+    sqldblogger.WithStartTimeFieldname("start_time"),               // default: start
+    sqldblogger.WithPreparerLevel(sqldblogger.LevelDebug),          // default: LevelInfo
+    sqldblogger.WithQueryerLevel(sqldblogger.LevelDebug),           // default: LevelInfo
+    sqldblogger.WithExecerLevel(sqldblogger.LevelDebug),            // default: LevelInfo
+)
 ```
 
-To:
-
-```go
-dsn := "username:passwd@tcp(mysqlserver:3306)/dbname?parseTime=true"
-db, err := sql.Open("mysql", dsn) // db is *sql.DB
-// handle err
-loggerAdapter := zerologadapter.New(zerolog.New(os.Stdout)) // zerolog.New(zerolog.NewConsoleWriter()) // <-- for colored console
-db = sqldblogger.OpenDriver(dsn, db.Driver(), loggerAdapter/*, using_default_options*/) // db is still *sql.DB
-db.Ping() // to check connectivity
-```
-
-## LOGGER ADAPTER
-
-sqldb-logger does not include a logger backend, but provide adapters that uses well known JSON structured logger:
-
-- [Zerolog adapter](logadapter/zerologadapter): Using [rs/zerolog](https://github.com/rs/zerolog) as its logger.
-- [Onelog adapter](logadapter/onelogadapter): Using [francoispqt/onelog](https://github.com/francoispqt/onelog) as its logger.
-- [Zap adapter](logadapter/zapadapter): Using [uber-go/zap](https://github.com/uber-go/zap) as its logger.
-- [Logrus adapter](logadapter/logrusadapter): Using [sirupsen/logrus](https://github.com/sirupsen/logrus) as its logger.
-
-[Provided adapters](./logadapter) does not use given `context`, you need to copy it and adjust with your needs. _(example: add http request id/whatever value from context to query log when you call `QueryerContext` and`ExecerContext` methods)_
-
-For another/custom logger backend, [`Logger`](./logger.go) interface is just as simple as following:
-
-```go
-type Logger interface {
-	Log(ctx context.Context, level Level, msg string, data map[string]interface{})
-}
-``` 
+[Click here](https://godoc.org/github.com/simukti/sqldb-logger#Option) for options documentation.
 
 ## MOTIVATION
 
@@ -176,9 +155,10 @@ I want to:
 - Keep using `*sql.DB`.
 - Have configurable output field.
 - Leverage structured logging.
+- Fetch and log `context.Context` value if needed. 
 - Re-use [pgx log interface](https://github.com/jackc/pgx/blob/f3a3ee1a0e5c8fc8991928bcd06fdbcd1ee9d05c/logger.go#L46-L49).
 
-I haven't found SQL logger with that features, so why not created myself? 
+I haven't found Go `*sql.DB` logger with that features, so why not created myself? 
 
 ## REFERENCES
 

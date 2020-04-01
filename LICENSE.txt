@@ -1,4 +1,4 @@
-Copyright (c) 2019 Sarjono Mukti Aji
+Copyright (c) 2019-2020 Sarjono Mukti Aji
 
 MIT License
 
