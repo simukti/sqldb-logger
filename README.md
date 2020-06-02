@@ -15,7 +15,7 @@ _Colored console writer output above only for sample/development_
 - Trackable log output:
     - Every call has its own unique ID.
     - Prepared statement and execution will have same ID.
-    - On execution/result error, it will include query, arguments, params, and related IDs. 
+    - On execution/result error, it will include the query, arguments, params, and related IDs. 
 
 ## INSTALL
 
@@ -35,7 +35,7 @@ type Logger interface {
 }
 ``` 
 
-There are 4 included basic implementation that uses well known JSON structured logger for quickstart:
+There are 4 included basic implementation that uses well-known JSON structured logger for quickstart:
 
 - [Zerolog adapter](logadapter/zerologadapter): Using [rs/zerolog](https://github.com/rs/zerolog) as its logger.
 - [Onelog adapter](logadapter/onelogadapter): Using [francoispqt/onelog](https://github.com/francoispqt/onelog) as its logger.
@@ -45,7 +45,7 @@ There are 4 included basic implementation that uses well known JSON structured l
 _Note: [those adapters](./logadapter) does not use given `context`, you need to modify it and adjust with your needs._ 
 _(example: add http request id/whatever value from context to query log when you call `QueryerContext` and`ExecerContext` methods)_
 
-Then for that logger to works, you need to integrate with compatible driver which will be used by `*sql.DB`.
+Then for that logger to works, you need to integrate with a compatible driver which will be used by `*sql.DB`.
 
 ### INTEGRATE WITH EXISTING SQL DB DRIVER
  
@@ -112,7 +112,7 @@ db := sqldblogger.OpenDriver(dsn, oci8.OCI8Driver, loggerAdapter /*, ...options 
 
 ## LOGGER OPTIONS
 
-When using `sqldblogger.OpenDriver(dsn, driver, logger, opt...)` without 4th variadic argument, it will uses [default options](./options.go#L37-L59).
+When using `sqldblogger.OpenDriver(dsn, driver, logger, opt...)` without 4th variadic argument, it will use [default options](./options.go#L37-L59).
 
 Here is sample of `OpenDriver()` using all available options and use non-default value:
 
@@ -146,7 +146,7 @@ db = sqldblogger.OpenDriver(
 )
 ```
 
-[Click here](https://godoc.org/github.com/simukti/sqldb-logger#Option) for options documentation.
+[Click here](https://pkg.go.dev/github.com/simukti/sqldb-logger#Option) for options documentation.
 
 ## MOTIVATION
 
@@ -168,7 +168,7 @@ I haven't found Go `*sql.DB` logger with that features, so why not created mysel
 
 ## CONTRIBUTE
 
-If you found bug, typo, wrong test, idea, help with existing issue, or anything constructive.
+If you found a bug, typo, wrong test, idea, help with existing issue, or anything constructive.
  
 Don't hesitate to create an issue or pull request.
 
