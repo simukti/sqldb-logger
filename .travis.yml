@@ -37,7 +37,7 @@ script:
   - go vet
   - golangci-lint run
   - test -z "$(go fmt ./...)" # fail if not formatted properly
-  - go test -v -race -coverprofile=coverage.out -covermode=atomic -tags=unit ./...
+  - go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
 
 after_success:
   - $GOPATH/bin/goveralls -v -coverprofile=coverage.out -service=travis-ci -repotoken=$COVERALLS_TOKEN
