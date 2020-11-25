@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/francoispqt/onelog"
+
 	sqldblogger "github.com/simukti/sqldb-logger"
 )
 

@@ -8,9 +8,10 @@ import (
 	"testing"
 	"time"
 
-	sqldblogger "github.com/simukti/sqldb-logger"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+
+	sqldblogger "github.com/simukti/sqldb-logger"
 )
 
 type logContent struct {

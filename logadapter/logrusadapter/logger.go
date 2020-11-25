@@ -3,8 +3,9 @@ package logrusadapter
 import (
 	"context"
 
-	sqldblogger "github.com/simukti/sqldb-logger"
 	"github.com/sirupsen/logrus"
+
+	sqldblogger "github.com/simukti/sqldb-logger"
 )
 
 type logrusAdapter struct {

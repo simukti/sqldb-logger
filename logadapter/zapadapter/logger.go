@@ -3,8 +3,9 @@ package zapadapter
 import (
 	"context"
 
-	sqldblogger "github.com/simukti/sqldb-logger"
 	"go.uber.org/zap"
+
+	sqldblogger "github.com/simukti/sqldb-logger"
 )
 
 type zapAdapter struct {

@@ -8,10 +8,11 @@ import (
 	"testing"
 	"time"
 
-	sqldblogger "github.com/simukti/sqldb-logger"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	sqldblogger "github.com/simukti/sqldb-logger"
 )
 
 type logContent struct {

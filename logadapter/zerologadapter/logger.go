@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/rs/zerolog"
+
 	sqldblogger "github.com/simukti/sqldb-logger"
 )
 

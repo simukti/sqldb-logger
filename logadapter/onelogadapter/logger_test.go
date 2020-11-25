@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"github.com/francoispqt/onelog"
-	sqldblogger "github.com/simukti/sqldb-logger"
 	"github.com/stretchr/testify/assert"
+
+	sqldblogger "github.com/simukti/sqldb-logger"
 )
 
 type logContent struct {
