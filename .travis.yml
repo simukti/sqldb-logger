@@ -38,6 +38,14 @@ script:
   - golangci-lint run
   - test -z "$(go fmt ./...)" # fail if not formatted properly
   - go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+  # logadapter use its own module and go test not supported nested modules
+  - |
+    ls -d logadapter/* | \
+    xargs -I {} bash -c "\
+    cd '{}' \
+    && go test -race -coverprofile=coverage.out -covermode=atomic -coverpkg=./... ./... \
+    && cat coverage.out | grep -v "mode:" >> ../../coverage.out \
+    && rm coverage.out"
 
 after_success:
   - $GOPATH/bin/goveralls -v -coverprofile=coverage.out -service=travis-ci -repotoken=$COVERALLS_TOKEN
