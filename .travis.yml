@@ -1,5 +1,9 @@
+dist: xenial
+addons:
+  # sonar-scanner run inside test.sh
+  sonarcloud:
+    organization: "simukti"
 language: go
-
 go:
   - 1.11.x
   - 1.12.x
@@ -7,33 +11,22 @@ go:
   - 1.14.x
   - 1.15.x
   - master
-
 matrix:
   fast_finish: true
   allow_failures:
     - go: master
-
 git:
   depth: 1
-
 env:
   - GO111MODULE=on
-
 install: true
-
 branches:
   only:
     - master
-
 before_install:
   - go get -u -v github.com/mattn/goveralls
-
-# golangci.com will be closed on 2020-04-15
-# https://medium.com/golangci/golangci-com-is-closing-d1fc1bd30e0e
 before_script:
   - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.33.0
-
 script: ./test.sh
-
 after_success:
   - $GOPATH/bin/goveralls -v -coverprofile=coverage.out -service=travis-ci -repotoken=$COVERALLS_TOKEN
