@@ -68,14 +68,78 @@ func TestWithArgs(t *testing.T) {
 }
 
 func TestLogInternalWithMinimumLevel(t *testing.T) {
-	cfg := &options{}
-	setDefaultOptions(cfg)
-	WithMinimumLevel(LevelError)(cfg)
-	bl := &bufferTestLogger{}
-	l := &logger{opt: cfg, logger: bl}
-	l.log(context.TODO(), LevelDebug, "msg", time.Now(), nil)
-	assert.Equal(t, 0, len(bl.Bytes()))
-	bl.Reset()
+	tt := []struct {
+		minLevel, givenLevel Level
+		msg, expect          string
+		err                  error
+	}{
+		{
+			minLevel:   LevelTrace,
+			givenLevel: LevelTrace,
+			msg:        "msg trace",
+			expect:     "msg trace",
+		},
+		{
+			minLevel:   LevelTrace,
+			givenLevel: LevelDebug,
+			msg:        "msg debug",
+			expect:     "msg debug",
+		},
+		{
+			minLevel:   LevelDebug,
+			givenLevel: LevelDebug,
+			msg:        "msg debug",
+			expect:     "msg debug",
+		},
+		{
+			minLevel:   LevelInfo,
+			givenLevel: LevelDebug,
+			msg:        "msg debug",
+			expect:     "",
+		},
+		{
+			minLevel:   LevelError,
+			givenLevel: LevelInfo,
+			msg:        "msg info",
+			expect:     "",
+		},
+		{
+			minLevel:   LevelInfo,
+			givenLevel: LevelInfo,
+			msg:        "msg info",
+			expect:     "msg info",
+		},
+		{
+			minLevel:   LevelError,
+			givenLevel: LevelError,
+			msg:        "msg error",
+			expect:     "msg error",
+			err:        fmt.Errorf("dummy error"),
+		},
+		{
+			minLevel:   LevelError,
+			givenLevel: LevelInfo,
+			msg:        "msg info",
+			expect:     "",
+		},
+	}
+	for _, tc := range tt {
+		cfg := &options{}
+		setDefaultOptions(cfg)
+		WithMinimumLevel(tc.minLevel)(cfg)
+		bl := &bufferTestLogger{}
+		l := &logger{opt: cfg, logger: bl}
+		l.log(context.TODO(), tc.givenLevel, tc.msg, time.Now(), tc.err)
+		if tc.expect == "" {
+			assert.Equal(t, bl.String(), tc.expect)
+		} else {
+			assert.Contains(t, bl.String(), tc.expect)
+		}
+		if tc.givenLevel == LevelError && tc.err != nil {
+			assert.Contains(t, bl.String(), tc.err.Error())
+		}
+		bl.Reset()
+	}
 }
 
 func TestLogInternal(t *testing.T) {

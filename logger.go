@@ -93,7 +93,7 @@ func (l *logger) withKeyArgs(key string, args []driver.Value) dataFunc {
 }
 
 func (l *logger) log(ctx context.Context, lvl Level, msg string, start time.Time, err error, datas ...dataFunc) {
-	if !(lvl >= l.opt.minimumLogLevel) {
+	if lvl < l.opt.minimumLogLevel {
 		return
 	}
 
@@ -110,7 +110,7 @@ func (l *logger) log(ctx context.Context, lvl Level, msg string, start time.Time
 		data[l.opt.startTimeFieldname] = l.opt.timeFormat.format(start)
 	}
 
-	if lvl == LevelError {
+	if lvl == LevelError && err != nil {
 		data[l.opt.errorFieldname] = err.Error()
 	}
 
