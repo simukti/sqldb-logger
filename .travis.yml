@@ -31,7 +31,7 @@ before_install:
 # golangci.com will be closed on 2020-04-15
 # https://medium.com/golangci/golangci-com-is-closing-d1fc1bd30e0e
 before_script:
-  - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.30.0
+  - curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.33.0
 
 script: ./test.sh
 
