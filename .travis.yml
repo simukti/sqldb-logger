@@ -44,7 +44,7 @@ script:
     xargs -I {} bash -c "\
     cd '{}' \
     && go test -race -coverprofile=coverage.out -covermode=atomic -coverpkg=./... ./... \
-    && cat coverage.out | grep -v "mode:" >> ../../coverage.out \
+    && cat coverage.out | grep -v \"mode:\" >> ../../coverage.out \
     && rm coverage.out"
 
 after_success:
