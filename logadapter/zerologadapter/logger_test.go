@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
-	sqldblogger "github.com/simukti/sqldb-logger"
 	"github.com/stretchr/testify/assert"
+
+	sqldblogger "github.com/simukti/sqldb-logger"
 )
 
 type logContent struct {
