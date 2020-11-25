@@ -54,7 +54,7 @@ func TestWithArgs(t *testing.T) {
 
 	t.Run("Non Empty Named Args", func(t *testing.T) {
 		k, v := l.withArgs(namedValuesToValues([]driver.NamedValue{
-			{"test", 1, 9},
+			{Name: "test", Ordinal: 1, Value: 9},
 		}))()
 		assert.Equal(t, cfg.sqlArgsFieldname, k)
 		assert.Equal(t, []interface{}{9}, v)
