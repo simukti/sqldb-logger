@@ -17,6 +17,7 @@ type statement struct {
 	query  string
 	logger *logger
 	id     string
+	conn   driver.Conn
 	connID string
 }
 
@@ -115,7 +116,10 @@ func (s *statement) QueryContext(ctx context.Context, args []driver.NamedValue) 
 func (s *statement) CheckNamedValue(nm *driver.NamedValue) error {
 	checker, ok := s.Stmt.(driver.NamedValueChecker)
 	if !ok {
-		return driver.ErrSkip
+		checker, ok = s.conn.(driver.NamedValueChecker)
+		if !ok {
+			return driver.ErrSkip
+		}
 	}
 
 	lvl, start := LevelTrace, time.Now()

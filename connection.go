@@ -261,7 +261,7 @@ func (c *connection) statement(stmt driver.Stmt, err error, id, query string) (d
 		return stmt, err
 	}
 
-	return &statement{Stmt: stmt, query: query, logger: c.logger, connID: c.id, id: id}, nil
+	return &statement{Stmt: stmt, query: query, logger: c.logger, connID: c.id, conn: c.Conn, id: id}, nil
 }
 
 func (c *connection) rows(res driver.Rows, err error, query string, args []driver.Value) (driver.Rows, error) {
