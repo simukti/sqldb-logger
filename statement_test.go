@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql/driver"
 	"encoding/json"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -376,6 +377,17 @@ func TestStatement_CheckNamedValue(t *testing.T) {
 		assert.NotEmpty(t, stmtOutput.Data[testOpts.connIDFieldname])
 	})
 
+	t.Run("Implement driver.NamedValueChecker on conn but stmt", func(t *testing.T) {
+		stmtMock := &statementMock{}
+		connMock := &driverConnNamedValueCheckerMock{}
+		mockErr := errors.New("mock")
+		connMock.On("CheckNamedValue", mock.Anything).Return(mockErr)
+
+		stmt := &statement{Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID(), conn: connMock}
+		err := stmt.CheckNamedValue(&driver.NamedValue{Name: "", Ordinal: 0, Value: "testid"})
+		assert.Equal(t, mockErr, err)
+	})
+
 	t.Run("Not implement driver.NamedValueChecker", func(t *testing.T) {
 		stmtMock := &statementMock{}
 
@@ -456,6 +468,14 @@ type statementNamedValueCheckerMock struct {
 
 func (m *statementNamedValueCheckerMock) CheckNamedValue(nm *driver.NamedValue) error {
 	return m.Called().Error(0)
+}
+
+type driverConnNamedValueCheckerMock struct {
+	driverConnMock
+}
+
+func (c *driverConnNamedValueCheckerMock) CheckNamedValue(nm *driver.NamedValue) error {
+	return c.Called().Error(0)
 }
 
 type statementValueConverterMock struct {
