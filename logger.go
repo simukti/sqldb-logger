@@ -101,10 +101,15 @@ func (l *logger) log(ctx context.Context, lvl Level, msg string, start time.Time
 		return
 	}
 
-	data := map[string]interface{}{
-		l.opt.timeFieldname:     l.opt.timeFormat.format(time.Now()),
-		l.opt.durationFieldname: l.opt.durationUnit.format(time.Since(start)),
+	data := make(map[string]interface{})
+
+	// set the user-defined fields first so they don't clobber any internal fields
+	for k, v := range l.opt.additionalFields {
+		data[k] = v
 	}
+
+	data[l.opt.timeFieldname] = l.opt.timeFormat.format(time.Now())
+	data[l.opt.durationFieldname] = l.opt.durationUnit.format(time.Since(start))
 
 	if l.opt.includeStartTime {
 		data[l.opt.startTimeFieldname] = l.opt.timeFormat.format(start)

@@ -18,6 +18,7 @@ type options struct {
 	stmtIDFieldname    string
 	connIDFieldname    string
 	txIDFieldname      string
+	additionalFields   map[string]interface{}
 	sqlQueryAsMsg      bool
 	logArgs            bool
 	logDriverErrSkip   bool
@@ -44,6 +45,7 @@ func setDefaultOptions(opt *options) {
 	opt.stmtIDFieldname = "stmt_id"
 	opt.connIDFieldname = "conn_id"
 	opt.txIDFieldname = "tx_id"
+	opt.additionalFields = make(map[string]interface{})
 	opt.sqlQueryAsMsg = false
 	opt.minimumLogLevel = LevelDebug
 	opt.logArgs = true
@@ -328,6 +330,14 @@ func WithStatementIDFieldname(name string) Option {
 func WithTransactionIDFieldname(name string) Option {
 	return func(opt *options) {
 		opt.txIDFieldname = name
+	}
+}
+
+func WithAdditionalFields(fields map[string]interface{}) Option {
+	return func(opt *options) {
+		for k, v := range fields {
+			opt.additionalFields[k] = v
+		}
 	}
 }
 

@@ -177,6 +177,27 @@ func TestLogInternalWithData(t *testing.T) {
 	bl.Reset()
 }
 
+func TestLogWithAdditionalFields(t *testing.T) {
+	cfg := &options{}
+	setDefaultOptions(cfg)
+	WithAdditionalFields(map[string]interface{}{"hello": "world"})(cfg)
+	bl := &bufferTestLogger{}
+	l := &logger{opt: cfg, logger: bl}
+	l.log(context.TODO(), LevelInfo, "msg", time.Now(), nil, l.withQuery("query"))
+
+	var content bufLog
+	err := json.Unmarshal(bl.Bytes(), &content)
+	assert.NoError(t, err)
+	assert.Contains(t, content.Data, cfg.timeFieldname)
+	assert.Contains(t, content.Data, cfg.durationFieldname)
+	assert.Contains(t, content.Data, cfg.sqlQueryFieldname)
+	assert.Equal(t, LevelInfo.String(), content.Level)
+	assert.Equal(t, "msg", content.Message)
+	assert.Equal(t, "query", content.Data[cfg.sqlQueryFieldname])
+	assert.Equal(t, "world", content.Data["hello"])
+	bl.Reset()
+}
+
 func TestLogInternalErrorLevel(t *testing.T) {
 	cfg := &options{}
 	setDefaultOptions(cfg)
