@@ -176,6 +176,18 @@ func TestWithTransactionIDFieldname(t *testing.T) {
 	assert.Equal(t, "trxid", cfg.txIDFieldname)
 }
 
+func TestWithAdditionalFields(t *testing.T) {
+	cfg := &options{}
+	setDefaultOptions(cfg)
+
+	WithAdditionalFields(map[string]interface{}{"hello": "world"})(cfg)
+	assert.EqualValues(t, map[string]interface{}{"hello": "world"}, cfg.additionalFields)
+
+	// additional calls should merge
+	WithAdditionalFields(map[string]interface{}{"foo": "bar", "hello": "baz"})(cfg)
+	assert.EqualValues(t, map[string]interface{}{"hello": "baz", "foo": "bar"}, cfg.additionalFields)
+}
+
 func TestWithWrapResult(t *testing.T) {
 	cfg := &options{}
 	setDefaultOptions(cfg)
