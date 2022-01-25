@@ -25,7 +25,10 @@ func (c *connector) Connect(ctx context.Context) (driver.Conn, error) {
 		return nil, err
 	}
 
-	c.logger.log(ctx, LevelDebug, "Connect", start, err, logID)
+	// here, we're using the overriding log level to guarantee that it's included
+	// despite really being informational... this will allow us to mute other stuff
+	// we don't want to listen to
+	c.logger.log(ctx, LevelMustInclude, "Connect", start, err, logID)
 
 	return &connection{Conn: conn, logger: c.logger, id: id}, nil
 }
