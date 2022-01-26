@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
-	sqldblogger "github.com/simukti/sqldb-logger"
+	sqldblogger "github.com/ntwrk1/sqldb-logger"
 )
 
 type logContent struct {
