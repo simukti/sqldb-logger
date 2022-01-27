@@ -234,10 +234,6 @@ func WithSQLArgsFieldname(name string) Option {
 // Default: LevelDebug
 func WithMinimumLevel(lvl Level) Option {
 	return func(opt *options) {
-		if lvl > LevelError || lvl < LevelTrace {
-			return
-		}
-
 		opt.minimumLogLevel = lvl
 	}
 }
