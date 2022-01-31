@@ -229,7 +229,7 @@ func WithSQLArgsFieldname(name string) Option {
 
 // WithMinimumLevel set minimum level to be logged. Logger will always log level >= minimum level.
 //
-// Options: LevelTrace < LevelDebug < LevelInfo < LevelError
+// Options: LevelTrace < LevelDebug < LevelInfo < LevelError < LevelImportantInfo
 //
 // Default: LevelDebug
 func WithMinimumLevel(lvl Level) Option {
