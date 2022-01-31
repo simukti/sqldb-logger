@@ -39,7 +39,7 @@ func TestConnector_Connect(t *testing.T) {
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "Connect", output.Message)
-		assert.Equal(t, LevelInfo.String(), output.Level)
+		assert.Equal(t, LevelImportantInfo.String(), output.Level)
 		assert.NotEmpty(t, output.Data[testOpts.connIDFieldname])
 	})
 }
