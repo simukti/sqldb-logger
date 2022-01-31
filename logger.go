@@ -21,8 +21,6 @@ const (
 	LevelInfo
 	// LevelError is used on actual driver error or when driver not implement some optional sql/driver interface.
 	LevelError
-	// LevelMustInclude is an overriding log level that must be included.
-	LevelMustInclude
 )
 
 // String implement Stringer to convert type Level to string.
@@ -37,8 +35,6 @@ func (l Level) String() string {
 		return "info"
 	case LevelError:
 		return "error"
-	case LevelMustInclude:
-		return "info"
 	default:
 		return fmt.Sprintf("(invalid level): %d", l)
 	}

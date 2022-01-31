@@ -33,8 +33,6 @@ func (zp *zapAdapter) Log(_ context.Context, level sqldblogger.Level, msg string
 		zp.logger.Error(msg, fields...)
 	case sqldblogger.LevelInfo:
 		zp.logger.Info(msg, fields...)
-	case sqldblogger.LevelMustInclude:
-		zp.logger.Info(msg, fields...)
 	case sqldblogger.LevelDebug:
 		zp.logger.Debug(msg, fields...)
 	default:
