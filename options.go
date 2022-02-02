@@ -49,7 +49,8 @@ func setDefaultOptions(opt *options) {
 	opt.logArgs = true
 	opt.logDriverErrSkip = false
 	opt.wrapResult = true
-	opt.durationUnit = DurationMillisecond
+	// Changing to Nanoseconds to conform with DataDog default duration
+	opt.durationUnit = DurationNanosecond
 	opt.timeFormat = TimeFormatUnix
 	opt.uidGenerator = newDefaultUIDDGenerator()
 	opt.includeStartTime = false
