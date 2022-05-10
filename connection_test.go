@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql/driver"
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -96,7 +97,12 @@ func TestConnection_Prepare(t *testing.T) {
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "Prepare", output.Message)
-		assert.Equal(t, LevelInfo.String(), output.Level)
+		if _, ok := output.Data[testOpts.errorFieldname]; ok {
+			fmt.Println(output.Data[testOpts.errorFieldname])
+			assert.Equal(t, LevelError.String(), output.Level)
+		} else {
+			assert.Equal(t, LevelDebug.String(), output.Level)
+		}
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
 		assert.Equal(t, conn.id, output.Data[testOpts.connIDFieldname])
 		assert.NotEmpty(t, output.Data[testOpts.stmtIDFieldname])
@@ -265,7 +271,12 @@ func TestConnection_PrepareContext(t *testing.T) {
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "PrepareContext", output.Message)
-		assert.Equal(t, LevelInfo.String(), output.Level)
+		if _, ok := output.Data[testOpts.errorFieldname]; ok {
+			fmt.Println(output.Data[testOpts.errorFieldname])
+			assert.Equal(t, LevelError.String(), output.Level)
+		} else {
+			assert.Equal(t, LevelDebug.String(), output.Level)
+		}
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
 		assert.Equal(t, conn.id, output.Data[testOpts.connIDFieldname])
 		assert.NotEmpty(t, output.Data[testOpts.stmtIDFieldname])
@@ -411,7 +422,12 @@ func TestConnection_Exec(t *testing.T) {
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "Exec", output.Message)
-		assert.Equal(t, LevelDebug.String(), output.Level)
+		if _, ok := output.Data[testOpts.errorFieldname]; ok {
+			fmt.Println(output.Data[testOpts.errorFieldname])
+			assert.Equal(t, LevelError.String(), output.Level)
+		} else {
+			assert.Equal(t, LevelInfo.String(), output.Level)
+		}
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
 		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
 		assert.Equal(t, conn.id, output.Data[testOpts.connIDFieldname])
@@ -464,7 +480,12 @@ func TestConnection_ExecContext(t *testing.T) {
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "ExecContext", output.Message)
-		assert.Equal(t, LevelInfo.String(), output.Level)
+		if _, ok := output.Data[testOpts.errorFieldname]; ok {
+			fmt.Println(output.Data[testOpts.errorFieldname])
+			assert.Equal(t, LevelError.String(), output.Level)
+		} else {
+			assert.Equal(t, LevelDebug.String(), output.Level)
+		}
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
 		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
 		assert.Equal(t, conn.id, output.Data[testOpts.connIDFieldname])
@@ -544,7 +565,11 @@ func TestConnection_Query(t *testing.T) {
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "Query", output.Message)
-		assert.Equal(t, LevelInfo.String(), output.Level)
+		if _, ok := output.Data[testOpts.errorFieldname]; ok {
+			assert.Equal(t, LevelError.String(), output.Level)
+		} else {
+			assert.Equal(t, LevelDebug.String(), output.Level)
+		}
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
 		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
 		assert.Equal(t, conn.id, output.Data[testOpts.connIDFieldname])
@@ -623,7 +648,11 @@ func TestConnection_QueryContext(t *testing.T) {
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "QueryContext", output.Message)
-		assert.Equal(t, LevelInfo.String(), output.Level)
+		if _, ok := output.Data[testOpts.errorFieldname]; ok {
+			assert.Equal(t, LevelError.String(), output.Level)
+		} else {
+			assert.Equal(t, LevelDebug.String(), output.Level)
+		}
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
 		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
 		assert.Equal(t, conn.id, output.Data[testOpts.connIDFieldname])

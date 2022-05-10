@@ -40,15 +40,16 @@ func (c *connection) Begin() (driver.Tx, error) {
 
 // Prepare implements driver.Conn
 func (c *connection) Prepare(query string) (driver.Stmt, error) {
-	lvl, start, id := c.logger.opt.preparerLevel, time.Now(), c.logger.opt.uidGenerator.UniqueID()
+	lvl, start, id := LevelDebug, time.Now(), c.logger.opt.uidGenerator.UniqueID()
 	logs := append(c.logData(), c.logger.withQuery(query), c.logger.withUID(c.logger.opt.stmtIDFieldname, id))
 	driverStmt, err := c.Conn.Prepare(query)
 
 	if err != nil {
 		lvl = LevelError
 	}
-
-	c.logger.log(context.Background(), lvl, "Prepare", start, err, logs...)
+	if c.logger.opt.preparerLevel <= lvl {
+		c.logger.log(context.Background(), lvl, "Prepare", start, err, logs...)
+	}
 
 	return c.statement(driverStmt, err, id, query)
 }
@@ -94,15 +95,16 @@ func (c *connection) PrepareContext(ctx context.Context, query string) (driver.S
 		return nil, driver.ErrSkip
 	}
 
-	lvl, start, id := c.logger.opt.preparerLevel, time.Now(), c.logger.opt.uidGenerator.UniqueID()
+	lvl, start, id := LevelDebug, time.Now(), c.logger.opt.uidGenerator.UniqueID()
 	logs := append(c.logData(), c.logger.withQuery(query), c.logger.withUID(c.logger.opt.stmtIDFieldname, id))
 	driverStmt, err := driverPrep.PrepareContext(ctx, query)
 
 	if err != nil {
 		lvl = LevelError
 	}
-
-	c.logger.log(ctx, lvl, "PrepareContext", start, err, logs...)
+	if c.logger.opt.preparerLevel <= lvl {
+		c.logger.log(ctx, lvl, "PrepareContext", start, err, logs...)
+	}
 
 	return c.statement(driverStmt, err, id, query)
 }
@@ -135,14 +137,15 @@ func (c *connection) Exec(query string, args []driver.Value) (driver.Result, err
 	}
 
 	logs := append(c.logData(), c.logger.withQuery(query), c.logger.withArgs(args))
-	lvl, start := c.logger.opt.execerLevel, time.Now()
+	lvl, start := LevelInfo, time.Now()
 	res, err := driverExecer.Exec(query, args)
 
 	if err != nil {
 		lvl = LevelError
 	}
-
-	c.logger.log(context.Background(), lvl, "Exec", start, err, logs...)
+	if c.logger.opt.execerLevel <= lvl {
+		c.logger.log(context.Background(), lvl, "Exec", start, err, logs...)
+	}
 
 	return c.result(res, err, query, args)
 }
@@ -156,14 +159,15 @@ func (c *connection) ExecContext(ctx context.Context, query string, args []drive
 
 	logArgs := namedValuesToValues(args)
 	logs := append(c.logData(), c.logger.withQuery(query), c.logger.withArgs(logArgs))
-	lvl, start := c.logger.opt.execerLevel, time.Now()
+	lvl, start := LevelDebug, time.Now()
 	res, err := driverExecerContext.ExecContext(ctx, query, args)
 
 	if err != nil {
 		lvl = LevelError
 	}
-
-	c.logger.log(ctx, lvl, "ExecContext", start, err, logs...)
+	if c.logger.opt.execerLevel <= lvl {
+		c.logger.log(ctx, lvl, "ExecContext", start, err, logs...)
+	}
 
 	return c.result(res, err, query, logArgs)
 }
@@ -177,14 +181,15 @@ func (c *connection) Query(query string, args []driver.Value) (driver.Rows, erro
 	}
 
 	logs := append(c.logData(), c.logger.withQuery(query), c.logger.withArgs(args))
-	lvl, start := c.logger.opt.queryerLevel, time.Now()
+	lvl, start := LevelDebug, time.Now()
 	res, err := driverQueryer.Query(query, args)
 
 	if err != nil {
 		lvl = LevelError
 	}
-
-	c.logger.log(context.Background(), lvl, "Query", start, err, logs...)
+	if c.logger.opt.queryerLevel <= lvl {
+		c.logger.log(context.Background(), lvl, "Query", start, err, logs...)
+	}
 
 	return c.rows(res, err, query, args)
 }
@@ -198,14 +203,15 @@ func (c *connection) QueryContext(ctx context.Context, query string, args []driv
 
 	logArgs := namedValuesToValues(args)
 	logs := append(c.logData(), c.logger.withQuery(query), c.logger.withArgs(logArgs))
-	lvl, start := c.logger.opt.queryerLevel, time.Now()
+	lvl, start := LevelDebug, time.Now()
 	res, err := driverQueryerContext.QueryContext(ctx, query, args)
 
 	if err != nil {
 		lvl = LevelError
 	}
-
-	c.logger.log(ctx, lvl, "QueryContext", start, err, logs...)
+	if c.logger.opt.queryerLevel <= lvl {
+		c.logger.log(ctx, lvl, "QueryContext", start, err, logs...)
+	}
 
 	return c.rows(res, err, query, logArgs)
 }
