@@ -29,7 +29,7 @@ func (s *statement) Close() error {
 		lvl = LevelError
 	}
 
-	s.logger.log(context.Background(), lvl, "StmtClose", start, err, s.logData()...)
+	s.logger.log(context.Background(), lvl, MessageStmtClose, start, err, s.logData()...)
 
 	return err
 }
@@ -48,10 +48,8 @@ func (s *statement) Exec(args []driver.Value) (driver.Result, error) {
 	if err != nil {
 		lvl = LevelError
 	}
-	if s.logger.opt.execerLevel <= lvl {
-		s.logger.log(context.Background(), lvl, "StmtExec", start, err, logs...)
-	}
 
+	s.logger.log(context.Background(), lvl, MessageStmtExec, start, err, logs...)
 	return s.result(res, err, args)
 }
 
@@ -64,10 +62,8 @@ func (s *statement) Query(args []driver.Value) (driver.Rows, error) {
 	if err != nil {
 		lvl = LevelError
 	}
-	if s.logger.opt.queryerLevel <= lvl {
-		s.logger.log(context.Background(), lvl, "StmtQuery", start, err, logs...)
-	}
 
+	s.logger.log(context.Background(), lvl, MessageStmtQuery, start, err, logs...)
 	return s.rows(res, err, args)
 }
 
@@ -86,10 +82,8 @@ func (s *statement) ExecContext(ctx context.Context, args []driver.NamedValue) (
 	if err != nil {
 		lvl = LevelError
 	}
-	if s.logger.opt.execerLevel <= lvl {
-		s.logger.log(ctx, lvl, "StmtExecContext", start, err, logs...)
-	}
 
+	s.logger.log(ctx, lvl, MessageStmtExecContext, start, err, logs...)
 	return s.result(res, err, logArgs)
 }
 
@@ -108,10 +102,8 @@ func (s *statement) QueryContext(ctx context.Context, args []driver.NamedValue) 
 	if err != nil {
 		lvl = LevelError
 	}
-	if s.logger.opt.queryerLevel <= lvl {
-		s.logger.log(ctx, lvl, "StmtQueryContext", start, err, logs...)
-	}
 
+	s.logger.log(ctx, lvl, MessageStmtQueryContext, start, err, logs...)
 	return s.rows(res, err, logArgs)
 }
 
@@ -129,7 +121,7 @@ func (s *statement) CheckNamedValue(nm *driver.NamedValue) error {
 		lvl = LevelError
 	}
 
-	s.logger.log(context.Background(), lvl, "StmtCheckNamedValue", start, err, s.logData()...)
+	s.logger.log(context.Background(), lvl, MessageStmtCheckNamedValue, start, err, s.logData()...)
 
 	return err
 }

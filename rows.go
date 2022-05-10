@@ -39,7 +39,7 @@ func (r *rows) Close() error {
 		lvl = LevelError
 	}
 
-	r.logger.log(context.Background(), lvl, "RowsClose", start, err, r.logData()...)
+	r.logger.log(context.Background(), lvl, MessageRowsClose, start, err, r.logData()...)
 
 	return err
 }
@@ -61,7 +61,7 @@ func (r *rows) Next(dest []driver.Value) error {
 		lvl = LevelError
 	}
 
-	r.logger.log(context.Background(), lvl, "RowsNext", start, err, logs...)
+	r.logger.log(context.Background(), lvl, MessageRowsNext, start, err, logs...)
 
 	return err
 }
@@ -89,7 +89,7 @@ func (r *rows) NextResultSet() error {
 		lvl = LevelError
 	}
 
-	r.logger.log(context.Background(), lvl, "RowsNextResultSet", start, err, r.logData()...)
+	r.logger.log(context.Background(), lvl, MessageRowsNextResultSet, start, err, r.logData()...)
 
 	return err
 }

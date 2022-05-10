@@ -22,7 +22,7 @@ func (tx *transaction) Commit() error {
 		lvl = LevelError
 	}
 
-	tx.logger.log(context.Background(), lvl, "Commit", start, err, tx.logData()...)
+	tx.logger.log(context.Background(), lvl, MessageCommit, start, err, tx.logData()...)
 
 	return err
 }
@@ -36,7 +36,7 @@ func (tx *transaction) Rollback() error {
 		lvl = LevelError
 	}
 
-	tx.logger.log(context.Background(), lvl, "Rollback", start, err, tx.logData()...)
+	tx.logger.log(context.Background(), lvl, MessageRollback, start, err, tx.logData()...)
 
 	return err
 }

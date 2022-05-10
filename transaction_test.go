@@ -10,16 +10,18 @@ import (
 )
 
 func TestTransaction_Commit(t *testing.T) {
+	to := newTestObject()
+
 	t.Run("Error", func(t *testing.T) {
 		txMock := &transactionMock{}
 		txMock.On("Commit").Return(driver.ErrBadConn)
 
-		conn := &transaction{Tx: txMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		conn := &transaction{Tx: txMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		err := conn.Commit()
 		assert.Error(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "Commit", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
@@ -29,12 +31,12 @@ func TestTransaction_Commit(t *testing.T) {
 		txMock := &transactionMock{}
 		txMock.On("Commit").Return(nil)
 
-		conn := &transaction{Tx: txMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		conn := &transaction{Tx: txMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		err := conn.Commit()
 		assert.NoError(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "Commit", output.Message)
 		assert.Equal(t, LevelDebug.String(), output.Level)
@@ -42,16 +44,18 @@ func TestTransaction_Commit(t *testing.T) {
 }
 
 func TestTransaction_Rollback(t *testing.T) {
+	to := newTestObject()
+
 	t.Run("Error", func(t *testing.T) {
 		txMock := &transactionMock{}
 		txMock.On("Rollback").Return(driver.ErrBadConn)
 
-		conn := &transaction{Tx: txMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		conn := &transaction{Tx: txMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		err := conn.Rollback()
 		assert.Error(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "Rollback", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
@@ -61,12 +65,12 @@ func TestTransaction_Rollback(t *testing.T) {
 		txMock := &transactionMock{}
 		txMock.On("Rollback").Return(nil)
 
-		conn := &transaction{Tx: txMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		conn := &transaction{Tx: txMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		err := conn.Rollback()
 		assert.NoError(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "Rollback", output.Message)
 		assert.Equal(t, LevelDebug.String(), output.Level)

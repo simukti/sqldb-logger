@@ -11,7 +11,7 @@ import (
 	"github.com/francoispqt/onelog"
 	"github.com/stretchr/testify/assert"
 
-	sqldblogger "github.com/drakejin/sqldb-logger"
+	sqldblogger "github.com/simukti/sqldb-logger"
 )
 
 type logContent struct {

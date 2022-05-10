@@ -343,6 +343,8 @@ func TestWithSQLQueryAsMessage2(t *testing.T) {
 	bl := &bufferTestLogger{}
 	l := &logger{opt: cfg, logger: bl}
 
+	to := newTestObject()
+
 	WithSQLQueryAsMessage(true)(cfg)
 
 	l.log(
@@ -351,9 +353,9 @@ func TestWithSQLQueryAsMessage2(t *testing.T) {
 		"msg",
 		time.Now(),
 		nil,
-		testLogger.withUID(cfg.stmtIDFieldname, l.opt.uidGenerator.UniqueID()),
-		testLogger.withQuery("query"),
-		testLogger.withArgs([]driver.Value{}),
+		to.testLogger.withUID(cfg.stmtIDFieldname, l.opt.uidGenerator.UniqueID()),
+		to.testLogger.withQuery("query"),
+		to.testLogger.withArgs([]driver.Value{}),
 	)
 
 	var content bufLog

@@ -1,4 +1,4 @@
-module github.com/drakejin/sqldb-logger
+module github.com/simukti/sqldb-logger
 
 go 1.13
 

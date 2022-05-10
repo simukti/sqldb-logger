@@ -5,7 +5,7 @@ import (
 
 	"github.com/rs/zerolog"
 
-	sqldblogger "github.com/drakejin/sqldb-logger"
+	sqldblogger "github.com/simukti/sqldb-logger"
 )
 
 type zerologAdapter struct {

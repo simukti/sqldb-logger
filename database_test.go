@@ -15,11 +15,13 @@ func init() {
 }
 
 func TestOpenDriver(t *testing.T) {
+	to := newTestObject()
+
 	t.Run("Without Options", func(t *testing.T) {
 		mockDriver := &driverMock{}
 		mockDriver.On("Open", mock.Anything).Return(&driverConnMock{}, nil)
 
-		db := OpenDriver("test", mockDriver, bufLogger)
+		db := OpenDriver("test", mockDriver, to.bufLogger)
 		_, ok := interface{}(db).(*sql.DB)
 		assert.True(t, ok)
 	})
@@ -28,14 +30,14 @@ func TestOpenDriver(t *testing.T) {
 		mockDriver := &driverMock{}
 		mockDriver.On("Open", mock.Anything).Return(&driverConnMock{}, driver.ErrBadConn)
 
-		db := OpenDriver("test", mockDriver, bufLogger, WithErrorFieldname("errtest"), WithMinimumLevel(LevelDebug))
+		db := OpenDriver("test", mockDriver, to.bufLogger, WithErrorFieldname("errtest"), WithMinimumLevel(LevelDebug))
 		_, ok := interface{}(db).(*sql.DB)
 		assert.True(t, ok)
 		err := db.Ping()
 		assert.Error(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "Connect", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)

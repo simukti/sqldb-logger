@@ -12,7 +12,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	sqldblogger "github.com/drakejin/sqldb-logger"
+	sqldblogger "github.com/simukti/sqldb-logger"
 )
 
 type logContent struct {

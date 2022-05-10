@@ -5,7 +5,7 @@ import (
 
 	"go.uber.org/zap"
 
-	sqldblogger "github.com/drakejin/sqldb-logger"
+	sqldblogger "github.com/simukti/sqldb-logger"
 )
 
 type zapAdapter struct {

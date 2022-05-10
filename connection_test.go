@@ -12,33 +12,44 @@ import (
 )
 
 var (
-	testOpts   = &options{}
-	bufLogger  = &bufferTestLogger{}
-	testLogger *logger
+	testOpts = &options{}
 )
 
 func init() {
-	setDefaultOptions(testOpts)
 	testOpts.minimumLogLevel = LevelDebug
-	testLogger = &logger{
-		logger: bufLogger,
-		opt:    testOpts,
+	setDefaultOptions(testOpts)
+}
+
+type testObject struct {
+	bufLogger  *bufferTestLogger
+	testLogger *logger
+}
+
+func newTestObject() *testObject {
+	bufLogger := &bufferTestLogger{}
+	return &testObject{
+		bufLogger: bufLogger,
+		testLogger: &logger{
+			logger: bufLogger,
+			opt:    testOpts,
+		},
 	}
 }
 
 func TestConnection_Begin(t *testing.T) {
+	to := newTestObject()
 	t.Run("Error", func(t *testing.T) {
 		driverConnMock := &driverConnMock{}
 		var txMock *transactionMock
 		driverConnMock.On("Begin").Return(txMock, driver.ErrBadConn)
 
-		id := testLogger.opt.uidGenerator.UniqueID()
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: id}
+		id := to.testLogger.opt.uidGenerator.UniqueID()
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: id}
 		_, err := conn.Begin()
 		assert.Error(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, LevelError.String(), output.Level)
 		assert.Equal(t, id, output.Data[testOpts.connIDFieldname])
@@ -49,14 +60,14 @@ func TestConnection_Begin(t *testing.T) {
 		txMock := &transactionMock{}
 		driverConnMock.On("Begin").Return(txMock, nil)
 
-		id := testLogger.opt.uidGenerator.UniqueID()
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: id}
+		id := to.testLogger.opt.uidGenerator.UniqueID()
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: id}
 		tx, err := conn.Begin()
 		assert.NoError(t, err)
 		assert.Implements(t, (*driver.Tx)(nil), tx)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "Begin", output.Message)
 		assert.Equal(t, LevelDebug.String(), output.Level)
@@ -65,17 +76,19 @@ func TestConnection_Begin(t *testing.T) {
 }
 
 func TestConnection_Prepare(t *testing.T) {
+	to := newTestObject()
+
 	t.Run("Error", func(t *testing.T) {
 		driverConnMock := &driverConnMock{}
 		var stmtMock *statementMock
 		driverConnMock.On("Prepare", mock.Anything).Return(stmtMock, driver.ErrBadConn)
-		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		q := "SELECT * FROM tt WHERE id = ?" + " -- TestConnection_Prepare/" + t.Name()
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		_, err := conn.Prepare(q)
 		assert.Error(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "Prepare", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
@@ -87,14 +100,14 @@ func TestConnection_Prepare(t *testing.T) {
 		driverConnMock := &driverConnMock{}
 		stmtMock := &statementMock{}
 		driverConnMock.On("Prepare", mock.Anything).Return(stmtMock, nil)
-		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		q := "SELECT * FROM tt WHERE id = ?" + " -- TestConnection_Prepare/" + t.Name()
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		stmt, err := conn.Prepare(q)
 		assert.NoError(t, err)
 		assert.Implements(t, (*driver.Stmt)(nil), stmt)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "Prepare", output.Message)
 		if _, ok := output.Data[testOpts.errorFieldname]; ok {
@@ -112,11 +125,11 @@ func TestConnection_Prepare(t *testing.T) {
 		driverConnMock := &driverConnMock{}
 		stmtMock := &statementMock{}
 		driverConnMock.On("Prepare", mock.Anything).Return(stmtMock, nil)
-		q := "SELECT * FROM tt WHERE id = ?"
+		q := "SELECT * FROM tt WHERE id = ?" + " -- TestConnection_Prepare/" + t.Name()
 
 		custOpt := *testOpts
 		WithPreparerLevel(LevelDebug)(&custOpt)
-		custLogger := *testLogger
+		custLogger := *to.testLogger
 		custLogger.opt = &custOpt
 
 		conn := &connection{Conn: driverConnMock, logger: &custLogger, id: custLogger.opt.uidGenerator.UniqueID()}
@@ -125,7 +138,7 @@ func TestConnection_Prepare(t *testing.T) {
 		assert.Implements(t, (*driver.Stmt)(nil), stmt)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "Prepare", output.Message)
 		assert.Equal(t, LevelDebug.String(), output.Level)
@@ -136,15 +149,17 @@ func TestConnection_Prepare(t *testing.T) {
 }
 
 func TestConnection_Close(t *testing.T) {
+	to := newTestObject()
+
 	t.Run("Error", func(t *testing.T) {
 		driverConnMock := &driverConnMock{}
 		driverConnMock.On("Close").Return(driver.ErrBadConn)
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		err := conn.Close()
 		assert.Error(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "Close", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
@@ -155,12 +170,12 @@ func TestConnection_Close(t *testing.T) {
 	t.Run("Success", func(t *testing.T) {
 		driverConnMock := &driverConnMock{}
 		driverConnMock.On("Close").Return(nil)
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		err := conn.Close()
 		assert.NoError(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "Close", output.Message)
 		assert.Equal(t, LevelDebug.String(), output.Level)
@@ -169,9 +184,11 @@ func TestConnection_Close(t *testing.T) {
 }
 
 func TestConnection_BeginTx(t *testing.T) {
+	to := newTestObject()
+
 	t.Run("Non driver.ConnBeginTx", func(t *testing.T) {
 		driverConnMock := &driverConnMock{}
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		_, err := conn.BeginTx(context.TODO(), driver.TxOptions{
 			Isolation: 1,
 			ReadOnly:  true,
@@ -185,7 +202,7 @@ func TestConnection_BeginTx(t *testing.T) {
 		var txMock *transactionMock
 		driverConnMock.On("BeginTx", mock.Anything, mock.Anything).Return(txMock, driver.ErrBadConn)
 
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		_, err := conn.BeginTx(context.TODO(), driver.TxOptions{
 			Isolation: 1,
 			ReadOnly:  true,
@@ -193,7 +210,7 @@ func TestConnection_BeginTx(t *testing.T) {
 		assert.Error(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "BeginTx", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
@@ -206,7 +223,7 @@ func TestConnection_BeginTx(t *testing.T) {
 		txMock := &transactionMock{}
 		driverConnMock.On("BeginTx", mock.Anything, mock.Anything).Return(txMock, nil)
 
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		tx, err := conn.BeginTx(context.TODO(), driver.TxOptions{
 			Isolation: 1,
 			ReadOnly:  true,
@@ -215,7 +232,7 @@ func TestConnection_BeginTx(t *testing.T) {
 		assert.Implements(t, (*driver.Tx)(nil), tx)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "BeginTx", output.Message)
 		assert.Equal(t, LevelDebug.String(), output.Level)
@@ -225,11 +242,13 @@ func TestConnection_BeginTx(t *testing.T) {
 }
 
 func TestConnection_PrepareContext(t *testing.T) {
+	to := newTestObject()
+
 	t.Run("Non driver.ConnPrepareContext", func(t *testing.T) {
 		driverConnMock := &driverConnMock{}
 
-		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		q := "SELECT * FROM tt WHERE id = ?" + " -- TestConnection_PrepareContext/" + t.Name()
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		_, err := conn.PrepareContext(context.TODO(), q)
 		assert.Error(t, err)
 		assert.Equal(t, driver.ErrSkip, err)
@@ -240,13 +259,13 @@ func TestConnection_PrepareContext(t *testing.T) {
 		var stmtMock *statementMock
 		driverConnMock.On("PrepareContext", mock.Anything).Return(stmtMock, driver.ErrBadConn)
 
-		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		q := "SELECT * FROM tt WHERE id = ?" + " -- TestConnection_PrepareContext/" + t.Name()
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		_, err := conn.PrepareContext(context.TODO(), q)
 		assert.Error(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "PrepareContext", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
@@ -261,14 +280,14 @@ func TestConnection_PrepareContext(t *testing.T) {
 		stmtMock := &statementMock{}
 		driverConnMock.On("PrepareContext", mock.Anything).Return(stmtMock, nil)
 
-		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		q := "SELECT * FROM tt WHERE id = ?" + " -- TestConnection_PrepareContext/" + t.Name()
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		stmt, err := conn.PrepareContext(context.TODO(), q)
 		assert.NoError(t, err)
 		assert.Implements(t, (*driver.Stmt)(nil), stmt)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "PrepareContext", output.Message)
 		if _, ok := output.Data[testOpts.errorFieldname]; ok {
@@ -289,17 +308,17 @@ func TestConnection_PrepareContext(t *testing.T) {
 
 		custOpt := *testOpts
 		WithPreparerLevel(LevelDebug)(&custOpt)
-		custLogger := *testLogger
+		custLogger := *to.testLogger
 		custLogger.opt = &custOpt
 
-		q := "SELECT * FROM tt WHERE id = ?"
+		q := "SELECT * FROM tt WHERE id = ?" + " -- TestConnection_PrepareContext/" + t.Name()
 		conn := &connection{Conn: driverConnMock, logger: &custLogger, id: custLogger.opt.uidGenerator.UniqueID()}
 		stmt, err := conn.PrepareContext(context.TODO(), q)
 		assert.NoError(t, err)
 		assert.Implements(t, (*driver.Stmt)(nil), stmt)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "PrepareContext", output.Message)
 		assert.Equal(t, LevelDebug.String(), output.Level)
@@ -310,9 +329,11 @@ func TestConnection_PrepareContext(t *testing.T) {
 }
 
 func TestConnection_Ping(t *testing.T) {
+	to := newTestObject()
+
 	t.Run("Non driver.Pinger", func(t *testing.T) {
 		driverConnMock := &driverConnMock{}
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		err := conn.Ping(context.TODO())
 		assert.Error(t, err)
 		assert.Equal(t, driver.ErrSkip, err)
@@ -321,12 +342,12 @@ func TestConnection_Ping(t *testing.T) {
 	t.Run("driver.Pinger With Error", func(t *testing.T) {
 		driverConnMock := &driverConnPingerMock{}
 		driverConnMock.On("Ping", mock.Anything).Return(driver.ErrBadConn)
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		err := conn.Ping(context.TODO())
 		assert.Error(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "Ping", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
@@ -337,12 +358,12 @@ func TestConnection_Ping(t *testing.T) {
 	t.Run("driver.Pinger Success", func(t *testing.T) {
 		driverConnMock := &driverConnPingerMock{}
 		driverConnMock.On("Ping", mock.Anything).Return(nil)
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		err := conn.Ping(context.TODO())
 		assert.NoError(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "Ping", output.Message)
 		assert.Equal(t, LevelDebug.String(), output.Level)
@@ -351,11 +372,13 @@ func TestConnection_Ping(t *testing.T) {
 }
 
 func TestConnection_Exec(t *testing.T) {
+	to := newTestObject()
+
 	t.Run("Non driver.Execer Will Return Error", func(t *testing.T) {
 		driverConnMock := &driverConnMock{}
 
-		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		q := "SELECT * FROM tt WHERE id = ?" + " -- TestConnection_Exec/" + t.Name()
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		res, err := conn.Exec(q, []driver.Value{1})
 		assert.Nil(t, res)
 		assert.Error(t, err)
@@ -367,14 +390,14 @@ func TestConnection_Exec(t *testing.T) {
 		resultMock := driver.ResultNoRows
 		driverConnMock.On("Exec", mock.Anything, mock.Anything).Return(resultMock, driver.ErrBadConn)
 
-		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		q := "SELECT * FROM tt WHERE id = ?" + " -- TestConnection_Exec/" + t.Name()
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		_, err := conn.Exec(q, []driver.Value{1})
 		assert.Error(t, err)
 		assert.Equal(t, interface{}(driver.ErrBadConn), err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "Exec", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
@@ -388,13 +411,13 @@ func TestConnection_Exec(t *testing.T) {
 		resultMock := driver.ResultNoRows
 		driverConnMock.On("Exec", mock.Anything, mock.Anything).Return(resultMock, nil)
 
-		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		q := "SELECT * FROM tt WHERE id = ?" + " -- TestConnection_Exec/" + t.Name()
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		_, err := conn.Exec(q, []driver.Value{"testid"})
 		assert.NoError(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "Exec", output.Message)
 		assert.Equal(t, LevelInfo.String(), output.Level)
@@ -408,10 +431,10 @@ func TestConnection_Exec(t *testing.T) {
 		resultMock := driver.ResultNoRows
 		driverConnMock.On("Exec", mock.Anything, mock.Anything).Return(resultMock, nil)
 
-		q := "SELECT * FROM tt WHERE id = ?"
+		q := "SELECT * FROM tt WHERE id = ?" + " -- TestConnection_Exec/" + t.Name()
 		custOpt := *testOpts
 		WithExecerLevel(LevelDebug)(&custOpt)
-		custLogger := *testLogger
+		custLogger := *to.testLogger
 		custLogger.opt = &custOpt
 
 		conn := &connection{Conn: driverConnMock, logger: &custLogger, id: custLogger.opt.uidGenerator.UniqueID()}
@@ -419,7 +442,7 @@ func TestConnection_Exec(t *testing.T) {
 		assert.NoError(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "Exec", output.Message)
 		if _, ok := output.Data[testOpts.errorFieldname]; ok {
@@ -435,10 +458,12 @@ func TestConnection_Exec(t *testing.T) {
 }
 
 func TestConnection_ExecContext(t *testing.T) {
+	to := newTestObject()
+
 	t.Run("Non driver.ExecerContext Return Error args", func(t *testing.T) {
 		driverConnMock := &driverConnExecerMock{}
-		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		q := "SELECT * FROM tt WHERE id = ?" + " -- TestConnection_ExecContext/" + t.Name()
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		_, err := conn.ExecContext(context.TODO(), q, []driver.NamedValue{
 			{Name: "errrrr", Ordinal: 0, Value: 1},
 		})
@@ -450,13 +475,13 @@ func TestConnection_ExecContext(t *testing.T) {
 		resultMock := driver.ResultNoRows
 		driverConnMock.On("ExecContext", mock.Anything, mock.Anything, mock.Anything).Return(resultMock, driver.ErrBadConn)
 
-		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		q := "SELECT * FROM tt WHERE id = ?" + " -- TestConnection_ExecContext/" + t.Name()
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		_, err := conn.ExecContext(context.TODO(), q, []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.Error(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "ExecContext", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
@@ -471,13 +496,13 @@ func TestConnection_ExecContext(t *testing.T) {
 		resultMock := driver.ResultNoRows
 		driverConnMock.On("ExecContext", mock.Anything, mock.Anything, mock.Anything).Return(resultMock, nil)
 
-		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		q := "SELECT * FROM tt WHERE id = ?" + " -- TestConnection_ExecContext/" + t.Name()
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		_, err := conn.ExecContext(context.TODO(), q, []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.NoError(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "ExecContext", output.Message)
 		if _, ok := output.Data[testOpts.errorFieldname]; ok {
@@ -496,10 +521,10 @@ func TestConnection_ExecContext(t *testing.T) {
 		resultMock := driver.ResultNoRows
 		driverConnMock.On("ExecContext", mock.Anything, mock.Anything, mock.Anything).Return(resultMock, nil)
 
-		q := "SELECT * FROM tt WHERE id = ?"
+		q := "SELECT * FROM tt WHERE id = ?" + " -- TestConnection_ExecContext/" + t.Name()
 		custOpt := *testOpts
 		WithExecerLevel(LevelDebug)(&custOpt)
-		custLogger := *testLogger
+		custLogger := *to.testLogger
 		custLogger.opt = &custOpt
 
 		conn := &connection{Conn: driverConnMock, logger: &custLogger, id: custLogger.opt.uidGenerator.UniqueID()}
@@ -507,7 +532,7 @@ func TestConnection_ExecContext(t *testing.T) {
 		assert.NoError(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "ExecContext", output.Message)
 		assert.Equal(t, LevelDebug.String(), output.Level)
@@ -518,11 +543,13 @@ func TestConnection_ExecContext(t *testing.T) {
 }
 
 func TestConnection_Query(t *testing.T) {
+	to := newTestObject()
+
 	t.Run("Non driver.Queryer Will Return Error", func(t *testing.T) {
 		driverConnMock := &driverConnMock{}
 
-		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		q := "SELECT * FROM tt WHERE id = ?" + " -- TestConnection_Query/" + t.Name()
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		res, err := conn.Query(q, []driver.Value{1})
 		assert.Nil(t, res)
 		assert.Error(t, err)
@@ -534,14 +561,14 @@ func TestConnection_Query(t *testing.T) {
 		resultMock := &rowsMock{}
 		driverConnMock.On("Query", mock.Anything, mock.Anything).Return(resultMock, driver.ErrBadConn)
 
-		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		q := "SELECT * FROM tt WHERE id = ?" + " -- TestConnection_Query/" + t.Name()
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		_, err := conn.Query(q, []driver.Value{"testid"})
 		assert.Error(t, err)
 		assert.Equal(t, interface{}(driver.ErrBadConn), err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "Query", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
@@ -556,13 +583,13 @@ func TestConnection_Query(t *testing.T) {
 		resultMock := &rowsMock{}
 		driverConnMock.On("Query", mock.Anything, mock.Anything).Return(resultMock, nil)
 
-		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		q := "SELECT * FROM tt WHERE id = ?" + " -- TestConnection_Query/" + t.Name()
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		_, err := conn.Query(q, []driver.Value{"testid"})
 		assert.NoError(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "Query", output.Message)
 		if _, ok := output.Data[testOpts.errorFieldname]; ok {
@@ -580,10 +607,10 @@ func TestConnection_Query(t *testing.T) {
 		resultMock := &rowsMock{}
 		driverConnMock.On("Query", mock.Anything, mock.Anything).Return(resultMock, nil)
 
-		q := "SELECT * FROM tt WHERE id = ?"
+		q := "SELECT * FROM tt WHERE id = ?" + " -- TestConnection_Query/" + t.Name()
 		custOpt := *testOpts
 		WithQueryerLevel(LevelDebug)(&custOpt)
-		custLogger := *testLogger
+		custLogger := *to.testLogger
 		custLogger.opt = &custOpt
 
 		conn := &connection{Conn: driverConnMock, logger: &custLogger, id: custLogger.opt.uidGenerator.UniqueID()}
@@ -591,7 +618,7 @@ func TestConnection_Query(t *testing.T) {
 		assert.NoError(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "Query", output.Message)
 		assert.Equal(t, LevelDebug.String(), output.Level)
@@ -602,10 +629,12 @@ func TestConnection_Query(t *testing.T) {
 }
 
 func TestConnection_QueryContext(t *testing.T) {
+	to := newTestObject()
+
 	t.Run("Non driver.QueryerContext Return Error args", func(t *testing.T) {
 		driverConnMock := &driverConnQueryerMock{}
-		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		q := "SELECT * FROM tt WHERE id = ?" + " -- TestConnection_QueryContext/" + t.Name()
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		_, err := conn.QueryContext(context.TODO(), q, []driver.NamedValue{
 			{Name: "errrrr", Ordinal: 0, Value: 1},
 		})
@@ -618,13 +647,13 @@ func TestConnection_QueryContext(t *testing.T) {
 		resultMock := &rowsMock{}
 		driverConnMock.On("QueryContext", mock.Anything, mock.Anything, mock.Anything).Return(resultMock, driver.ErrBadConn)
 
-		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		q := "SELECT * FROM tt WHERE id = ?" + " -- TestConnection_QueryContext/" + t.Name()
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		_, err := conn.QueryContext(context.TODO(), q, []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.Error(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "QueryContext", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
@@ -639,13 +668,13 @@ func TestConnection_QueryContext(t *testing.T) {
 		resultMock := &rowsMock{}
 		driverConnMock.On("QueryContext", mock.Anything, mock.Anything, mock.Anything).Return(resultMock, nil)
 
-		q := "SELECT * FROM tt WHERE id = ?"
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		q := "SELECT * FROM tt WHERE id = ?" + " -- TestConnection_QueryContext/" + t.Name()
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		_, err := conn.QueryContext(context.TODO(), q, []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.NoError(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "QueryContext", output.Message)
 		if _, ok := output.Data[testOpts.errorFieldname]; ok {
@@ -663,10 +692,10 @@ func TestConnection_QueryContext(t *testing.T) {
 		resultMock := &rowsMock{}
 		driverConnMock.On("QueryContext", mock.Anything, mock.Anything, mock.Anything).Return(resultMock, nil)
 
-		q := "SELECT * FROM tt WHERE id = ?"
+		q := "SELECT * FROM tt WHERE id = ?" + " -- TestConnection_QueryContext/" + t.Name()
 		custOpt := *testOpts
 		WithQueryerLevel(LevelDebug)(&custOpt)
-		custLogger := *testLogger
+		custLogger := *to.testLogger
 		custLogger.opt = &custOpt
 
 		conn := &connection{Conn: driverConnMock, logger: &custLogger, id: custLogger.opt.uidGenerator.UniqueID()}
@@ -674,7 +703,7 @@ func TestConnection_QueryContext(t *testing.T) {
 		assert.NoError(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "QueryContext", output.Message)
 		assert.Equal(t, LevelDebug.String(), output.Level)
@@ -685,9 +714,11 @@ func TestConnection_QueryContext(t *testing.T) {
 }
 
 func TestConnection_ResetSession(t *testing.T) {
+	to := newTestObject()
+
 	t.Run("Non driver.SessionResetter", func(t *testing.T) {
 		driverConnMock := &driverConnMock{}
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		err := conn.ResetSession(context.TODO())
 		assert.Error(t, err)
 		assert.Error(t, driver.ErrSkip, err)
@@ -697,12 +728,12 @@ func TestConnection_ResetSession(t *testing.T) {
 		driverConnMock := &driverConnResetterMock{}
 		driverConnMock.On("ResetSession", mock.Anything).Return(driver.ErrBadConn)
 
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		err := conn.ResetSession(context.TODO())
 		assert.Error(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "ResetSession", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
@@ -711,9 +742,11 @@ func TestConnection_ResetSession(t *testing.T) {
 }
 
 func TestConnection_CheckNamedValue(t *testing.T) {
+	to := newTestObject()
+
 	t.Run("Non driver.NamedValueChecker", func(t *testing.T) {
 		driverConnMock := &driverConnMock{}
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		err := conn.CheckNamedValue(&driver.NamedValue{
 			Name:    "",
 			Ordinal: 0,
@@ -727,7 +760,7 @@ func TestConnection_CheckNamedValue(t *testing.T) {
 		driverConnMock := &driverConnNameValueCheckerMock{}
 		driverConnMock.On("CheckNamedValue", mock.Anything).Return(driver.ErrBadConn)
 
-		conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+		conn := &connection{Conn: driverConnMock, logger: to.testLogger, id: to.testLogger.opt.uidGenerator.UniqueID()}
 		err := conn.CheckNamedValue(&driver.NamedValue{
 			Name:    "",
 			Ordinal: 0,
@@ -736,7 +769,7 @@ func TestConnection_CheckNamedValue(t *testing.T) {
 		assert.Error(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(to.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "CheckNamedValue", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)

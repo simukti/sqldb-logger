@@ -184,6 +184,8 @@ func TestWithWrapResult(t *testing.T) {
 }
 
 func TestWithUIDGenerator(t *testing.T) {
+	to := newTestObject()
+
 	t.Run("Success", func(t *testing.T) {
 		cfg := &options{}
 		setDefaultOptions(cfg)
@@ -207,9 +209,9 @@ func TestWithUIDGenerator(t *testing.T) {
 			"msg",
 			time.Now(),
 			nil,
-			testLogger.withUID(cfg.stmtIDFieldname, l.opt.uidGenerator.UniqueID()),
-			testLogger.withQuery("query"),
-			testLogger.withArgs([]driver.Value{}),
+			to.testLogger.withUID(cfg.stmtIDFieldname, l.opt.uidGenerator.UniqueID()),
+			to.testLogger.withQuery("query"),
+			to.testLogger.withArgs([]driver.Value{}),
 		)
 
 		var content bufLog
@@ -221,6 +223,8 @@ func TestWithUIDGenerator(t *testing.T) {
 }
 
 func TestWithIncludeStartTime(t *testing.T) {
+	to := newTestObject()
+
 	t.Run("Default not include", func(t *testing.T) {
 		cfg := &options{}
 		setDefaultOptions(cfg)
@@ -247,9 +251,9 @@ func TestWithIncludeStartTime(t *testing.T) {
 			"msg",
 			start,
 			nil,
-			testLogger.withUID(cfg.stmtIDFieldname, l.opt.uidGenerator.UniqueID()),
-			testLogger.withQuery("query"),
-			testLogger.withArgs([]driver.Value{}),
+			to.testLogger.withUID(cfg.stmtIDFieldname, l.opt.uidGenerator.UniqueID()),
+			to.testLogger.withQuery("query"),
+			to.testLogger.withArgs([]driver.Value{}),
 		)
 
 		var content bufLog

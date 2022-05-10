@@ -33,7 +33,7 @@ func (c *connection) Begin() (driver.Tx, error) {
 		lvl = LevelError
 	}
 
-	c.logger.log(context.Background(), lvl, "Begin", start, err, logs...)
+	c.logger.log(context.Background(), lvl, MessageBegin, start, err, logs...)
 
 	return c.transaction(connTx, err, id)
 }
@@ -47,10 +47,8 @@ func (c *connection) Prepare(query string) (driver.Stmt, error) {
 	if err != nil {
 		lvl = LevelError
 	}
-	if c.logger.opt.preparerLevel <= lvl {
-		c.logger.log(context.Background(), lvl, "Prepare", start, err, logs...)
-	}
 
+	c.logger.log(context.Background(), lvl, MessagePrepare, start, err, logs...)
 	return c.statement(driverStmt, err, id, query)
 }
 
@@ -63,7 +61,7 @@ func (c *connection) Close() error {
 		lvl = LevelError
 	}
 
-	c.logger.log(context.Background(), lvl, "Close", start, err, c.logData()...)
+	c.logger.log(context.Background(), lvl, MessageClose, start, err, c.logData()...)
 
 	return err
 }
@@ -83,7 +81,7 @@ func (c *connection) BeginTx(ctx context.Context, opts driver.TxOptions) (driver
 		lvl = LevelError
 	}
 
-	c.logger.log(ctx, lvl, "BeginTx", start, err, logs...)
+	c.logger.log(ctx, lvl, MessageBeginTx, start, err, logs...)
 
 	return c.transaction(connTx, err, id)
 }
@@ -102,10 +100,8 @@ func (c *connection) PrepareContext(ctx context.Context, query string) (driver.S
 	if err != nil {
 		lvl = LevelError
 	}
-	if c.logger.opt.preparerLevel <= lvl {
-		c.logger.log(ctx, lvl, "PrepareContext", start, err, logs...)
-	}
 
+	c.logger.log(ctx, lvl, MessagePrepareContext, start, err, logs...)
 	return c.statement(driverStmt, err, id, query)
 }
 
@@ -123,7 +119,7 @@ func (c *connection) Ping(ctx context.Context) error {
 		lvl = LevelError
 	}
 
-	c.logger.log(ctx, lvl, "Ping", start, err, c.logData()...)
+	c.logger.log(ctx, lvl, MessagePing, start, err, c.logData()...)
 
 	return err
 }
@@ -143,10 +139,8 @@ func (c *connection) Exec(query string, args []driver.Value) (driver.Result, err
 	if err != nil {
 		lvl = LevelError
 	}
-	if c.logger.opt.execerLevel <= lvl {
-		c.logger.log(context.Background(), lvl, "Exec", start, err, logs...)
-	}
 
+	c.logger.log(context.Background(), lvl, MessageExec, start, err, logs...)
 	return c.result(res, err, query, args)
 }
 
@@ -165,10 +159,8 @@ func (c *connection) ExecContext(ctx context.Context, query string, args []drive
 	if err != nil {
 		lvl = LevelError
 	}
-	if c.logger.opt.execerLevel <= lvl {
-		c.logger.log(ctx, lvl, "ExecContext", start, err, logs...)
-	}
 
+	c.logger.log(ctx, lvl, MessageExecContext, start, err, logs...)
 	return c.result(res, err, query, logArgs)
 }
 
@@ -187,10 +179,8 @@ func (c *connection) Query(query string, args []driver.Value) (driver.Rows, erro
 	if err != nil {
 		lvl = LevelError
 	}
-	if c.logger.opt.queryerLevel <= lvl {
-		c.logger.log(context.Background(), lvl, "Query", start, err, logs...)
-	}
 
+	c.logger.log(context.Background(), lvl, MessageQuery, start, err, logs...)
 	return c.rows(res, err, query, args)
 }
 
@@ -209,10 +199,8 @@ func (c *connection) QueryContext(ctx context.Context, query string, args []driv
 	if err != nil {
 		lvl = LevelError
 	}
-	if c.logger.opt.queryerLevel <= lvl {
-		c.logger.log(ctx, lvl, "QueryContext", start, err, logs...)
-	}
 
+	c.logger.log(ctx, lvl, MessageQueryContext, start, err, logs...)
 	return c.rows(res, err, query, logArgs)
 }
 
@@ -230,7 +218,7 @@ func (c *connection) ResetSession(ctx context.Context) error {
 		lvl = LevelError
 	}
 
-	c.logger.log(context.Background(), lvl, "ResetSession", start, err, c.logData()...)
+	c.logger.log(context.Background(), lvl, MessageResetSession, start, err, c.logData()...)
 
 	return err
 }
@@ -249,7 +237,7 @@ func (c *connection) CheckNamedValue(nm *driver.NamedValue) error {
 		lvl = LevelError
 	}
 
-	c.logger.log(context.Background(), lvl, "CheckNamedValue", start, err, c.logData()...)
+	c.logger.log(context.Background(), lvl, MessageCheckNamedValue, start, err, c.logData()...)
 
 	return err
 }

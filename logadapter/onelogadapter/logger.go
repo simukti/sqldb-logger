@@ -5,7 +5,7 @@ import (
 
 	"github.com/francoispqt/onelog"
 
-	sqldblogger "github.com/drakejin/sqldb-logger"
+	sqldblogger "github.com/simukti/sqldb-logger"
 )
 
 type onelogAdapter struct {

@@ -25,7 +25,7 @@ func (r *result) LastInsertId() (int64, error) {
 		lvl = LevelError
 	}
 
-	r.logger.log(context.Background(), lvl, "ResultLastInsertId", start, err, r.logData()...)
+	r.logger.log(context.Background(), lvl, MessageResultLastInsertId, start, err, r.logData()...)
 
 	return id, err
 }
@@ -39,7 +39,7 @@ func (r *result) RowsAffected() (int64, error) {
 		lvl = LevelError
 	}
 
-	r.logger.log(context.Background(), lvl, "ResultRowsAffected", start, err, r.logData()...)
+	r.logger.log(context.Background(), lvl, MessageResultRowsAffected, start, err, r.logData()...)
 
 	return num, err
 }

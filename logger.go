@@ -96,6 +96,34 @@ func (l *logger) log(ctx context.Context, lvl Level, msg string, start time.Time
 	if lvl < l.opt.minimumLogLevel {
 		return
 	}
+	var willPrint = true
+	switch msg {
+	case MessagePrepare, MessagePrepareContext:
+		if l.opt.preparerLevel > lvl {
+			willPrint = false
+			break
+		}
+	case MessageExecContext, MessageExec, MessageStmtExec, MessageStmtExecContext:
+		if l.opt.execerLevel > lvl {
+			willPrint = false
+			break
+		}
+	case MessageQuery, MessageQueryContext, MessageStmtQuery, MessageStmtQueryContext:
+		if l.opt.queryerLevel > lvl {
+			willPrint = false
+			break
+		}
+	}
+	fmt.Println(l.opt.minimumLogLevel.String())
+	fmt.Println(lvl.String())
+	fmt.Println(msg)
+	fmt.Println(l.opt.queryerLevel.String(), lvl.String())
+	fmt.Println(l.opt.queryerLevel > lvl)
+	fmt.Println(l.opt.execerLevel.String(), lvl.String())
+	fmt.Println(l.opt.execerLevel > lvl)
+	fmt.Println(l.opt.preparerLevel.String(), lvl.String())
+	fmt.Println(l.opt.preparerLevel > lvl)
+	fmt.Println(willPrint, "willPrint")
 
 	if !l.opt.logDriverErrSkip && err == driver.ErrSkip {
 		return
@@ -134,7 +162,11 @@ func (l *logger) log(ctx context.Context, lvl Level, msg string, start time.Time
 		data[k] = v
 	}
 
-	l.logger.Log(ctx, lvl, msg, data)
+	if willPrint {
+		l.logger.Log(ctx, lvl, msg, data)
+	} else {
+		l.logger.Log(ctx, LevelTrace, "", nil)
+	}
 }
 
 // maxArgValueLen []byte and string more than this length will be truncated.
