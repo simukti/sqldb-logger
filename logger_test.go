@@ -1,7 +1,6 @@
 package sqldblogger
 
 import (
-	"bytes"
 	"context"
 	"database/sql/driver"
 	"encoding/json"
@@ -290,7 +289,7 @@ func TestWithEmptyArgs(t *testing.T) {
 	)
 
 	var content bufLog
-	err := json.Unmarshal(bl.Bytes(), &content)
+	err := json.Unmarshal([]byte(bl.Bytes()), &content)
 	assert.NoError(t, err)
 	assert.Contains(t, content.Data, cfg.sqlQueryFieldname)
 	assert.Contains(t, content.Data, cfg.timeFieldname)
@@ -343,7 +342,7 @@ func TestWithSQLQueryAsMessage2(t *testing.T) {
 	bl := &bufferTestLogger{}
 	l := &logger{opt: cfg, logger: bl}
 
-	to := newTestObject()
+	ml := newMockLogger()
 
 	WithSQLQueryAsMessage(true)(cfg)
 
@@ -353,13 +352,13 @@ func TestWithSQLQueryAsMessage2(t *testing.T) {
 		"msg",
 		time.Now(),
 		nil,
-		to.testLogger.withUID(cfg.stmtIDFieldname, l.opt.uidGenerator.UniqueID()),
-		to.testLogger.withQuery("query"),
-		to.testLogger.withArgs([]driver.Value{}),
+		ml.testLogger.withUID(cfg.stmtIDFieldname, l.opt.uidGenerator.UniqueID()),
+		ml.testLogger.withQuery("query"),
+		ml.testLogger.withArgs([]driver.Value{}),
 	)
 
 	var content bufLog
-	err := json.Unmarshal(bl.Bytes(), &content)
+	err := json.Unmarshal([]byte(bl.Bytes()), &content)
 	assert.NoError(t, err)
 	assert.NotContains(t, content.Data, cfg.sqlQueryFieldname)
 	assert.Equal(t, "query", content.Message)
@@ -368,19 +367,4 @@ func TestWithSQLQueryAsMessage2(t *testing.T) {
 	assert.Contains(t, content.Data, cfg.stmtIDFieldname)
 	// empty args will not logged
 	assert.NotContains(t, content.Data, cfg.sqlArgsFieldname)
-}
-
-type bufferTestLogger struct {
-	bytes.Buffer
-}
-
-type bufLog struct {
-	Level   string                 `json:"level"`
-	Message string                 `json:"message"`
-	Data    map[string]interface{} `json:"data"`
-}
-
-func (bl *bufferTestLogger) Log(_ context.Context, level Level, msg string, data map[string]interface{}) {
-	bl.Reset()
-	_ = json.NewEncoder(bl).Encode(bufLog{level.String(), msg, data})
 }

@@ -22,14 +22,15 @@ type statement struct {
 
 // Close implements driver.Stmt
 func (s *statement) Close() error {
-	lvl, start := LevelDebug, time.Now()
+	msg := MessageStmtClose
+	lvl, start := getDefaultLevelByMessage(msg), time.Now()
 	err := s.Stmt.Close()
 
 	if err != nil {
 		lvl = LevelError
 	}
 
-	s.logger.log(context.Background(), lvl, MessageStmtClose, start, err, s.logData()...)
+	s.logger.log(context.Background(), lvl, msg, start, err, s.logData()...)
 
 	return err
 }
@@ -42,28 +43,30 @@ func (s *statement) NumInput() int {
 // Exec implements driver.Stmt
 func (s *statement) Exec(args []driver.Value) (driver.Result, error) {
 	logs := append(s.logData(), s.logger.withArgs(args))
-	lvl, start := LevelDebug, time.Now()
+	msg := MessageStmtExec
+	lvl, start := getDefaultLevelByMessage(msg), time.Now()
 	res, err := s.Stmt.Exec(args) // nolint // disable static check on deprecated driver method
 
 	if err != nil {
 		lvl = LevelError
 	}
 
-	s.logger.log(context.Background(), lvl, MessageStmtExec, start, err, logs...)
+	s.logger.log(context.Background(), lvl, msg, start, err, logs...)
 	return s.result(res, err, args)
 }
 
 // Query implements driver.Stmt
 func (s *statement) Query(args []driver.Value) (driver.Rows, error) {
 	logs := append(s.logData(), s.logger.withArgs(args))
-	lvl, start := LevelDebug, time.Now()
+	msg := MessageStmtQuery
+	lvl, start := getDefaultLevelByMessage(msg), time.Now()
 	res, err := s.Stmt.Query(args) // nolint // disable static check on deprecated driver method
 
 	if err != nil {
 		lvl = LevelError
 	}
 
-	s.logger.log(context.Background(), lvl, MessageStmtQuery, start, err, logs...)
+	s.logger.log(context.Background(), lvl, msg, start, err, logs...)
 	return s.rows(res, err, args)
 }
 
@@ -76,14 +79,15 @@ func (s *statement) ExecContext(ctx context.Context, args []driver.NamedValue) (
 
 	logArgs := namedValuesToValues(args)
 	logs := append(s.logData(), s.logger.withArgs(logArgs))
-	lvl, start := LevelDebug, time.Now()
+	msg := MessageStmtExecContext
+	lvl, start := getDefaultLevelByMessage(msg), time.Now()
 	res, err := stmtExecer.ExecContext(ctx, args)
 
 	if err != nil {
 		lvl = LevelError
 	}
 
-	s.logger.log(ctx, lvl, MessageStmtExecContext, start, err, logs...)
+	s.logger.log(ctx, lvl, msg, start, err, logs...)
 	return s.result(res, err, logArgs)
 }
 
@@ -96,14 +100,15 @@ func (s *statement) QueryContext(ctx context.Context, args []driver.NamedValue) 
 
 	logArgs := namedValuesToValues(args)
 	logs := append(s.logData(), s.logger.withArgs(logArgs))
-	lvl, start := LevelDebug, time.Now()
+	msg := MessageStmtQueryContext
+	lvl, start := getDefaultLevelByMessage(msg), time.Now()
 	res, err := stmtQueryer.QueryContext(ctx, args)
 
 	if err != nil {
 		lvl = LevelError
 	}
 
-	s.logger.log(ctx, lvl, MessageStmtQueryContext, start, err, logs...)
+	s.logger.log(ctx, lvl, msg, start, err, logs...)
 	return s.rows(res, err, logArgs)
 }
 
@@ -114,14 +119,15 @@ func (s *statement) CheckNamedValue(nm *driver.NamedValue) error {
 		return driver.ErrSkip
 	}
 
-	lvl, start := LevelTrace, time.Now()
+	msg := MessageStmtCheckNamedValue
+	lvl, start := getDefaultLevelByMessage(msg), time.Now()
 	err := checker.CheckNamedValue(nm)
 
 	if err != nil {
 		lvl = LevelError
 	}
 
-	s.logger.log(context.Background(), lvl, MessageStmtCheckNamedValue, start, err, s.logData()...)
+	s.logger.log(context.Background(), lvl, msg, start, err, s.logData()...)
 
 	return err
 }
