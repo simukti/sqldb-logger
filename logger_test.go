@@ -289,7 +289,7 @@ func TestWithEmptyArgs(t *testing.T) {
 	)
 
 	var content bufLog
-	err := json.Unmarshal([]byte(bl.Bytes()), &content)
+	err := json.Unmarshal(bl.Bytes(), &content)
 	assert.NoError(t, err)
 	assert.Contains(t, content.Data, cfg.sqlQueryFieldname)
 	assert.Contains(t, content.Data, cfg.timeFieldname)
@@ -358,7 +358,7 @@ func TestWithSQLQueryAsMessage2(t *testing.T) {
 	)
 
 	var content bufLog
-	err := json.Unmarshal([]byte(bl.Bytes()), &content)
+	err := json.Unmarshal(bl.Bytes(), &content)
 	assert.NoError(t, err)
 	assert.NotContains(t, content.Data, cfg.sqlQueryFieldname)
 	assert.Equal(t, "query", content.Message)
