@@ -66,19 +66,25 @@ func getDefaultLevelByMessage(msg string) Level {
 }
 
 func isAbleToPrinted(o *options, msg string, lvl Level) bool {
-	var myLevel Level
+	myLevel := o.minimumLogLevel
 	switch msg {
-	case MessagePrepare, MessagePrepareContext:
-		myLevel = o.preparerLevel
+	case MessagePrepare, MessagePrepareContext,
+		MessageStmtExec, MessageStmtExecContext,
+		MessageStmtQuery, MessageStmtQueryContext,
+		MessageStmtClose, MessageStmtCheckNamedValue:
+		if o.minimumLogLevel <= o.preparerLevel {
+			myLevel = o.preparerLevel
+		}
 		break
-	case MessageExecContext, MessageExec, MessageStmtExec, MessageStmtExecContext:
-		myLevel = o.execerLevel
+	case MessageExec, MessageExecContext:
+		if o.minimumLogLevel <= o.execerLevel {
+			myLevel = o.execerLevel
+		}
 		break
-	case MessageQuery, MessageQueryContext, MessageStmtQuery, MessageStmtQueryContext:
-		myLevel = o.queryerLevel
-		break
-	default:
-		myLevel = o.minimumLogLevel
+	case MessageQuery, MessageQueryContext:
+		if o.minimumLogLevel <= o.queryerLevel {
+			myLevel = o.queryerLevel
+		}
 		break
 	}
 	return myLevel <= lvl
