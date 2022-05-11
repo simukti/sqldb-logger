@@ -45,7 +45,6 @@ func setDefaultOptions(opt *options) {
 	opt.connIDFieldname = "conn_id"
 	opt.txIDFieldname = "tx_id"
 	opt.sqlQueryAsMsg = false
-	opt.minimumLogLevel = LevelDebug
 	opt.logArgs = true
 	opt.logDriverErrSkip = false
 	opt.wrapResult = true
@@ -53,6 +52,7 @@ func setDefaultOptions(opt *options) {
 	opt.timeFormat = TimeFormatUnix
 	opt.uidGenerator = newDefaultUIDDGenerator()
 	opt.includeStartTime = false
+	opt.minimumLogLevel = LevelDebug
 	opt.preparerLevel = LevelInfo
 	opt.queryerLevel = LevelInfo
 	opt.execerLevel = LevelInfo

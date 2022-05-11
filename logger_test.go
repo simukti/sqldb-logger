@@ -1,7 +1,6 @@
 package sqldblogger
 
 import (
-	"bytes"
 	"context"
 	"database/sql/driver"
 	"encoding/json"
@@ -343,6 +342,8 @@ func TestWithSQLQueryAsMessage2(t *testing.T) {
 	bl := &bufferTestLogger{}
 	l := &logger{opt: cfg, logger: bl}
 
+	ml := newMockLogger()
+
 	WithSQLQueryAsMessage(true)(cfg)
 
 	l.log(
@@ -351,9 +352,9 @@ func TestWithSQLQueryAsMessage2(t *testing.T) {
 		"msg",
 		time.Now(),
 		nil,
-		testLogger.withUID(cfg.stmtIDFieldname, l.opt.uidGenerator.UniqueID()),
-		testLogger.withQuery("query"),
-		testLogger.withArgs([]driver.Value{}),
+		ml.testLogger.withUID(cfg.stmtIDFieldname, l.opt.uidGenerator.UniqueID()),
+		ml.testLogger.withQuery("query"),
+		ml.testLogger.withArgs([]driver.Value{}),
 	)
 
 	var content bufLog
@@ -366,19 +367,4 @@ func TestWithSQLQueryAsMessage2(t *testing.T) {
 	assert.Contains(t, content.Data, cfg.stmtIDFieldname)
 	// empty args will not logged
 	assert.NotContains(t, content.Data, cfg.sqlArgsFieldname)
-}
-
-type bufferTestLogger struct {
-	bytes.Buffer
-}
-
-type bufLog struct {
-	Level   string                 `json:"level"`
-	Message string                 `json:"message"`
-	Data    map[string]interface{} `json:"data"`
-}
-
-func (bl *bufferTestLogger) Log(_ context.Context, level Level, msg string, data map[string]interface{}) {
-	bl.Reset()
-	_ = json.NewEncoder(bl).Encode(bufLog{level.String(), msg, data})
 }

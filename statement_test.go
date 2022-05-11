@@ -11,185 +11,183 @@ import (
 )
 
 func TestStatement_Close(t *testing.T) {
+
 	t.Run("Error", func(t *testing.T) {
+		ml := newMockLogger()
 		q := "SELECT * FROM tt WHERE id = ?"
 		stmtMock := &statementMock{}
 		stmtMock.On("Close").Return(driver.ErrBadConn)
 
-		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: ml.testLogger, id: ml.testLogger.opt.uidGenerator.UniqueID(), connID: ml.testLogger.opt.uidGenerator.UniqueID()}
 		err := stmt.Close()
 		assert.Error(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "StmtClose", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
-		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testOpts.errorFieldname])
-		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
-		assert.Equal(t, stmt.connID, output.Data[testOpts.connIDFieldname])
-		assert.Equal(t, stmt.id, output.Data[testOpts.stmtIDFieldname])
+		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[ml.testOpts.errorFieldname])
+		assert.Equal(t, q, output.Data[ml.testOpts.sqlQueryFieldname])
+		assert.Equal(t, stmt.connID, output.Data[ml.testOpts.connIDFieldname])
+		assert.Equal(t, stmt.id, output.Data[ml.testOpts.stmtIDFieldname])
 	})
 
 	t.Run("Success", func(t *testing.T) {
+		ml := newMockLogger()
 		q := "SELECT * FROM tt WHERE id = ?"
 		stmtMock := &statementMock{}
 		stmtMock.On("Close").Return(nil)
 
-		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: ml.testLogger, id: ml.testLogger.opt.uidGenerator.UniqueID(), connID: ml.testLogger.opt.uidGenerator.UniqueID()}
 		err := stmt.Close()
 		assert.NoError(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtClose", output.Message)
-		assert.NotContains(t, output.Data, testOpts.errorFieldname)
-		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
-		assert.Equal(t, stmt.connID, output.Data[testOpts.connIDFieldname])
-		assert.Equal(t, stmt.id, output.Data[testOpts.stmtIDFieldname])
+		assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessageStmtClose, LevelDebug))
 	})
 }
 
 func TestStatement_NumInput(t *testing.T) {
+	ml := newMockLogger()
+
 	q := "SELECT * FROM tt WHERE id = ?"
 	stmtMock := &statementMock{}
 	stmtMock.On("NumInput").Return(1)
 
-	stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
+	stmt := &statement{query: q, Stmt: stmtMock, logger: ml.testLogger, id: ml.testLogger.opt.uidGenerator.UniqueID(), connID: ml.testLogger.opt.uidGenerator.UniqueID()}
 	input := stmt.NumInput()
 	assert.Equal(t, 1, input)
 }
 
 func TestStatement_Exec(t *testing.T) {
+
 	t.Run("Error", func(t *testing.T) {
+		ml := newMockLogger()
+
 		q := "SELECT * FROM tt WHERE id = ?"
 		stmtMock := &statementMock{}
 		stmtMock.On("Exec", mock.Anything).Return(driver.ResultNoRows, driver.ErrBadConn)
 
-		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: ml.testLogger, id: ml.testLogger.opt.uidGenerator.UniqueID(), connID: ml.testLogger.opt.uidGenerator.UniqueID()}
 		_, err := stmt.Exec([]driver.Value{"testid"})
 		assert.Error(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "StmtExec", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
-		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testOpts.errorFieldname])
-		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
+		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[ml.testOpts.errorFieldname])
+		assert.Equal(t, q, output.Data[ml.testOpts.sqlQueryFieldname])
+		assert.Equal(t, []interface{}{"testid"}, output.Data[ml.testOpts.sqlArgsFieldname])
 	})
 
 	t.Run("Success", func(t *testing.T) {
+		ml := newMockLogger()
+
 		q := "SELECT * FROM tt WHERE id = ?"
 		stmtMock := &statementMock{}
 		stmtMock.On("Exec", mock.Anything).Return(&resultMock{}, nil)
 
-		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: ml.testLogger, id: ml.testLogger.opt.uidGenerator.UniqueID(), connID: ml.testLogger.opt.uidGenerator.UniqueID()}
 		_, err := stmt.Exec([]driver.Value{"testid"})
 		assert.NoError(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtExec", output.Message)
-		assert.Equal(t, LevelInfo.String(), output.Level)
-		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
+		assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessagePrepare, LevelDebug))
 	})
 
 	t.Run("Success With Custom Level", func(t *testing.T) {
+		ml := newMockLogger()
+		ml.testOpts.execerLevel = LevelDebug
+
 		q := "SELECT * FROM tt WHERE id = ?"
 		stmtMock := &statementMock{}
 		stmtMock.On("Exec", mock.Anything).Return(&resultMock{}, nil)
 
-		custOpt := *testOpts
-		WithExecerLevel(LevelDebug)(&custOpt)
-		custLogger := *testLogger
-		custLogger.opt = &custOpt
-
-		stmt := &statement{query: q, Stmt: stmtMock, logger: &custLogger, id: custLogger.opt.uidGenerator.UniqueID(), connID: custLogger.opt.uidGenerator.UniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: ml.testLogger, id: ml.testOpts.uidGenerator.UniqueID(), connID: ml.testOpts.uidGenerator.UniqueID()}
 		_, err := stmt.Exec([]driver.Value{"testid"})
 		assert.NoError(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtExec", output.Message)
-		assert.Equal(t, LevelDebug.String(), output.Level)
-		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
+		assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessageStmtExec, LevelDebug))
 	})
 }
 
 func TestStatement_Query(t *testing.T) {
+
 	t.Run("Error", func(t *testing.T) {
+		ml := newMockLogger()
+
 		q := "SELECT * FROM tt WHERE id = ?"
 		stmtMock := &statementMock{}
 		stmtMock.On("Query", mock.Anything).Return(&rowsMock{}, driver.ErrBadConn)
 
-		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: ml.testLogger, id: ml.testLogger.opt.uidGenerator.UniqueID(), connID: ml.testLogger.opt.uidGenerator.UniqueID()}
 		_, err := stmt.Query([]driver.Value{"testid"})
 		assert.Error(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "StmtQuery", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
-		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testOpts.errorFieldname])
-		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
+		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[ml.testOpts.errorFieldname])
+		assert.Equal(t, q, output.Data[ml.testOpts.sqlQueryFieldname])
+		assert.Equal(t, []interface{}{"testid"}, output.Data[ml.testOpts.sqlArgsFieldname])
 	})
 
 	t.Run("Success", func(t *testing.T) {
+		ml := newMockLogger()
+
 		q := "SELECT * FROM tt WHERE id = ?"
 		stmtMock := &statementMock{}
 		stmtMock.On("Query", mock.Anything).Return(&rowsMock{}, nil)
 
-		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: ml.testLogger, id: ml.testLogger.opt.uidGenerator.UniqueID(), connID: ml.testLogger.opt.uidGenerator.UniqueID()}
 		_, err := stmt.Query([]driver.Value{"testid"})
 		assert.NoError(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtQuery", output.Message)
-		assert.Equal(t, LevelInfo.String(), output.Level)
-		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
+		assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessagePrepare, LevelDebug))
 	})
 
 	t.Run("Success With Custom Level", func(t *testing.T) {
+		ml := newMockLogger()
+		ml.testOpts.queryerLevel = LevelDebug
+
 		q := "SELECT * FROM tt WHERE id = ?"
 		stmtMock := &statementMock{}
 		stmtMock.On("Query", mock.Anything).Return(&rowsMock{}, nil)
 
-		custOpt := *testOpts
-		WithQueryerLevel(LevelDebug)(&custOpt)
-		custLogger := *testLogger
-		custLogger.opt = &custOpt
-
-		stmt := &statement{query: q, Stmt: stmtMock, logger: &custLogger, id: custLogger.opt.uidGenerator.UniqueID(), connID: custLogger.opt.uidGenerator.UniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: ml.testLogger, id: ml.testOpts.uidGenerator.UniqueID(), connID: ml.testOpts.uidGenerator.UniqueID()}
 		_, err := stmt.Query([]driver.Value{"testid"})
 		assert.NoError(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtQuery", output.Message)
-		assert.Equal(t, LevelDebug.String(), output.Level)
-		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
+		assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessageStmtQuery, LevelDebug))
 	})
 }
 
 func TestStatement_ExecContext(t *testing.T) {
+
 	t.Run("Not implement driver.StmtExecContext", func(t *testing.T) {
+		ml := newMockLogger()
+
 		q := "SELECT * FROM tt WHERE id = ?"
 		stmtMock := &statementMock{}
-		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: ml.testLogger, id: ml.testLogger.opt.uidGenerator.UniqueID(), connID: ml.testLogger.opt.uidGenerator.UniqueID()}
 
 		_, err := stmt.ExecContext(context.TODO(), []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.Error(t, err)
@@ -197,72 +195,71 @@ func TestStatement_ExecContext(t *testing.T) {
 	})
 
 	t.Run("Error", func(t *testing.T) {
+		ml := newMockLogger()
+
 		q := "SELECT * FROM tt WHERE id = ?"
 		stmtMock := &statementExecerContextMock{}
 		stmtMock.On("ExecContext", mock.Anything, mock.Anything).Return(&resultMock{}, driver.ErrBadConn)
 
-		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: ml.testLogger, id: ml.testLogger.opt.uidGenerator.UniqueID(), connID: ml.testLogger.opt.uidGenerator.UniqueID()}
 		_, err := stmt.ExecContext(context.TODO(), []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.Error(t, err)
 		assert.Equal(t, driver.ErrBadConn, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "StmtExecContext", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
-		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testOpts.errorFieldname])
-		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
+		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[ml.testOpts.errorFieldname])
+		assert.Equal(t, q, output.Data[ml.testOpts.sqlQueryFieldname])
+		assert.Equal(t, []interface{}{"testid"}, output.Data[ml.testOpts.sqlArgsFieldname])
 	})
 
 	t.Run("Success", func(t *testing.T) {
+		ml := newMockLogger()
+
 		q := "SELECT * FROM tt WHERE id = ?"
 		stmtMock := &statementExecerContextMock{}
 		stmtMock.On("ExecContext", mock.Anything, mock.Anything).Return(&resultMock{}, nil)
 
-		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: ml.testLogger, id: ml.testLogger.opt.uidGenerator.UniqueID(), connID: ml.testLogger.opt.uidGenerator.UniqueID()}
 		_, err := stmt.ExecContext(context.TODO(), []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.NoError(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtExecContext", output.Message)
-		assert.Equal(t, LevelInfo.String(), output.Level)
-		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
+		assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessageStmtExecContext, LevelDebug))
 	})
 
 	t.Run("Success With Custom Level", func(t *testing.T) {
+		ml := newMockLogger()
+		ml.testOpts.execerLevel = LevelDebug
+
 		q := "SELECT * FROM tt WHERE id = ?"
 		stmtMock := &statementExecerContextMock{}
 		stmtMock.On("ExecContext", mock.Anything, mock.Anything).Return(&resultMock{}, nil)
 
-		custOpt := *testOpts
-		WithExecerLevel(LevelDebug)(&custOpt)
-		custLogger := *testLogger
-		custLogger.opt = &custOpt
-
-		stmt := &statement{query: q, Stmt: stmtMock, logger: &custLogger, id: custLogger.opt.uidGenerator.UniqueID(), connID: custLogger.opt.uidGenerator.UniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: ml.testLogger, id: ml.testOpts.uidGenerator.UniqueID(), connID: ml.testOpts.uidGenerator.UniqueID()}
 		_, err := stmt.ExecContext(context.TODO(), []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.NoError(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtExecContext", output.Message)
-		assert.Equal(t, LevelDebug.String(), output.Level)
-		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
+		assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessageStmtExecContext, LevelDebug))
 	})
 }
 
 func TestStatement_QueryContext(t *testing.T) {
+
 	t.Run("Not implement driver.StmtQueryContext", func(t *testing.T) {
+		ml := newMockLogger()
+
 		q := "SELECT * FROM tt WHERE id = ?"
 		stmtMock := &statementMock{}
-		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: ml.testLogger, id: ml.testLogger.opt.uidGenerator.UniqueID(), connID: ml.testLogger.opt.uidGenerator.UniqueID()}
 
 		_, err := stmt.QueryContext(context.TODO(), []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.Error(t, err)
@@ -270,116 +267,115 @@ func TestStatement_QueryContext(t *testing.T) {
 	})
 
 	t.Run("Error", func(t *testing.T) {
+		ml := newMockLogger()
+
 		q := "SELECT * FROM tt WHERE id = ?"
 		stmtMock := &statementQueryerContextMock{}
 		stmtMock.On("QueryContext", mock.Anything, mock.Anything).Return(&rowsMock{}, driver.ErrBadConn)
 
-		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: ml.testLogger, id: ml.testLogger.opt.uidGenerator.UniqueID(), connID: ml.testLogger.opt.uidGenerator.UniqueID()}
 		_, err := stmt.QueryContext(context.TODO(), []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.Error(t, err)
 		assert.Equal(t, driver.ErrBadConn, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
 		assert.Equal(t, "StmtQueryContext", output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
-		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testOpts.errorFieldname])
-		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
+		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[ml.testOpts.errorFieldname])
+		assert.Equal(t, q, output.Data[ml.testOpts.sqlQueryFieldname])
+		assert.Equal(t, []interface{}{"testid"}, output.Data[ml.testOpts.sqlArgsFieldname])
 	})
 
 	t.Run("Success", func(t *testing.T) {
+		ml := newMockLogger()
+
 		q := "SELECT * FROM tt WHERE id = ?"
 		stmtMock := &statementQueryerContextMock{}
 		stmtMock.On("QueryContext", mock.Anything, mock.Anything).Return(&rowsMock{}, nil)
 
-		stmt := &statement{query: q, Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: ml.testLogger, id: ml.testLogger.opt.uidGenerator.UniqueID(), connID: ml.testLogger.opt.uidGenerator.UniqueID()}
 		_, err := stmt.QueryContext(context.TODO(), []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.NoError(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtQueryContext", output.Message)
-		assert.Equal(t, LevelInfo.String(), output.Level)
-		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
+		assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessagePrepare, LevelDebug))
 	})
 
 	t.Run("Success With Custom Level", func(t *testing.T) {
+		ml := newMockLogger()
+		ml.testOpts.queryerLevel = LevelDebug
+
 		q := "SELECT * FROM tt WHERE id = ?"
 		stmtMock := &statementQueryerContextMock{}
 		stmtMock.On("QueryContext", mock.Anything, mock.Anything).Return(&rowsMock{}, nil)
 
-		custOpt := *testOpts
-		WithQueryerLevel(LevelDebug)(&custOpt)
-		custLogger := *testLogger
-		custLogger.opt = &custOpt
-
-		stmt := &statement{query: q, Stmt: stmtMock, logger: &custLogger, id: custLogger.opt.uidGenerator.UniqueID(), connID: custLogger.opt.uidGenerator.UniqueID()}
+		stmt := &statement{query: q, Stmt: stmtMock, logger: ml.testLogger, id: ml.testOpts.uidGenerator.UniqueID(), connID: ml.testOpts.uidGenerator.UniqueID()}
 		_, err := stmt.QueryContext(context.TODO(), []driver.NamedValue{{Name: "", Ordinal: 0, Value: "testid"}})
 		assert.NoError(t, err)
 
 		var output bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &output)
+		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtQueryContext", output.Message)
-		assert.Equal(t, LevelDebug.String(), output.Level)
-		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
+		assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessageStmtQueryContext, LevelDebug))
 	})
 }
 
 func TestStatement_QueryContext2(t *testing.T) {
+	ml := newMockLogger()
+
 	// make sure conn id flow into statement
 	driverConnMock := &driverConnMock{}
 	stmtMock := &statementMock{}
 	stmtMock.On("Query", mock.Anything).Return(&rowsMock{}, nil)
 	driverConnMock.On("Prepare", mock.Anything).Return(stmtMock, nil)
 	q := "SELECT * FROM tt WHERE id = ?"
-	conn := &connection{Conn: driverConnMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID()}
+	conn := &connection{Conn: driverConnMock, logger: ml.testLogger, id: ml.testLogger.opt.uidGenerator.UniqueID()}
 	stmt, err := conn.Prepare(q)
 	assert.NoError(t, err)
 
 	var connOutput bufLog
-	err = json.Unmarshal(bufLogger.Bytes(), &connOutput)
+	err = json.Unmarshal(ml.bufLogger.Bytes(), &connOutput)
 	assert.NoError(t, err)
-	assert.Equal(t, LevelInfo.String(), connOutput.Level)
-	assert.Equal(t, conn.id, connOutput.Data[testOpts.connIDFieldname])
+	assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessagePrepare, LevelDebug))
 
 	_, rsErr := stmt.Query([]driver.Value{1})
 	assert.NoError(t, rsErr)
 	var stmtOutput bufLog
-	err = json.Unmarshal(bufLogger.Bytes(), &stmtOutput)
+	err = json.Unmarshal(ml.bufLogger.Bytes(), &stmtOutput)
 	assert.NoError(t, err)
-	assert.Equal(t, LevelInfo.String(), stmtOutput.Level)
-	assert.Equal(t, conn.id, stmtOutput.Data[testOpts.connIDFieldname])
-	assert.NotEmpty(t, stmtOutput.Data[testOpts.stmtIDFieldname])
+	assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessagePrepare, LevelDebug))
 }
 
 func TestStatement_CheckNamedValue(t *testing.T) {
 	t.Run("Error", func(t *testing.T) {
+		ml := newMockLogger()
+
 		stmtMock := &statementNamedValueCheckerMock{}
 		stmtMock.On("CheckNamedValue", mock.Anything).Return(driver.ErrBadConn)
 
-		stmt := &statement{Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
+		stmt := &statement{Stmt: stmtMock, logger: ml.testLogger, id: ml.testLogger.opt.uidGenerator.UniqueID(), connID: ml.testLogger.opt.uidGenerator.UniqueID()}
 		err := stmt.CheckNamedValue(&driver.NamedValue{Name: "", Ordinal: 0, Value: "testid"})
 		assert.Error(t, err)
 
 		var stmtOutput bufLog
-		err = json.Unmarshal(bufLogger.Bytes(), &stmtOutput)
+		err = json.Unmarshal(ml.bufLogger.Bytes(), &stmtOutput)
 		assert.NoError(t, err)
 		assert.Equal(t, LevelError.String(), stmtOutput.Level)
 		assert.Equal(t, "StmtCheckNamedValue", stmtOutput.Message)
-		assert.NotEmpty(t, stmtOutput.Data[testOpts.stmtIDFieldname])
-		assert.NotEmpty(t, stmtOutput.Data[testOpts.connIDFieldname])
+		assert.NotEmpty(t, stmtOutput.Data[ml.testOpts.stmtIDFieldname])
+		assert.NotEmpty(t, stmtOutput.Data[ml.testOpts.connIDFieldname])
 	})
 
 	t.Run("Not implement driver.NamedValueChecker", func(t *testing.T) {
+		ml := newMockLogger()
+
 		stmtMock := &statementMock{}
 
-		stmt := &statement{Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
+		stmt := &statement{Stmt: stmtMock, logger: ml.testLogger, id: ml.testLogger.opt.uidGenerator.UniqueID(), connID: ml.testLogger.opt.uidGenerator.UniqueID()}
 		err := stmt.CheckNamedValue(&driver.NamedValue{Name: "", Ordinal: 0, Value: "testid"})
 		assert.Error(t, err)
 		assert.Equal(t, driver.ErrSkip, err)
@@ -387,11 +383,14 @@ func TestStatement_CheckNamedValue(t *testing.T) {
 }
 
 func TestStatement_ColumnConverter(t *testing.T) {
+
 	t.Run("Return as is", func(t *testing.T) {
+		ml := newMockLogger()
+
 		stmtMock := &statementValueConverterMock{}
 		stmtMock.On("ColumnConverter", mock.Anything).Return(driver.NotNull{Converter: driver.DefaultParameterConverter})
 
-		stmt := &statement{Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
+		stmt := &statement{Stmt: stmtMock, logger: ml.testLogger, id: ml.testLogger.opt.uidGenerator.UniqueID(), connID: ml.testLogger.opt.uidGenerator.UniqueID()}
 		cnv := stmt.ColumnConverter(1)
 		val, err := cnv.ConvertValue(1)
 		assert.NoError(t, err)
@@ -401,8 +400,10 @@ func TestStatement_ColumnConverter(t *testing.T) {
 	})
 
 	t.Run("Not implement driver.ColumnConverter", func(t *testing.T) {
+		ml := newMockLogger()
+
 		stmtMock := &statementMock{}
-		stmt := &statement{Stmt: stmtMock, logger: testLogger, id: testLogger.opt.uidGenerator.UniqueID(), connID: testLogger.opt.uidGenerator.UniqueID()}
+		stmt := &statement{Stmt: stmtMock, logger: ml.testLogger, id: ml.testLogger.opt.uidGenerator.UniqueID(), connID: ml.testLogger.opt.uidGenerator.UniqueID()}
 		cnv := stmt.ColumnConverter(1)
 		assert.Equal(t, driver.DefaultParameterConverter, cnv)
 	})
