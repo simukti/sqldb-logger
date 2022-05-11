@@ -86,7 +86,7 @@ func TestConnection_Prepare(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, false, isAbleToPrinted(ml.testOpts, MessagePrepare, LevelDebug))
+		assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessagePrepare, LevelDebug))
 	})
 
 	t.Run("Success with cusmlm level", func(t *testing.T) {
@@ -259,7 +259,7 @@ func TestConnection_PrepareContext(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, false, isAbleToPrinted(ml.testOpts, MessagePrepareContext, LevelDebug))
+		assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessagePrepareContext, LevelDebug))
 	})
 
 	t.Run("With driver.ConnBeginTx Success and cusmlm preparer level", func(t *testing.T) {
@@ -470,7 +470,7 @@ func TestConnection_ExecContext(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, false, isAbleToPrinted(ml.testOpts, MessageExecContext, LevelDebug))
+		assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessageExecContext, LevelDebug))
 	})
 
 	t.Run("driver.ExecerContext Success", func(t *testing.T) {
@@ -552,7 +552,7 @@ func TestConnection_Query(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, false, isAbleToPrinted(ml.testOpts, "Query", LevelDebug))
+		assert.Equal(t, false, isAbleToPrint(ml.testOpts, "Query", LevelDebug))
 	})
 
 	t.Run("driver.Queryer Success With Custom Level", func(t *testing.T) {
@@ -633,7 +633,7 @@ func TestConnection_QueryContext(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, false, isAbleToPrinted(ml.testOpts, MessageQueryContext, LevelDebug))
+		assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessageQueryContext, LevelDebug))
 	})
 
 	t.Run("driver.QueryerContext Success With Custom Level", func(t *testing.T) {

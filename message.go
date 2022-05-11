@@ -65,7 +65,7 @@ func getDefaultLevelByMessage(msg string) Level {
 	return LevelTrace
 }
 
-func isAbleToPrinted(o *options, msg string, lvl Level) bool {
+func isAbleToPrint(o *options, msg string, lvl Level) bool {
 	myLevel := o.minimumLogLevel
 	switch msg {
 	case MessagePrepare, MessagePrepareContext,

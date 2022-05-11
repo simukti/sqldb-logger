@@ -46,11 +46,7 @@ func TestStatement_Close(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtClose", output.Message)
-		//assert.NotContains(t, output.Data, testOpts.errorFieldname)
-		assert.Equal(t, q, output.Data[ml.testOpts.sqlQueryFieldname])
-		assert.Equal(t, stmt.connID, output.Data[ml.testOpts.connIDFieldname])
-		assert.Equal(t, stmt.id, output.Data[ml.testOpts.stmtIDFieldname])
+		assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessageStmtClose, LevelDebug))
 	})
 }
 
@@ -103,7 +99,7 @@ func TestStatement_Exec(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, false, isAbleToPrinted(ml.testOpts, MessagePrepare, LevelDebug))
+		assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessagePrepare, LevelDebug))
 	})
 
 	t.Run("Success With Custom Level", func(t *testing.T) {
@@ -121,10 +117,7 @@ func TestStatement_Exec(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtExec", output.Message)
-		assert.Equal(t, LevelDebug.String(), output.Level)
-		assert.Equal(t, q, output.Data[ml.testOpts.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[ml.testOpts.sqlArgsFieldname])
+		assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessageStmtExec, LevelDebug))
 	})
 }
 
@@ -165,7 +158,7 @@ func TestStatement_Query(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, false, isAbleToPrinted(ml.testOpts, MessagePrepare, LevelDebug))
+		assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessagePrepare, LevelDebug))
 	})
 
 	t.Run("Success With Custom Level", func(t *testing.T) {
@@ -183,10 +176,7 @@ func TestStatement_Query(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtQuery", output.Message)
-		assert.Equal(t, LevelDebug.String(), output.Level)
-		assert.Equal(t, q, output.Data[ml.testOpts.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[ml.testOpts.sqlArgsFieldname])
+		assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessageStmtQuery, LevelDebug))
 	})
 }
 
@@ -240,7 +230,7 @@ func TestStatement_ExecContext(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, false, isAbleToPrinted(ml.testOpts, MessagePrepare, LevelDebug))
+		assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessageStmtExecContext, LevelDebug))
 	})
 
 	t.Run("Success With Custom Level", func(t *testing.T) {
@@ -258,10 +248,7 @@ func TestStatement_ExecContext(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtExecContext", output.Message)
-		assert.Equal(t, LevelDebug.String(), output.Level)
-		assert.Equal(t, q, output.Data[ml.testOpts.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[ml.testOpts.sqlArgsFieldname])
+		assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessageStmtExecContext, LevelDebug))
 	})
 }
 
@@ -315,7 +302,7 @@ func TestStatement_QueryContext(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, false, isAbleToPrinted(ml.testOpts, MessagePrepare, LevelDebug))
+		assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessagePrepare, LevelDebug))
 	})
 
 	t.Run("Success With Custom Level", func(t *testing.T) {
@@ -333,10 +320,7 @@ func TestStatement_QueryContext(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(ml.bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtQueryContext", output.Message)
-		assert.Equal(t, LevelDebug.String(), output.Level)
-		assert.Equal(t, q, output.Data[ml.testOpts.sqlQueryFieldname])
-		assert.Equal(t, []interface{}{"testid"}, output.Data[ml.testOpts.sqlArgsFieldname])
+		assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessageStmtQueryContext, LevelDebug))
 	})
 }
 
@@ -356,14 +340,14 @@ func TestStatement_QueryContext2(t *testing.T) {
 	var connOutput bufLog
 	err = json.Unmarshal(ml.bufLogger.Bytes(), &connOutput)
 	assert.NoError(t, err)
-	assert.Equal(t, false, isAbleToPrinted(ml.testOpts, MessagePrepare, LevelDebug))
+	assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessagePrepare, LevelDebug))
 
 	_, rsErr := stmt.Query([]driver.Value{1})
 	assert.NoError(t, rsErr)
 	var stmtOutput bufLog
 	err = json.Unmarshal(ml.bufLogger.Bytes(), &stmtOutput)
 	assert.NoError(t, err)
-	assert.Equal(t, false, isAbleToPrinted(ml.testOpts, MessagePrepare, LevelDebug))
+	assert.Equal(t, false, isAbleToPrint(ml.testOpts, MessagePrepare, LevelDebug))
 }
 
 func TestStatement_CheckNamedValue(t *testing.T) {

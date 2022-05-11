@@ -93,7 +93,7 @@ func (l *logger) withKeyArgs(key string, args []driver.Value) dataFunc {
 }
 
 func (l *logger) log(ctx context.Context, lvl Level, msg string, start time.Time, err error, datas ...dataFunc) {
-	if !isAbleToPrinted(l.opt, msg, lvl) {
+	if !isAbleToPrint(l.opt, msg, lvl) {
 		return
 	}
 
