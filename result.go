@@ -18,28 +18,30 @@ type result struct {
 
 // LastInsertId implement driver.Result
 func (r *result) LastInsertId() (int64, error) {
-	lvl, start := LevelTrace, time.Now()
+	msg := MessageResultLastInsertId
+	lvl, start := getDefaultLevelByMessage(msg, nil), time.Now()
 	id, err := r.Result.LastInsertId()
 
 	if err != nil {
 		lvl = LevelError
 	}
 
-	r.logger.log(context.Background(), lvl, "ResultLastInsertId", start, err, r.logData()...)
+	r.logger.log(context.Background(), lvl, msg, start, err, r.logData()...)
 
 	return id, err
 }
 
 // RowsAffected implement driver.Result
 func (r *result) RowsAffected() (int64, error) {
-	lvl, start := LevelTrace, time.Now()
+	msg := MessageResultRowsAffected
+	lvl, start := getDefaultLevelByMessage(msg, nil), time.Now()
 	num, err := r.Result.RowsAffected()
 
 	if err != nil {
 		lvl = LevelError
 	}
 
-	r.logger.log(context.Background(), lvl, "ResultRowsAffected", start, err, r.logData()...)
+	r.logger.log(context.Background(), lvl, msg, start, err, r.logData()...)
 
 	return num, err
 }

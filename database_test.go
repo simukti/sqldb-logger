@@ -37,7 +37,7 @@ func TestOpenDriver(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "Connect", output.Message)
+		assert.Equal(t, MessageConnect, output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
 		assert.Contains(t, output.Data, "errtest")
 	})

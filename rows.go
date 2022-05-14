@@ -32,14 +32,15 @@ func (r *rows) Columns() []string {
 
 // Close implement driver.Rows
 func (r *rows) Close() error {
-	lvl, start := LevelTrace, time.Now()
+	msg := MessageRowsClose
+	lvl, start := getDefaultLevelByMessage(msg, nil), time.Now()
 	err := r.Rows.Close()
 
 	if err != nil {
 		lvl = LevelError
 	}
 
-	r.logger.log(context.Background(), lvl, "RowsClose", start, err, r.logData()...)
+	r.logger.log(context.Background(), lvl, msg, start, err, r.logData()...)
 
 	return err
 }
@@ -54,14 +55,15 @@ func (r *rows) Next(dest []driver.Value) error {
 		logs = append(logs, r.logger.withKeyArgs("rows_dest", dest))
 	}
 
-	lvl, start := LevelTrace, time.Now()
+	msg := MessageRowsNext
+	lvl, start := getDefaultLevelByMessage(msg, nil), time.Now()
 	err := r.Rows.Next(dest)
 
 	if err != nil && err != io.EOF {
 		lvl = LevelError
 	}
 
-	r.logger.log(context.Background(), lvl, "RowsNext", start, err, logs...)
+	r.logger.log(context.Background(), lvl, msg, start, err, logs...)
 
 	return err
 }
@@ -82,14 +84,15 @@ func (r *rows) NextResultSet() error {
 		return io.EOF
 	}
 
-	lvl, start := LevelTrace, time.Now()
+	msg := MessageRowsNextResultSet
+	lvl, start := getDefaultLevelByMessage(msg, nil), time.Now()
 	err := rs.NextResultSet()
 
 	if err != nil && err != io.EOF {
 		lvl = LevelError
 	}
 
-	r.logger.log(context.Background(), lvl, "RowsNextResultSet", start, err, r.logData()...)
+	r.logger.log(context.Background(), lvl, msg, start, err, r.logData()...)
 
 	return err
 }

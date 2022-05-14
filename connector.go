@@ -19,13 +19,14 @@ func (c *connector) Connect(ctx context.Context) (driver.Conn, error) {
 	start, id := time.Now(), c.logger.opt.uidGenerator.UniqueID()
 	logID := c.logger.withUID(c.logger.opt.connIDFieldname, id)
 	conn, err := c.driver.Open(c.dsn)
+	msg := MessageConnect
 
 	if err != nil {
-		c.logger.log(ctx, LevelError, "Connect", start, err, logID)
+		c.logger.log(ctx, LevelError, msg, start, err, logID)
 		return nil, err
 	}
 
-	c.logger.log(ctx, LevelDebug, "Connect", start, err, logID)
+	c.logger.log(ctx, LevelDebug, msg, start, err, logID)
 
 	return &connection{Conn: conn, logger: c.logger, id: id}, nil
 }

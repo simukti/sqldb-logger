@@ -15,28 +15,30 @@ type transaction struct {
 
 // Commit implement driver.Tx
 func (tx *transaction) Commit() error {
-	lvl, start := LevelDebug, time.Now()
+	msg := MessageCommit
+	lvl, start := getDefaultLevelByMessage(msg, nil), time.Now()
 	err := tx.Tx.Commit()
 
 	if err != nil {
 		lvl = LevelError
 	}
 
-	tx.logger.log(context.Background(), lvl, "Commit", start, err, tx.logData()...)
+	tx.logger.log(context.Background(), lvl, msg, start, err, tx.logData()...)
 
 	return err
 }
 
 // Rollback implement driver.Tx
 func (tx *transaction) Rollback() error {
-	lvl, start := LevelDebug, time.Now()
+	msg := MessageRollback
+	lvl, start := getDefaultLevelByMessage(msg, nil), time.Now()
 	err := tx.Tx.Rollback()
 
 	if err != nil {
 		lvl = LevelError
 	}
 
-	tx.logger.log(context.Background(), lvl, "Rollback", start, err, tx.logData()...)
+	tx.logger.log(context.Background(), lvl, msg, start, err, tx.logData()...)
 
 	return err
 }
