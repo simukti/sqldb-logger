@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -ev
 go vet
-golangci-lint run
 test -z "$(go fmt ./...)" # fail if not formatted properly
 go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
 ls -d logadapter/* | xargs -I {} bash -c "cd '{}' \
@@ -10,4 +9,3 @@ ls -d logadapter/* | xargs -I {} bash -c "cd '{}' \
 && rm coverage.out"
 # for go repo with nested modules, remove repo prefix, otherwise goveralls will failed.
 sed -i -e 's/github.com\/simukti\/sqldb-logger/./g' coverage.out
-sonar-scanner
