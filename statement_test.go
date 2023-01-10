@@ -23,7 +23,7 @@ func TestStatement_Close(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtClose", output.Message)
+		assert.Equal(t, MessageStmtClose, output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
 		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testOpts.errorFieldname])
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
@@ -43,7 +43,7 @@ func TestStatement_Close(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtClose", output.Message)
+		assert.Equal(t, MessageStmtClose, output.Message)
 		assert.NotContains(t, output.Data, testOpts.errorFieldname)
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
 		assert.Equal(t, stmt.connID, output.Data[testOpts.connIDFieldname])
@@ -74,7 +74,7 @@ func TestStatement_Exec(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtExec", output.Message)
+		assert.Equal(t, MessageStmtExec, output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
 		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testOpts.errorFieldname])
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
@@ -93,7 +93,7 @@ func TestStatement_Exec(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtExec", output.Message)
+		assert.Equal(t, MessageStmtExec, output.Message)
 		assert.Equal(t, LevelInfo.String(), output.Level)
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
 		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
@@ -116,7 +116,7 @@ func TestStatement_Exec(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtExec", output.Message)
+		assert.Equal(t, MessageStmtExec, output.Message)
 		assert.Equal(t, LevelDebug.String(), output.Level)
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
 		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
@@ -136,7 +136,7 @@ func TestStatement_Query(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtQuery", output.Message)
+		assert.Equal(t, MessageStmtQuery, output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
 		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testOpts.errorFieldname])
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
@@ -155,7 +155,7 @@ func TestStatement_Query(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtQuery", output.Message)
+		assert.Equal(t, MessageStmtQuery, output.Message)
 		assert.Equal(t, LevelInfo.String(), output.Level)
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
 		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
@@ -178,7 +178,7 @@ func TestStatement_Query(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtQuery", output.Message)
+		assert.Equal(t, MessageStmtQuery, output.Message)
 		assert.Equal(t, LevelDebug.String(), output.Level)
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
 		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
@@ -209,7 +209,7 @@ func TestStatement_ExecContext(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtExecContext", output.Message)
+		assert.Equal(t, MessageStmtExecContext, output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
 		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testOpts.errorFieldname])
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
@@ -228,7 +228,7 @@ func TestStatement_ExecContext(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtExecContext", output.Message)
+		assert.Equal(t, MessageStmtExecContext, output.Message)
 		assert.Equal(t, LevelInfo.String(), output.Level)
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
 		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
@@ -251,7 +251,7 @@ func TestStatement_ExecContext(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtExecContext", output.Message)
+		assert.Equal(t, MessageStmtExecContext, output.Message)
 		assert.Equal(t, LevelDebug.String(), output.Level)
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
 		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
@@ -282,7 +282,7 @@ func TestStatement_QueryContext(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtQueryContext", output.Message)
+		assert.Equal(t, MessageStmtQueryContext, output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
 		assert.Equal(t, driver.ErrBadConn.Error(), output.Data[testOpts.errorFieldname])
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
@@ -301,7 +301,7 @@ func TestStatement_QueryContext(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtQueryContext", output.Message)
+		assert.Equal(t, MessageStmtQueryContext, output.Message)
 		assert.Equal(t, LevelInfo.String(), output.Level)
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
 		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
@@ -324,7 +324,7 @@ func TestStatement_QueryContext(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "StmtQueryContext", output.Message)
+		assert.Equal(t, MessageStmtQueryContext, output.Message)
 		assert.Equal(t, LevelDebug.String(), output.Level)
 		assert.Equal(t, q, output.Data[testOpts.sqlQueryFieldname])
 		assert.Equal(t, []interface{}{"testid"}, output.Data[testOpts.sqlArgsFieldname])
@@ -371,7 +371,7 @@ func TestStatement_CheckNamedValue(t *testing.T) {
 		err = json.Unmarshal(bufLogger.Bytes(), &stmtOutput)
 		assert.NoError(t, err)
 		assert.Equal(t, LevelError.String(), stmtOutput.Level)
-		assert.Equal(t, "StmtCheckNamedValue", stmtOutput.Message)
+		assert.Equal(t, MessageStmtCheckNamedValue, stmtOutput.Message)
 		assert.NotEmpty(t, stmtOutput.Data[testOpts.stmtIDFieldname])
 		assert.NotEmpty(t, stmtOutput.Data[testOpts.connIDFieldname])
 	})

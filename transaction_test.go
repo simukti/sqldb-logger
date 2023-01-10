@@ -21,7 +21,7 @@ func TestTransaction_Commit(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "Commit", output.Message)
+		assert.Equal(t, MessageCommit, output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
 	})
 
@@ -36,7 +36,7 @@ func TestTransaction_Commit(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "Commit", output.Message)
+		assert.Equal(t, MessageCommit, output.Message)
 		assert.Equal(t, LevelDebug.String(), output.Level)
 	})
 }
@@ -53,7 +53,7 @@ func TestTransaction_Rollback(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "Rollback", output.Message)
+		assert.Equal(t, MessageRollback, output.Message)
 		assert.Equal(t, LevelError.String(), output.Level)
 	})
 
@@ -68,7 +68,7 @@ func TestTransaction_Rollback(t *testing.T) {
 		var output bufLog
 		err = json.Unmarshal(bufLogger.Bytes(), &output)
 		assert.NoError(t, err)
-		assert.Equal(t, "Rollback", output.Message)
+		assert.Equal(t, MessageRollback, output.Message)
 		assert.Equal(t, LevelDebug.String(), output.Level)
 	})
 }
