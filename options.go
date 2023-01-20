@@ -18,6 +18,7 @@ type options struct {
 	stmtIDFieldname    string
 	connIDFieldname    string
 	txIDFieldname      string
+	additionalFields   map[string]interface{}
 	sqlQueryAsMsg      bool
 	logArgs            bool
 	logDriverErrSkip   bool
@@ -44,6 +45,7 @@ func setDefaultOptions(opt *options) {
 	opt.stmtIDFieldname = "stmt_id"
 	opt.connIDFieldname = "conn_id"
 	opt.txIDFieldname = "tx_id"
+	opt.additionalFields = make(map[string]interface{})
 	opt.sqlQueryAsMsg = false
 	opt.minimumLogLevel = LevelDebug
 	opt.logArgs = true
@@ -328,6 +330,28 @@ func WithStatementIDFieldname(name string) Option {
 func WithTransactionIDFieldname(name string) Option {
 	return func(opt *options) {
 		opt.txIDFieldname = name
+	}
+}
+
+// WithAdditionalFields allows injecting multiple log fields.
+//
+// In the event of another log field name colliding with any additional fields,
+// it will be overwritten by what comes later.
+func WithAdditionalFields(fields map[string]interface{}) Option {
+	return func(opt *options) {
+		for k, v := range fields {
+			opt.additionalFields[k] = v
+		}
+	}
+}
+
+// WithAdditionalField allows injecting a single log field.
+//
+// In the event of another log field name colliding with any additional fields,
+// it will be overwritten by what comes later.
+func WithAdditionalField(name string, value interface{}) Option {
+	return func(opt *options) {
+		opt.additionalFields[name] = value
 	}
 }
 
