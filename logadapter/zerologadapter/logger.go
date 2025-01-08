@@ -19,7 +19,7 @@ func New(logger zerolog.Logger) sqldblogger.Logger {
 
 // Log implement sqldblogger.Logger and log it as is.
 // To use context.Context values, please copy this file and adjust to your needs.
-func (zl *zerologAdapter) Log(_ context.Context, level sqldblogger.Level, msg string, data map[string]interface{}) {
+func (zl *zerologAdapter) Log(ctx context.Context, level sqldblogger.Level, msg string, data map[string]interface{}) {
 	var lvl zerolog.Level
 
 	switch level {
@@ -35,5 +35,5 @@ func (zl *zerologAdapter) Log(_ context.Context, level sqldblogger.Level, msg st
 		lvl = zerolog.DebugLevel
 	}
 
-	zl.logger.WithLevel(lvl).Fields(data).Msg(msg)
+	zl.logger.WithLevel(lvl).Ctx(ctx).Fields(data).Msg(msg)
 }

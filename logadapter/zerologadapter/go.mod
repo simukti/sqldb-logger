@@ -3,7 +3,7 @@ module github.com/simukti/sqldb-logger/logadapter/zerologadapter
 go 1.17
 
 require (
-	github.com/rs/zerolog v1.28.0
+	github.com/rs/zerolog v1.30.0
 	github.com/simukti/sqldb-logger v0.0.0-20230108154142-840120f68bea
 	github.com/stretchr/testify v1.8.1
 )
