@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/simukti/sqldb-logger v0.0.0-20230108154142-840120f68bea
-	github.com/sirupsen/logrus v1.9.0
+	github.com/sirupsen/logrus v1.9.1
 	github.com/stretchr/testify v1.8.1
 )
 
